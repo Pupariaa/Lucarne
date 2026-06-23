@@ -1,0 +1,19 @@
+{
+  "name": "Lucarne",
+  "version": "0.1.0",
+  "description": "Driver and UI toolkit for SPI displays (ST7789, ST7735S) on Arduino and ESP32 without Adafruit dependency.",
+  "keywords": "display, spi, st7789, st7735, esp32, ui, gfx",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Pupariaa/Lucarne.git"
+  },
+  "authors": [
+    {
+      "name": "Techalchemy"
+    }
+  ],
+  "license": "MIT",
+  "frameworks": "arduino",
+  "platforms": "*",
+  "headers": "Lucarne.h"
+}
