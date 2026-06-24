@@ -52,11 +52,16 @@ class Gfx {
     void print(const char *s);
     void println(const char *s);
     void println();
-    void print(int32_t value);
-    void print(uint32_t value);
     void print(int value);
+    void print(unsigned int value);
+    void print(long value);
+    void print(unsigned long value);
     void print(double value, uint8_t digits = 2);
     void getTextBounds(const char *str, int16_t x, int16_t y, int16_t *x1, int16_t *y1, uint16_t *w, uint16_t *h);
+
+    void drawCharAA(const AAFont *font, int16_t penX, int16_t baselineY, uint16_t c, uint16_t fg, uint16_t bg);
+    void drawTextAA(const AAFont *font, int16_t penX, int16_t baselineY, const char *s, uint16_t fg, uint16_t bg);
+    void getAATextBounds(const AAFont *font, const char *s, int16_t *minx, int16_t *miny, int16_t *w, int16_t *h);
 
     int16_t width() const { return _width; }
     int16_t height() const { return _height; }

@@ -1,5 +1,6 @@
 #include "LucarneGfx.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 namespace lucarne {
@@ -242,11 +243,11 @@ void Gfx::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, u
     writeFastHLine((int16_t)(x + r), (int16_t)(y + h - 1), (int16_t)(w - 2 * r), color);
     writeFastVLine(x, (int16_t)(y + r), (int16_t)(h - 2 * r), color);
     writeFastVLine((int16_t)(x + w - 1), (int16_t)(y + r), (int16_t)(h - 2 * r), color);
-    endWrite();
     drawCircleHelper((int16_t)(x + r), (int16_t)(y + r), r, 1, color);
     drawCircleHelper((int16_t)(x + w - r - 1), (int16_t)(y + r), r, 2, color);
     drawCircleHelper((int16_t)(x + w - r - 1), (int16_t)(y + h - r - 1), r, 4, color);
     drawCircleHelper((int16_t)(x + r), (int16_t)(y + h - r - 1), r, 8, color);
+    endWrite();
 }
 
 void Gfx::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color) {
@@ -254,9 +255,9 @@ void Gfx::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, u
     if (r > maxRadius) r = maxRadius;
     startWrite();
     writeFillRect((int16_t)(x + r), y, (int16_t)(w - 2 * r), h, color);
-    endWrite();
     fillCircleHelper((int16_t)(x + w - r - 1), (int16_t)(y + r), r, 1, (int16_t)(h - 2 * r - 1), color);
     fillCircleHelper((int16_t)(x + r), (int16_t)(y + r), r, 2, (int16_t)(h - 2 * r - 1), color);
+    endWrite();
 }
 
 void Gfx::drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
@@ -509,20 +510,28 @@ void Gfx::println() {
     write((uint8_t)'\n');
 }
 
-void Gfx::print(int32_t value) {
-    char buf[16];
-    snprintf(buf, sizeof(buf), "%ld", (long)value);
-    print(buf);
-}
-
-void Gfx::print(uint32_t value) {
-    char buf[16];
-    snprintf(buf, sizeof(buf), "%lu", (unsigned long)value);
-    print(buf);
-}
-
 void Gfx::print(int value) {
-    print((int32_t)value);
+    char buf[16];
+    snprintf(buf, sizeof(buf), "%d", value);
+    print(buf);
+}
+
+void Gfx::print(unsigned int value) {
+    char buf[16];
+    snprintf(buf, sizeof(buf), "%u", value);
+    print(buf);
+}
+
+void Gfx::print(long value) {
+    char buf[24];
+    snprintf(buf, sizeof(buf), "%ld", value);
+    print(buf);
+}
+
+void Gfx::print(unsigned long value) {
+    char buf[24];
+    snprintf(buf, sizeof(buf), "%lu", value);
+    print(buf);
 }
 
 void Gfx::print(double value, uint8_t digits) {
@@ -604,6 +613,75 @@ void Gfx::getTextBounds(const char *str, int16_t x, int16_t y, int16_t *x1, int1
     if (maxy >= miny) {
         *y1 = miny;
         *h = (uint16_t)(maxy - miny + 1);
+    }
+}
+
+void Gfx::drawCharAA(const AAFont *font, int16_t penX, int16_t baselineY, uint16_t c, uint16_t fg, uint16_t bg) {
+    if (!font) return;
+    if (c < font->first || c > font->last) return;
+    const AAGlyph *gl = &font->glyph[c - font->first];
+    if (gl->width == 0 || gl->height == 0) return;
+    const uint8_t *cov = font->coverage + gl->coverageOffset;
+    int16_t gx = (int16_t)(penX + gl->xOffset);
+    int16_t gy = (int16_t)(baselineY + gl->yOffset);
+    startWrite();
+    for (uint8_t yy = 0; yy < gl->height; yy++) {
+        for (uint8_t xx = 0; xx < gl->width; xx++) {
+            uint8_t a = cov[yy * gl->width + xx];
+            if (a == 0) continue;
+            uint16_t out = (a >= 250) ? fg : colorBlend(bg, fg, a);
+            writePixel((int16_t)(gx + xx), (int16_t)(gy + yy), out);
+        }
+    }
+    endWrite();
+}
+
+void Gfx::drawTextAA(const AAFont *font, int16_t penX, int16_t baselineY, const char *s, uint16_t fg, uint16_t bg) {
+    if (!font || !s) return;
+    int16_t pen = penX;
+    while (*s) {
+        uint8_t c = (uint8_t)*s++;
+        if (c == '\n') {
+            baselineY = (int16_t)(baselineY + font->yAdvance);
+            pen = penX;
+            continue;
+        }
+        if (c < font->first || c > font->last) continue;
+        const AAGlyph *gl = &font->glyph[c - font->first];
+        drawCharAA(font, pen, baselineY, c, fg, bg);
+        pen = (int16_t)(pen + gl->xAdvance);
+    }
+}
+
+void Gfx::getAATextBounds(const AAFont *font, const char *s, int16_t *minx, int16_t *miny, int16_t *w, int16_t *h) {
+    *minx = 0;
+    *miny = 0;
+    *w = 0;
+    *h = 0;
+    if (!font || !s || !*s) return;
+    int16_t pen = 0;
+    int16_t loX = 32767, loY = 32767, hiX = -32768, hiY = -32768;
+    while (*s) {
+        uint8_t c = (uint8_t)*s++;
+        if (c < font->first || c > font->last) continue;
+        const AAGlyph *gl = &font->glyph[c - font->first];
+        if (gl->width > 0 && gl->height > 0) {
+            int16_t gx = (int16_t)(pen + gl->xOffset);
+            int16_t gy = gl->yOffset;
+            if (gx < loX) loX = gx;
+            if (gy < loY) loY = gy;
+            if ((int16_t)(gx + gl->width) > hiX) hiX = (int16_t)(gx + gl->width);
+            if ((int16_t)(gy + gl->height) > hiY) hiY = (int16_t)(gy + gl->height);
+        }
+        pen = (int16_t)(pen + gl->xAdvance);
+    }
+    if (hiX > loX) {
+        *minx = loX;
+        *w = (int16_t)(hiX - loX);
+    }
+    if (hiY > loY) {
+        *miny = loY;
+        *h = (int16_t)(hiY - loY);
     }
 }
 

@@ -25,6 +25,7 @@ struct DisplayOptions {
     int16_t panelHeight = 0;
     uint8_t rotation = 0;
     uint32_t spiHz = 27000000;
+    uint8_t spiMode = 0;
     ColorOrder colorOrder = ColorOrder::RGB;
     bool invert = false;
     int16_t colStart = -1;
@@ -32,6 +33,7 @@ struct DisplayOptions {
     int16_t colStart2 = -1;
     int16_t rowStart2 = -1;
     bool blActiveLow = false;
+    bool debug = false;
 };
 
 struct BufferOptions {

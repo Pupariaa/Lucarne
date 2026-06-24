@@ -22,6 +22,24 @@ typedef struct {
     uint8_t yAdvance;
 } Font;
 
+typedef struct {
+    uint32_t coverageOffset;
+    uint8_t width;
+    uint8_t height;
+    uint8_t xAdvance;
+    int8_t xOffset;
+    int8_t yOffset;
+} AAGlyph;
+
+typedef struct {
+    const uint8_t *coverage;
+    const AAGlyph *glyph;
+    uint16_t first;
+    uint16_t last;
+    uint8_t yAdvance;
+    uint8_t pixelSize;
+} AAFont;
+
 extern const uint8_t LucarneClassicFont[];
 
 }
