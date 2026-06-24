@@ -1,0 +1,25 @@
+#ifndef LUCARNE_SCREEN_H
+#define LUCARNE_SCREEN_H
+
+#include "LucarneWidget.h"
+
+namespace lucarne {
+
+class Screen {
+  public:
+    Screen(const char *name = nullptr);
+
+    void add(Widget *widget);
+    void draw(Gfx &g, const Theme &theme, Store &store);
+    const char *name() const { return _name; }
+    Widget *first() const { return _head; }
+
+  private:
+    const char *_name;
+    Widget *_head;
+    Widget *_tail;
+};
+
+}
+
+#endif
