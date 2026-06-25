@@ -20,6 +20,7 @@ Lucarne couvre toute la chaîne, de la conception visuelle au rendu sur l'écran
 - [Menus, navigation et transitions](#menus-navigation-et-transitions)
 - [Contrôles physiques](#contrôles-physiques)
 - [Lucarne Studio (éditeur web)](#lucarne-studio-éditeur-web)
+- [Live preview (USB)](#live-preview-usb)
 - [Intégrer une UI générée](#intégrer-une-ui-générée)
 - [Polices anti-aliasées](#polices-anti-aliasées)
 - [Écrans supportés](#écrans-supportés)
@@ -270,6 +271,16 @@ Le guide complet de l'éditeur est dans [docs/EDITOR.md](docs/EDITOR.md).
 
 ---
 
+## Live preview (USB)
+
+Vous pouvez voir votre conception **en temps réel sur un vrai écran**, sans rien régénérer. Flashez une fois le firmware `examples/LucarnePreview`, branchez l'ESP32-S3 en USB, puis cliquez sur **Live** dans l'éditeur (Chrome ou Edge) pour vous connecter.
+
+L'éditeur calcule le rendu pixel-exact et streame le framebuffer (compressé RLE) par USB CDC ; la carte ne fait que l'afficher, sans aucune interaction de son côté. Idéal pour itérer : chaque modification, et la navigation dans le simulateur, apparaissent immédiatement sur l'écran. Cette fonction est isolée, n'utilise que l'API publique du `Display` et ne touche pas au moteur.
+
+Détails, protocole et dépannage : [docs/LIVE_PREVIEW.md](docs/LIVE_PREVIEW.md).
+
+---
+
 ## Intégrer une UI générée
 
 L'export produit un ou deux fichiers à déposer **à côté de votre `.ino`** (ou dans le dossier du projet) :
@@ -401,6 +412,7 @@ Mémoire du framebuffer :
 | `examples/LucarneDiag` | Diagnostic d'écran (bandes de couleurs, offsets). |
 | `examples/LucarneUI` | Tableau de bord avec widgets et données animées. |
 | `examples/LucarneMenu` | Menu + navigation + transitions + boutons + polices AA. |
+| `examples/LucarnePreview` | Firmware de live preview USB piloté par l'éditeur. |
 
 ---
 
@@ -425,6 +437,7 @@ Lucarne/
 
 - [docs/RUNTIME.md](docs/RUNTIME.md) — Theme, Store, widgets, écrans, navigation, transitions (référence d'API).
 - [docs/EDITOR.md](docs/EDITOR.md) — guide complet de Lucarne Studio et de l'export.
+- [docs/LIVE_PREVIEW.md](docs/LIVE_PREVIEW.md) — live preview USB en temps réel depuis l'éditeur.
 - [docs/HARDWARE.md](docs/HARDWARE.md) — câblage des écrans et des contrôles physiques.
 - [docs/FONTS.md](docs/FONTS.md) — polices anti-aliasées, création et régénération.
 
