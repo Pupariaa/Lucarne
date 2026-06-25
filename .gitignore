@@ -1,2 +1,3 @@
-scripts
-editor
+editor/
+.vscode/
+scripts/
