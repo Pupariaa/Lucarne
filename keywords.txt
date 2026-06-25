@@ -30,6 +30,7 @@ Transition	KEYWORD1
 ButtonInput	KEYWORD1
 EncoderInput	KEYWORD1
 TouchInput	KEYWORD1
+LivePreview	KEYWORD1
 
 LucarneFontBody	LITERAL1
 LucarneFontTitle	LITERAL1
