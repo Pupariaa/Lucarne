@@ -181,6 +181,67 @@
       this.fillCircleHelper(x + r, y + r, r, 2, h - 2 * r - 1, color);
     }
 
+    fillCircle(cx, cy, r, color) {
+      r = r | 0;
+      cx = cx | 0;
+      cy = cy | 0;
+      for (let y = -r; y <= r; y++) {
+        for (let x = -r; x <= r; x++) {
+          if (x * x + y * y <= r * r) this.writePixel(cx + x, cy + y, color);
+        }
+      }
+    }
+
+    drawCircle(cx, cy, r, color) {
+      r = r | 0;
+      cx = cx | 0;
+      cy = cy | 0;
+      let x = r;
+      let y = 0;
+      let err = 1 - r;
+      while (x >= y) {
+        this.writePixel(cx + x, cy + y, color);
+        this.writePixel(cx + y, cy + x, color);
+        this.writePixel(cx - y, cy + x, color);
+        this.writePixel(cx - x, cy + y, color);
+        this.writePixel(cx - x, cy - y, color);
+        this.writePixel(cx - y, cy - x, color);
+        this.writePixel(cx + y, cy - x, color);
+        this.writePixel(cx + x, cy - y, color);
+        y++;
+        if (err < 0) err += 2 * y + 1;
+        else {
+          x--;
+          err += 2 * (y - x) + 1;
+        }
+      }
+    }
+
+    drawLine(x0, y0, x1, y1, color) {
+      x0 = x0 | 0;
+      y0 = y0 | 0;
+      x1 = x1 | 0;
+      y1 = y1 | 0;
+      const dx = Math.abs(x1 - x0);
+      const dy = Math.abs(y1 - y0);
+      const sx = x0 < x1 ? 1 : -1;
+      const sy = y0 < y1 ? 1 : -1;
+      let err = dx - dy;
+      while (true) {
+        this.writePixel(x0, y0, color);
+        if (x0 === x1 && y0 === y1) break;
+        const e2 = 2 * err;
+        if (e2 > -dy) {
+          err -= dy;
+          x0 += sx;
+        }
+        if (e2 < dx) {
+          err += dx;
+          y0 += sy;
+        }
+      }
+    }
+
     drawCharClassic(x, y, c, color, size) {
       const FONT = window.LUCARNE_FONT5x7;
       c = c & 0xff;
@@ -512,6 +573,133 @@
         const pct = Math.trunc(ratio * 100 + 0.5) + "%";
         const txtBg = fillW > w.w / 2 ? color : t.surface;
         drawText(disp, pct, w.x, w.y, w.w, w.h, "center", t.text, t.textSize, txtBg, fontBody);
+      }
+    } else if (w.type === "button") {
+      const fill = w.fill ? hexTo565(w.fill) : t.primary;
+      const txt = w.textColor ? hexTo565(w.textColor) : t.background;
+      disp.fillRoundRect(w.x, w.y, w.w, w.h, t.radius, fill);
+      disp.drawRoundRect(w.x, w.y, w.w, w.h, t.radius, t.surfaceEdge);
+      let contentX = w.x + t.padding;
+      const ic = w.icon && w.icon !== "none" ? resolveIcon(w.icon, env) : null;
+      if (ic) {
+        let side = w.h - t.padding * 2;
+        if (side > 20) side = 20;
+        if (side < 8) side = 8;
+        const iy = w.y + idiv(w.h - side, 2);
+        disp.drawIconSized(ic, contentX, iy, side, side, txt);
+        contentX += side + t.padding;
+      }
+      const lw = w.x + w.w - t.padding - contentX;
+      drawText(disp, w.label || "Button", contentX, w.y, lw, w.h, "center", txt, t.textSize, fill, fontBody);
+    } else if (w.type === "switch") {
+      const rec = env.getValue(w.key);
+      const on = rec && rec.type === "bool" ? !!rec.value : false;
+      let trackW = Math.max(28, Math.trunc((w.w * 40) / 100));
+      let trackH = Math.max(14, Math.trunc((w.h * 55) / 100));
+      const tx = w.x + w.w - trackW - t.padding;
+      const ty = w.y + idiv(w.h - trackH, 2);
+      const track = on ? t.primary : t.surfaceEdge;
+      disp.fillRoundRect(tx, ty, trackW, trackH, idiv(trackH, 2), track);
+      const knob = trackH - 4;
+      const kx = on ? tx + trackW - knob - 2 : tx + 2;
+      const ky = ty + 2;
+      disp.fillCircle(kx + idiv(knob, 2), ky + idiv(knob, 2), idiv(knob, 2), t.text);
+      const lw = tx - w.x - t.padding;
+      if (lw > 0) drawText(disp, w.label || "", w.x, w.y, lw, w.h, "left", t.text, t.textSize, t.background, fontBody);
+    } else if (w.type === "slider") {
+      const rec = env.getValue(w.key);
+      const min = w.min === undefined ? 0 : w.min;
+      const max = w.max === undefined ? 100 : w.max;
+      let v = rec && rec.type !== "string" && rec.type !== "bool" ? Number(rec.value) : min;
+      if (v < min) v = min;
+      if (v > max) v = max;
+      const span = max - min || 1;
+      const ratio = (v - min) / span;
+      const pad = t.padding;
+      let trackH = Math.max(6, Math.trunc((w.h * 35) / 100));
+      const ty = w.y + idiv(w.h - trackH, 2);
+      const tw = w.w - pad * 2;
+      const tx = w.x + pad;
+      disp.fillRoundRect(tx, ty, tw, trackH, idiv(trackH, 2), t.surfaceEdge);
+      const fill = w.color ? hexTo565(w.color) : t.primary;
+      const fw = Math.trunc(tw * ratio);
+      if (fw > 0) disp.fillRoundRect(tx, ty, fw, trackH, idiv(trackH, 2), fill);
+      let knobR = trackH + 2;
+      if (knobR < 6) knobR = 6;
+      const kx = tx + Math.trunc(tw * ratio);
+      const ky = ty + idiv(trackH, 2);
+      disp.fillCircle(kx, ky, knobR, fill);
+      disp.drawCircle(kx, ky, knobR, t.text);
+    } else if (w.type === "chart") {
+      const keys = (w.keys || []).filter((k) => k);
+      if (keys.length >= 2) {
+        const line = w.color ? hexTo565(w.color) : t.primary;
+        disp.drawRoundRect(w.x, w.y, w.w, w.h, t.radius, t.surfaceEdge);
+        const pad = t.padding;
+        const gx = w.x + pad;
+        const gy = w.y + pad;
+        const gw = w.w - pad * 2;
+        const gh = w.h - pad * 2;
+        const min = w.min === undefined ? 0 : w.min;
+        const max = w.max === undefined ? 1 : w.max;
+        const span = max - min || 1;
+        let px0 = gx;
+        let py0 = gy;
+        for (let i = 0; i < keys.length; i++) {
+          const rec = env.getValue(keys[i]);
+          let v = rec && rec.type !== "string" && rec.type !== "bool" ? Number(rec.value) : min;
+          if (v < min) v = min;
+          if (v > max) v = max;
+          const r = (v - min) / span;
+          const px = gx + idiv((gw * i) / (keys.length - 1));
+          const py = gy + gh - Math.trunc(gh * r);
+          if (i > 0) disp.drawLine(px0, py0, px, py, line);
+          px0 = px;
+          py0 = py;
+        }
+      }
+    } else if (w.type === "gauge") {
+      const rec = env.getValue(w.key);
+      const min = w.min === undefined ? 0 : w.min;
+      const max = w.max === undefined ? 100 : w.max;
+      let v = rec && rec.type !== "string" && rec.type !== "bool" ? Number(rec.value) : min;
+      if (v < min) v = min;
+      if (v > max) v = max;
+      const span = max - min || 1;
+      const ratio = (v - min) / span;
+      const accent = w.accent ? hexTo565(w.accent) : t.primary;
+      const cx = w.x + idiv(w.w, 2);
+      const cy = w.y + idiv(w.h * 55, 100);
+      let r = idiv(w.w, 3);
+      if (r > idiv(w.h, 2)) r = idiv(w.h, 2);
+      if (r < 8) r = 8;
+      disp.drawCircle(cx, cy, r, t.surfaceEdge);
+      const arcEnd = Math.trunc(180 * ratio);
+      for (let a = 0; a <= arcEnd; a++) {
+        const rad = ((180 - a) * Math.PI) / 180;
+        const px = Math.trunc(cx + Math.cos(rad) * r);
+        const py = Math.trunc(cy - Math.sin(rad) * r);
+        disp.drawPixel(px, py, accent);
+      }
+      drawText(disp, w.label || "", w.x, w.y + 2, w.w, idiv(w.h, 3), "center", t.textDim, t.textSize, t.background, fontBody);
+      const txt = formatMetric(rec, "", w.decimals === undefined ? 1 : w.decimals);
+      drawText(disp, txt, w.x, cy + idiv(r, 2), w.w, idiv(w.h, 3), "center", t.text, t.textSize, t.background, fontBody);
+    } else if (w.type === "list") {
+      let rowH = t.rowHeight;
+      if (rowH < 14) rowH = 14;
+      let visible = idiv(w.h, rowH);
+      if (visible < 1) visible = 1;
+      const items = w.items || [];
+      const gap = 2;
+      for (let row = 0; row < visible; row++) {
+        if (row >= items.length) break;
+        const it = items[row];
+        const ry = w.y + row * rowH;
+        const rh = rowH - gap;
+        disp.fillRoundRect(w.x, ry, w.w, rh, t.radius, t.surface);
+        disp.drawRoundRect(w.x, ry, w.w, rh, t.radius, t.surfaceEdge);
+        const lbl = typeof it === "string" ? it : it.label || "";
+        drawText(disp, lbl, w.x + t.padding, ry, w.w - t.padding * 2, rh, "left", t.text, t.textSize, t.surface, fontBody);
       }
     } else if (w.type === "icon") {
       const color = w.color ? hexTo565(w.color) : t.text;

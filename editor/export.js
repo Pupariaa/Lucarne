@@ -127,6 +127,7 @@
       (project.screens || []).forEach((s) => {
         (s.widgets || []).forEach((w) => {
           if (w.type === "icon") use(w.icon);
+          if (w.type === "button") use(w.icon);
           if (w.type === "menu")
             (w.items || []).forEach((it) => {
               use(it.icon);
@@ -165,38 +166,31 @@
     h += "#include <string.h>\n\n";
     h += "namespace projet {\n\n";
     h += body;
-    if (rowDispatch.length) {
-      h += "inline const uint16_t *iconRowsByRef(const char *name) {\n";
-      h += "    if (!name) return nullptr;\n";
-      rowDispatch.forEach((d) => {
-        h += '    if (strcmp(name, "' + d.key + '") == 0) return ' + d.fn + "();\n";
-      });
-      h += "    return nullptr;\n";
-      h += "}\n\n";
-    }
-    if (imgDispatch.length) {
-      h += "inline const lucarne::ImageAsset *iconImageByRef(const char *name) {\n";
-      h += "    if (!name) return nullptr;\n";
-      imgDispatch.forEach((d) => {
-        h += '    if (strcmp(name, "' + d.key + '") == 0) return &' + d.fn + ";\n";
-      });
-      h += "    return nullptr;\n";
-      h += "}\n\n";
-    }
+    h += "inline const uint16_t *iconRowsByRef(const char *name) {\n";
+    h += "    if (!name) return nullptr;\n";
+    rowDispatch.forEach((d) => {
+      h += '    if (strcmp(name, "' + d.key + '") == 0) return ' + d.fn + "();\n";
+    });
+    h += "    return nullptr;\n";
+    h += "}\n\n";
+    h += "inline const lucarne::ImageAsset *iconImageByRef(const char *name) {\n";
+    h += "    if (!name) return nullptr;\n";
+    imgDispatch.forEach((d) => {
+      h += '    if (strcmp(name, "' + d.key + '") == 0) return &' + d.fn + ";\n";
+    });
+    h += "    return nullptr;\n";
+    h += "}\n\n";
     h += "}  // namespace projet\n\n#endif\n";
     return h;
   }
 
+  function iconRefExpr(name) {
+    if (!name || name === "none") return "nullptr";
+    return cstr(name);
+  }
+
   function iconExpr(name) {
-    if (!name || name === "none") return "IconId::None";
-    if (
-      name.indexOf("c:") === 0 ||
-      name.indexOf("tabler:") === 0 ||
-      name.indexOf("streamline:") === 0 ||
-      name.indexOf("glyphs:") === 0
-    )
-      return "IconId::Chart";
-    return "iconFromName(" + cstr(name) + ")";
+    return iconRefExpr(name);
   }
 
   function menuItemOptsExpr(it) {
@@ -206,11 +200,11 @@
     const autoRi = ri === "auto" || ri === "";
     const noRi = ri === "none";
     if (autoRi && !is && !bs) return "";
-    let badge = "IconId::None";
+    let badgeArg = "nullptr";
     let hidden = "false";
     if (noRi) hidden = "true";
-    else if (!autoRi) badge = iconExpr(ri);
-    return ", MenuItemOpts{" + badge + ", " + hidden + ", " + is + ", " + bs + "}";
+    else if (!autoRi) badgeArg = iconRefExpr(ri);
+    return ", MenuItemOpts{" + badgeArg + ", " + hidden + ", " + is + ", " + bs + "}";
   }
 
   function actionConst(id) {
@@ -221,13 +215,17 @@
     const map = new Map();
     project.screens.forEach((s) => {
       s.widgets.forEach((w) => {
-        if (w.type !== "menu") return;
-        (w.items || []).forEach((it) => {
-          if (it.action === "callback" && it.callbackId) {
-            const id = ident(it.callbackId);
-            if (!map.has(id)) map.set(id, id);
-          }
-        });
+        if (w.type === "menu") {
+          (w.items || []).forEach((it) => {
+            if (it.action === "callback" && it.callbackId) {
+              const id = ident(it.callbackId);
+              if (!map.has(id)) map.set(id, id);
+            }
+          });
+        } else if (w.type === "button" && w.action === "callback" && w.callbackId) {
+          const id = ident(w.callbackId);
+          if (!map.has(id)) map.set(id, id);
+        }
       });
     });
     return map;
@@ -301,6 +299,56 @@
           p("Image " + v + "(" + w.x + ", " + w.y + ", " + w.w + ", " + w.h + ", " + asset + ");");
         } else if (w.type === "menu") {
           p("Menu " + v + "(" + w.x + ", " + w.y + ", " + w.w + ", " + w.h + ");");
+        } else if (w.type === "button") {
+          p("Button " + v + "(" + w.x + ", " + w.y + ", " + w.w + ", " + w.h + ", " + cstr(w.label || "Button") + ");");
+        } else if (w.type === "switch") {
+          p("Switch " + v + "(" + w.x + ", " + w.y + ", " + w.w + ", " + w.h + ", " + cstr(w.label || "") + ", " + cstr(w.key || "") + ");");
+        } else if (w.type === "slider") {
+          p(
+            "Slider " +
+              v +
+              "(" +
+              w.x +
+              ", " +
+              w.y +
+              ", " +
+              w.w +
+              ", " +
+              w.h +
+              ", " +
+              cstr(w.key || "") +
+              ", " +
+              floatLit(w.min || 0) +
+              ", " +
+              floatLit(w.max === undefined ? 100 : w.max) +
+              ");"
+          );
+        } else if (w.type === "chart") {
+          p("Chart " + v + "(" + w.x + ", " + w.y + ", " + w.w + ", " + w.h + ");");
+        } else if (w.type === "gauge") {
+          p(
+            "Gauge " +
+              v +
+              "(" +
+              w.x +
+              ", " +
+              w.y +
+              ", " +
+              w.w +
+              ", " +
+              w.h +
+              ", " +
+              cstr(w.label || "") +
+              ", " +
+              cstr(w.key || "") +
+              ", " +
+              floatLit(w.min || 0) +
+              ", " +
+              floatLit(w.max === undefined ? 100 : w.max) +
+              ");"
+          );
+        } else if (w.type === "list") {
+          p("List " + v + "(" + w.x + ", " + w.y + ", " + w.w + ", " + w.h + ");");
         }
       });
     });
@@ -363,6 +411,7 @@
     p("inline void build(UI &ui) {");
     p("    ui.setTheme(makeTheme());");
     p("    ui.setTransition(" + transEnum(project.transition.default) + ", " + (project.transition.durationMs || 220) + ");");
+    if (hasIcons) p("    lucarne::setIconLookups(projet::iconRowsByRef, projet::iconImageByRef);");
     if (cbIds.length > 0) p("    // Menu callbacks are polled in loop() — see pollMenuAction() below");
     p("");
 
@@ -418,6 +467,29 @@
                   ");"
               );
             }
+          });
+        } else if (w.type === "button") {
+          if (w.icon && w.icon !== "none") p("    " + v + ".setIconRef(" + iconExpr(w.icon) + ");");
+          if (w.fill && w.textColor) p("    " + v + ".setColor(" + col(w.fill) + ", " + col(w.textColor) + ");");
+          else if (w.fill) p("    " + v + ".setColor(" + col(w.fill) + ", " + col(theme.background) + ");");
+          if (w.action === "callback" && w.callbackId) {
+            p("    " + v + ".setCallback(" + (cbMap[ident(w.callbackId)] || 0) + ");");
+          } else if (w.target) {
+            p("    " + v + ".setNavigate(&screen_" + ident(w.target) + ", " + transEnum(w.transition) + ");");
+          }
+        } else if (w.type === "slider") {
+          if (w.color) p("    " + v + ".setColor(" + col(w.color) + ");");
+        } else if (w.type === "chart") {
+          (w.keys || []).forEach((key, idx) => {
+            if (key) p("    " + v + ".setKey(" + idx + ", " + cstr(key) + ");");
+          });
+          p("    " + v + ".setRange(" + floatLit(w.min || 0) + ", " + floatLit(w.max === undefined ? 100 : w.max) + ");");
+          if (w.color) p("    " + v + ".setColor(" + col(w.color) + ");");
+        } else if (w.type === "gauge") {
+          if (w.accent) p("    " + v + ".setAccent(" + col(w.accent) + ");");
+        } else if (w.type === "list") {
+          (w.items || []).forEach((it) => {
+            p("    " + v + ".addItem(" + cstr(typeof it === "string" ? it : it.label || "") + ");");
           });
         }
       });

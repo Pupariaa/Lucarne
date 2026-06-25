@@ -172,7 +172,7 @@
       return (
         "static const lucarne::ImageAsset " +
         name +
-        " = { nullptr, " +
+        " = { nullptr, nullptr, " +
         w +
         ", " +
         h +
@@ -194,12 +194,27 @@
     }
     if (px.length % 12 !== 0) s += "\n";
     s += "};\n\n";
+    let alphaField = "nullptr";
+    if (entry.alpha) {
+      s += "static const uint8_t " + name + "_alpha[] PROGMEM = {\n";
+      for (let i = 0; i < entry.alpha.length; i++) {
+        if (i % 16 === 0) s += "    ";
+        s += entry.alpha[i];
+        s += i < entry.alpha.length - 1 ? ", " : "";
+        if (i % 16 === 15) s += "\n";
+      }
+      if (entry.alpha.length % 16 !== 0) s += "\n";
+      s += "};\n\n";
+      alphaField = name + "_alpha";
+    }
     s +=
       "static const lucarne::ImageAsset " +
       name +
       " = { " +
       name +
       "_data, " +
+      alphaField +
+      ", " +
       w +
       ", " +
       h +
@@ -217,6 +232,7 @@
         w: entry.w,
         h: entry.h,
         pixels: entry.pixels,
+        alpha: entry.alpha,
         storage: "flash",
         source: "",
       });

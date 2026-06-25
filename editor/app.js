@@ -546,6 +546,7 @@
             if (w.type === "menu") (w.items || []).forEach((it) => {
               if (it.target === s.id) it.target = "";
             });
+            if (w.type === "button" && w.target === s.id) w.target = "";
           })
         );
         if (LE.project.startScreen === s.id) LE.project.startScreen = LE.project.screens[0].id;
@@ -898,6 +899,88 @@
       menuRightScale.min = "1";
       menuRightScale.max = "4";
       buildMenuItems(host, s, w);
+    } else if (w.type === "button") {
+      fieldRow(sec, "Label", "text", w.label || "Button", (v) => ((w.label = v), markDirty()));
+      iconPickerRow(sec, "Icon", w.icon || "none", (v) => {
+        w.icon = v;
+        ensureIconRefLoaded(v)
+          .then(() => markDirty())
+          .catch(() => toast("Icon load failed"));
+      });
+      colorRow(sec, "Fill", w.fill, true, (v) => ((w.fill = v), markDirty()));
+      colorRow(sec, "Text", w.textColor, true, (v) => ((w.textColor = v), markDirty()));
+      if (!w.action) w.action = w.callbackId ? "callback" : "navigate";
+      selectRow(
+        sec,
+        "Action",
+        [
+          { value: "navigate", label: "Navigate" },
+          { value: "callback", label: "Callback" },
+        ],
+        w.action,
+        (v) => {
+          w.action = v;
+          if (v === "callback") w.target = "";
+          else w.callbackId = "";
+          markDirty();
+          refreshDock();
+        }
+      );
+      if (w.action === "navigate") {
+        selectRow(
+          sec,
+          "Target",
+          [{ value: "", label: "(none)" }].concat(
+            LE.project.screens.filter((x) => x.id !== s.id).map((x) => ({ value: x.id, label: x.name || x.id }))
+          ),
+          w.target || "",
+          (v) => ((w.target = v), markDirty())
+        );
+        selectRow(
+          sec,
+          "Transition",
+          [{ value: "Inherit", label: "Inherit (" + LE.project.transition.default + ")" }].concat(
+            S.TRANSITIONS.map((t) => ({ value: t, label: t }))
+          ),
+          w.transition || "Inherit",
+          (v) => ((w.transition = v), markDirty())
+        );
+      } else {
+        fieldRow(sec, "Callback ID", "text", w.callbackId || "", (v) => {
+          w.callbackId = v.replace(/[^a-zA-Z0-9_]/g, "_");
+          markDirty();
+        });
+        const hint = document.createElement("div");
+        hint.className = "hint";
+        hint.textContent = "loop(): case projet::ACTION_" + (w.callbackId || "id").replace(/[^a-zA-Z0-9_]/g, "_").toUpperCase() + ":";
+        sec.appendChild(hint);
+      }
+    } else if (w.type === "switch") {
+      fieldRow(sec, "Label", "text", w.label || "", (v) => ((w.label = v), markDirty()));
+      keyRow(sec, "Key", w.key, (v) => ((w.key = v), markDirty()));
+      const hint = document.createElement("div");
+      hint.className = "hint";
+      hint.textContent = "Bind a bool key. Toggled on touch in firmware.";
+      sec.appendChild(hint);
+    } else if (w.type === "slider") {
+      keyRow(sec, "Key", w.key, (v) => ((w.key = v), markDirty()));
+      fieldRow(sec, "Min", "number", w.min === undefined ? 0 : w.min, (v) => ((w.min = parseFloat(v) || 0), markDirty()));
+      fieldRow(sec, "Max", "number", w.max === undefined ? 100 : w.max, (v) => ((w.max = parseFloat(v) || 0), markDirty()));
+      colorRow(sec, "Color", w.color, true, (v) => ((w.color = v), markDirty()));
+    } else if (w.type === "chart") {
+      buildChartKeys(host, w);
+      fieldRow(sec, "Min", "number", w.min === undefined ? 0 : w.min, (v) => ((w.min = parseFloat(v) || 0), markDirty()));
+      fieldRow(sec, "Max", "number", w.max === undefined ? 100 : w.max, (v) => ((w.max = parseFloat(v) || 0), markDirty()));
+      colorRow(sec, "Color", w.color, true, (v) => ((w.color = v), markDirty()));
+    } else if (w.type === "gauge") {
+      fieldRow(sec, "Label", "text", w.label || "", (v) => ((w.label = v), markDirty()));
+      keyRow(sec, "Key", w.key, (v) => ((w.key = v), markDirty()));
+      fieldRow(sec, "Min", "number", w.min === undefined ? 0 : w.min, (v) => ((w.min = parseFloat(v) || 0), markDirty()));
+      fieldRow(sec, "Max", "number", w.max === undefined ? 100 : w.max, (v) => ((w.max = parseFloat(v) || 0), markDirty()));
+      fieldRow(sec, "Decimals", "number", w.decimals === undefined ? 1 : w.decimals, (v) => ((w.decimals = parseInt(v, 10) || 0), markDirty()));
+      colorRow(sec, "Accent", w.accent, true, (v) => ((w.accent = v), markDirty()));
+    } else if (w.type === "list") {
+      buildListItems(host, w);
     }
 
     const del = row(sec, "");
@@ -909,6 +992,83 @@
         refreshDock();
       })
     );
+  }
+
+  function buildChartKeys(host, chart) {
+    if (!chart.keys) chart.keys = ["", ""];
+    const sec = section(
+      host,
+      "Series keys",
+      btn("+ Key", "tiny primary", () => {
+        if (chart.keys.length >= 8) return toast("Max 8 series");
+        chart.keys.push("");
+        markDirty();
+        refreshDock();
+      })
+    );
+    chart.keys.forEach((key, idx) => {
+      const card = document.createElement("div");
+      card.className = "section";
+      card.style.background = "var(--panel)";
+      card.style.border = "1px solid var(--edge)";
+      card.style.borderRadius = "9px";
+      card.style.padding = "8px";
+      card.style.marginBottom = "6px";
+      const title = document.createElement("div");
+      title.className = "muted";
+      title.textContent = "Series " + (idx + 1);
+      card.appendChild(title);
+      keyRow(card, "Key", key, (v) => {
+        chart.keys[idx] = v;
+        markDirty();
+      });
+      const r = row(card, "");
+      r.appendChild(
+        btn("Remove", "danger tiny", () => {
+          chart.keys.splice(idx, 1);
+          if (chart.keys.length < 2) chart.keys.push("");
+          markDirty();
+          refreshDock();
+        })
+      );
+      sec.appendChild(card);
+    });
+  }
+
+  function buildListItems(host, list) {
+    const sec = section(
+      host,
+      "List items",
+      btn("+ Item", "tiny primary", () => {
+        list.items = list.items || [];
+        if (list.items.length >= 12) return toast("Max 12 items");
+        list.items.push({ id: S.genId("it"), label: "Item" });
+        markDirty();
+        refreshDock();
+      })
+    );
+    (list.items || []).forEach((it, idx) => {
+      const card = document.createElement("div");
+      card.className = "section";
+      card.style.background = "var(--panel)";
+      card.style.border = "1px solid var(--edge)";
+      card.style.borderRadius = "9px";
+      card.style.padding = "8px";
+      card.style.marginBottom = "6px";
+      fieldRow(card, "Label", "text", it.label || "", (v) => {
+        it.label = v;
+        markDirty();
+      });
+      const r = row(card, "");
+      r.appendChild(
+        btn("Remove", "danger tiny", () => {
+          list.items.splice(idx, 1);
+          markDirty();
+          refreshDock();
+        })
+      );
+      sec.appendChild(card);
+    });
   }
 
   function buildMenuItems(host, screen, menu) {
@@ -1302,6 +1462,7 @@
           LE.project.screens.forEach((sc) => {
             sc.widgets.forEach((w) => {
               if (w.type === "icon" && w.icon === prefix) w.icon = "none";
+              if (w.type === "button" && w.icon === prefix) w.icon = "none";
               if (w.type === "menu") {
                 (w.items || []).forEach((it) => {
                   if (it.icon === prefix) it.icon = "none";

@@ -43,6 +43,60 @@
       return s;
     }
 
+    function hitWidget(screen, x, y) {
+      if (!screen || !screen.widgets) return null;
+      for (let i = screen.widgets.length - 1; i >= 0; i--) {
+        const w = screen.widgets[i];
+        if (w.visible === false) continue;
+        const bw = w.w > 0 ? w.w : 40;
+        const bh = w.h > 0 ? w.h : 16;
+        if (x >= w.x && y >= w.y && x < w.x + bw && y < w.y + bh) return w;
+      }
+      return null;
+    }
+
+    function toggleKey(name) {
+      const k = LE.project.keys.find((x) => x.name === name);
+      if (!k || k.type !== "bool") return;
+      k.value = !k.value;
+      markDirtyKeys();
+    }
+
+    function markDirtyKeys() {
+      LE.autosave();
+      paint();
+    }
+
+    function activateAt(x, y) {
+      if (state.animating) return;
+      const s = LE.getScreen(state.current);
+      if (!s) return;
+      const w = hitWidget(s, x, y);
+      if (!w) return;
+      if (w.type === "button") {
+        if (w.action === "callback") {
+          const id = (w.callbackId || w.label || "callback").replace(/[^a-zA-Z0-9_]/g, "_").toUpperCase();
+          LE.toast("Callback ACTION_" + id + " — handle in loop() with ui.pollMenuAction()");
+          return;
+        }
+        if (w.target) {
+          const t = resolveTrans(w.transition);
+          state.stack.push({ id: state.current, trans: t });
+          animate(w.target, t);
+        }
+      } else if (w.type === "switch") {
+        toggleKey(w.key);
+      }
+    }
+
+    canvas.addEventListener("pointerdown", (ev) => {
+      const rect = canvas.getBoundingClientRect();
+      const scale = canvas.width / rect.width;
+      const x = Math.floor((ev.clientX - rect.left) * scale);
+      const y = Math.floor((ev.clientY - rect.top) * scale);
+      activateAt(x, y);
+    });
+
     function activeMenu(screen) {
       if (!screen) return null;
       return screen.widgets.find((w) => w.type === "menu") || null;

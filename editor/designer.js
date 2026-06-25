@@ -17,6 +17,12 @@
     { type: "icon", label: "Icon" },
     { type: "image", label: "Image" },
     { type: "menu", label: "Menu" },
+    { type: "button", label: "Button" },
+    { type: "switch", label: "Switch" },
+    { type: "slider", label: "Slider" },
+    { type: "chart", label: "Chart" },
+    { type: "gauge", label: "Gauge" },
+    { type: "list", label: "List" },
   ];
 
   function init(host, LE) {
@@ -41,6 +47,35 @@
       const item = el("div", "palette-item", palette);
       item.textContent = p.label;
       item.addEventListener("click", () => addWidget(p.type));
+    });
+
+    const tplTitle = el("div", "layers-title", palette);
+    tplTitle.style.marginTop = "12px";
+    tplTitle.textContent = "Template";
+    const tplSel = document.createElement("select");
+    tplSel.className = "select";
+    tplSel.style.width = "100%";
+    tplSel.style.marginBottom = "6px";
+    if (window.LucarneTemplates) {
+      window.LucarneTemplates.list().forEach((p) => {
+        const o = document.createElement("option");
+        o.value = p.id;
+        o.textContent = p.label;
+        tplSel.appendChild(o);
+      });
+    }
+    palette.appendChild(tplSel);
+    const tplBtn = el("button", "btn", palette);
+    tplBtn.textContent = "Insert template";
+    tplBtn.style.width = "100%";
+    tplBtn.addEventListener("click", () => {
+      if (!window.LucarneTemplates) return;
+      const s = currentScreen();
+      if (!s) return;
+      window.LucarneTemplates.apply(tplSel.value, s, LE.dims(), LE.genId);
+      LE.markDirty();
+      LE.refreshDock();
+      render();
     });
 
     const wrap = el("div", "canvas-wrap", body);
@@ -114,6 +149,18 @@
         w = { id, type, x: 0, y: 0, w: d.w, h: d.h, imageId: "" };
       else if (type === "menu")
         w = { id, type, x: 12, y: 24, w: d.w - 24, h: d.h - 48, iconScale: 1, badgeScale: 1, items: [] };
+      else if (type === "button")
+        w = { id, type, x: 14, y: d.h - 44, w: d.w - 28, h: 32, label: "Button", icon: "none", action: "navigate", target: "", transition: "Inherit", callbackId: "" };
+      else if (type === "switch")
+        w = { id, type, x: 14, y: 40, w: d.w - 28, h: 28, label: "Switch", key: "" };
+      else if (type === "slider")
+        w = { id, type, x: 14, y: 80, w: d.w - 28, h: 32, key: "", min: 0, max: 100 };
+      else if (type === "chart")
+        w = { id, type, x: 14, y: 72, w: d.w - 28, h: 56, keys: ["", ""], min: 0, max: 100 };
+      else if (type === "gauge")
+        w = { id, type, x: 14, y: 12, w: Math.min(80, d.w - 28), h: 72, label: "Gauge", key: "", min: 0, max: 100, decimals: 1 };
+      else if (type === "list")
+        w = { id, type, x: 14, y: 120, w: d.w - 28, h: Math.min(100, d.h - 128), items: [] };
       s.widgets.push(w);
       LE.selection = { widgetId: id };
       LE.markDirty();
