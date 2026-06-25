@@ -67,7 +67,173 @@
     return h;
   }
 
-  function buildHeader(LE, hasFonts) {
+  function buildImagesHeader(LE) {
+    const project = LE.project;
+    if (!project.images) return null;
+    let body = "";
+    let count = 0;
+    Object.keys(project.images).forEach((id) => {
+      const img = project.images[id];
+      if (!img) return;
+      const st = img.storage || "flash";
+      if (!img.pixels && st !== "sd" && st !== "web") return;
+      body += "// Image: " + (img.label || id) + " (" + img.w + "x" + img.h + ", " + st + ")\n";
+      body += window.LucarneAssets.toC("Img_" + ident(id), img);
+      count++;
+    });
+    if (!count) return null;
+    let h = "#ifndef PROJET_IMAGES_H\n#define PROJET_IMAGES_H\n\n";
+    h += "#include <Lucarne.h>\n\n";
+    h += "namespace lucarne {\n\n";
+    h += body;
+    h += "}\n\n#endif\n";
+    return h;
+  }
+
+  function buildIconsHeader(LE) {
+    const project = LE.project;
+    let body = "";
+    let count = 0;
+    const rowDispatch = [];
+    const imgDispatch = [];
+
+    function addIcon(ref, icon) {
+      if (!icon) return;
+      const safe = ident(ref.replace(/:/g, "_"));
+      body += "// " + ref + "\n";
+      if (icon.pixels) {
+        const cname = "Ico_" + safe + "_img";
+        body += window.LucarneAssets.toC(cname, {
+          w: icon.w,
+          h: icon.h,
+          pixels: icon.pixels,
+          storage: "flash",
+          source: "",
+        });
+        imgDispatch.push({ key: ref, fn: cname });
+      } else if (icon.rows) {
+        const cname = "Ico_" + safe;
+        body += window.LucarneAssets.toIconC(cname, icon);
+        rowDispatch.push({ key: ref, fn: cname });
+      } else return;
+      count++;
+    }
+
+    function collectRefs() {
+      const set = new Set();
+      function use(ref) {
+        if (ref && ref !== "none") set.add(ref);
+      }
+      (project.screens || []).forEach((s) => {
+        (s.widgets || []).forEach((w) => {
+          if (w.type === "icon") use(w.icon);
+          if (w.type === "menu")
+            (w.items || []).forEach((it) => {
+              use(it.icon);
+              const ri = it.rightIcon;
+              if (ri && ri !== "none" && ri !== "auto") use(ri);
+            });
+        });
+      });
+      return Array.from(set);
+    }
+
+    collectRefs().forEach((ref) => {
+      if (ref.indexOf("c:") === 0) {
+        const id = ref.slice(2);
+        const ic = project.icons && project.icons[id];
+        if (ic) addIcon(ref, window.LucarneAssets.iconAtlas(ic) || ic);
+        return;
+      }
+      if (window.LucarneIconPacks) {
+        const ic = window.LucarneIconPacks.getIcon(ref);
+        if (ic) {
+          addIcon(ref, ic);
+          return;
+        }
+      }
+      if (ref.indexOf("tabler:") === 0 && window.LucarneTabler) {
+        const ic = window.LucarneTabler.getIcon(ref.slice(7));
+        if (ic) addIcon(ref, ic);
+      }
+    });
+
+    if (!count) return null;
+    let h = "#ifndef PROJET_ICONS_H\n#define PROJET_ICONS_H\n\n";
+    h += "#include <stdint.h>\n";
+    h += "#include <Lucarne.h>\n";
+    h += "#include <string.h>\n\n";
+    h += "namespace projet {\n\n";
+    h += body;
+    if (rowDispatch.length) {
+      h += "inline const uint16_t *iconRowsByRef(const char *name) {\n";
+      h += "    if (!name) return nullptr;\n";
+      rowDispatch.forEach((d) => {
+        h += '    if (strcmp(name, "' + d.key + '") == 0) return ' + d.fn + "();\n";
+      });
+      h += "    return nullptr;\n";
+      h += "}\n\n";
+    }
+    if (imgDispatch.length) {
+      h += "inline const lucarne::ImageAsset *iconImageByRef(const char *name) {\n";
+      h += "    if (!name) return nullptr;\n";
+      imgDispatch.forEach((d) => {
+        h += '    if (strcmp(name, "' + d.key + '") == 0) return &' + d.fn + ";\n";
+      });
+      h += "    return nullptr;\n";
+      h += "}\n\n";
+    }
+    h += "}  // namespace projet\n\n#endif\n";
+    return h;
+  }
+
+  function iconExpr(name) {
+    if (!name || name === "none") return "IconId::None";
+    if (
+      name.indexOf("c:") === 0 ||
+      name.indexOf("tabler:") === 0 ||
+      name.indexOf("streamline:") === 0 ||
+      name.indexOf("glyphs:") === 0
+    )
+      return "IconId::Chart";
+    return "iconFromName(" + cstr(name) + ")";
+  }
+
+  function menuItemOptsExpr(it) {
+    const ri = it.rightIcon || "auto";
+    const is = it.iconScale | 0;
+    const bs = it.rightIconScale | 0;
+    const autoRi = ri === "auto" || ri === "";
+    const noRi = ri === "none";
+    if (autoRi && !is && !bs) return "";
+    let badge = "IconId::None";
+    let hidden = "false";
+    if (noRi) hidden = "true";
+    else if (!autoRi) badge = iconExpr(ri);
+    return ", MenuItemOpts{" + badge + ", " + hidden + ", " + is + ", " + bs + "}";
+  }
+
+  function actionConst(id) {
+    return "ACTION_" + ident(id).toUpperCase();
+  }
+
+  function collectCallbacks(project) {
+    const map = new Map();
+    project.screens.forEach((s) => {
+      s.widgets.forEach((w) => {
+        if (w.type !== "menu") return;
+        (w.items || []).forEach((it) => {
+          if (it.action === "callback" && it.callbackId) {
+            const id = ident(it.callbackId);
+            if (!map.has(id)) map.set(id, id);
+          }
+        });
+      });
+    });
+    return map;
+  }
+
+  function buildHeader(LE, hasFonts, hasImages, hasIcons) {
     const project = LE.project;
     const theme = project.theme;
     const lines = [];
@@ -78,9 +244,28 @@
     p("");
     p("#include <Lucarne.h>");
     if (hasFonts) p('#include "Projet_fonts.h"');
+    if (hasImages) p('#include "Projet_images.h"');
+    if (hasIcons) p('#include "Projet_icons.h"');
     p("");
     p("using namespace lucarne;");
     p("");
+
+    const callbacks = collectCallbacks(project);
+    const cbIds = Array.from(callbacks.keys());
+    const cbMap = {};
+    cbIds.forEach((id, i) => {
+      cbMap[id] = i + 1;
+    });
+    if (cbIds.length > 0) {
+      p("// Menu actions — read in loop() with ui.pollMenuAction() (constants below)");
+      cbIds.forEach((id) => {
+        p("static const uint8_t " + actionConst(id) + " = " + cbMap[id] + ";");
+      });
+      p("");
+      p("inline uint8_t pollMenuAction(UI &ui) { return ui.pollMenuAction(); }");
+      p("");
+    }
+
     p("namespace projet {");
     p("");
 
@@ -110,7 +295,10 @@
             "Bar " + v + "(" + w.x + ", " + w.y + ", " + w.w + ", " + w.h + ", " + cstr(w.key) + ", " + floatLit(w.min || 0) + ", " + floatLit(w.max === undefined ? 1 : w.max) + ");"
           );
         } else if (w.type === "icon") {
-          p("Icon " + v + "(" + w.x + ", " + w.y + ", iconFromName(" + cstr(w.icon) + "), " + (w.scale || 1) + ");");
+          p("Icon " + v + "(" + w.x + ", " + w.y + ", " + iconExpr(w.icon) + ", " + (w.scale || 1) + ");");
+        } else if (w.type === "image") {
+          const asset = w.imageId ? "&Img_" + ident(w.imageId) : "nullptr";
+          p("Image " + v + "(" + w.x + ", " + w.y + ", " + w.w + ", " + w.h + ", " + asset + ");");
         } else if (w.type === "menu") {
           p("Menu " + v + "(" + w.x + ", " + w.y + ", " + w.w + ", " + w.h + ");");
         }
@@ -123,6 +311,15 @@
       p("Screen screen_" + ident(s.id) + "(" + cstr(s.name || s.id) + ");");
     });
     p("");
+
+    project.screens.forEach((s) => {
+      if (s.cornerRadius) {
+        p("inline void setupScreen_" + ident(s.id) + "() {");
+        p("    screen_" + ident(s.id) + ".setCornerRadius(" + s.cornerRadius + ");");
+        p("}");
+        p("");
+      }
+    });
 
     p("inline Theme makeTheme() {");
     p("    Theme t;");
@@ -155,9 +352,18 @@
     }
     p("");
 
+    const uiSrc = project.uiSource;
+    if (uiSrc && uiSrc.mode === "url" && uiSrc.url) {
+      p("// UI source: web — " + uiSrc.url);
+    } else if (uiSrc && uiSrc.mode === "sd" && uiSrc.sdPath) {
+      p("// UI source: SD — " + uiSrc.sdPath);
+    }
+    p("");
+
     p("inline void build(UI &ui) {");
     p("    ui.setTheme(makeTheme());");
     p("    ui.setTransition(" + transEnum(project.transition.default) + ", " + (project.transition.durationMs || 220) + ");");
+    if (cbIds.length > 0) p("    // Menu callbacks are polled in loop() — see pollMenuAction() below");
     p("");
 
     project.screens.forEach((s) => {
@@ -177,11 +383,41 @@
         } else if (w.type === "icon") {
           if (w.color) p("    " + v + ".setColor(" + col(w.color) + ");");
         } else if (w.type === "menu") {
+          if (w.iconScale && w.iconScale !== 1) p("    " + v + ".setIconScale(" + w.iconScale + ");");
+          if (w.badgeScale && w.badgeScale !== 1) p("    " + v + ".setBadgeScale(" + w.badgeScale + ");");
           (w.items || []).forEach((it) => {
-            const target = it.target ? "&screen_" + ident(it.target) : "nullptr";
-            p(
-              "    " + v + ".addItem(" + cstr(it.label) + ", iconFromName(" + cstr(it.icon || "none") + "), " + target + ", " + transEnum(it.transition) + ");"
-            );
+            const opts = menuItemOptsExpr(it);
+            if (it.action === "callback" && it.callbackId) {
+              const cid = ident(it.callbackId);
+              p(
+                "    " +
+                  v +
+                  ".addCallbackItem(" +
+                  cstr(it.label) +
+                  ", " +
+                  iconExpr(it.icon || "none") +
+                  ", " +
+                  (cbMap[cid] || 0) +
+                  opts +
+                  ");"
+              );
+            } else {
+              const target = it.target ? "&screen_" + ident(it.target) : "nullptr";
+              p(
+                "    " +
+                  v +
+                  ".addItem(" +
+                  cstr(it.label) +
+                  ", " +
+                  iconExpr(it.icon || "none") +
+                  ", " +
+                  target +
+                  ", " +
+                  transEnum(it.transition) +
+                  opts +
+                  ");"
+              );
+            }
           });
         }
       });
@@ -193,6 +429,7 @@
       s.widgets.forEach((w) => {
         p("    " + sv + ".add(&" + varOf[w.id] + ");");
       });
+      if (s.cornerRadius) p("    setupScreen_" + ident(s.id) + "();");
     });
     p("");
 
@@ -205,7 +442,19 @@
     p("");
 
     const start = project.startScreen || (project.screens[0] && project.screens[0].id);
+    const startScreen = project.screens.find((s) => s.id === start);
     p("    ui.show(&screen_" + ident(start) + ");");
+    if (startScreen && startScreen.splash && startScreen.splash.enabled && startScreen.splash.nextScreen) {
+      p(
+        "    ui.setSplash(&screen_" +
+          ident(startScreen.splash.nextScreen) +
+          ", " +
+          (startScreen.splash.durationMs || 2000) +
+          ", " +
+          (startScreen.splash.showProgress !== false ? "true" : "false") +
+          ");"
+      );
+    }
     p("}");
     p("");
 
@@ -239,6 +488,15 @@
     }
     p("}");
     p("");
+    if (cbIds.length > 0) {
+      p("// In loop(), after projet::update() and ui.update():");
+      p("//   switch (ui.pollMenuAction()) {");
+      cbIds.forEach((id) => {
+        p("//     case " + actionConst(id) + ": /* your code */ break;");
+      });
+      p("//   }");
+      p("");
+    }
 
     p("}  // namespace projet");
     p("");
@@ -257,9 +515,25 @@
 
   function buildAll(LE) {
     const fonts = buildFontsHeader(LE);
-    const main = buildHeader(LE, !!fonts);
+    const images = buildImagesHeader(LE);
+    const icons = buildIconsHeader(LE);
+    const main = buildHeader(LE, !!fonts, !!images, !!icons);
     const files = [{ name: "Projet.h", content: main }];
     if (fonts) files.push({ name: "Projet_fonts.h", content: fonts });
+    if (images) files.push({ name: "Projet_images.h", content: images });
+    if (icons) files.push({ name: "Projet_icons.h", content: icons });
+    if (LE.project.images) {
+      Object.keys(LE.project.images).forEach((id) => {
+        const img = LE.project.images[id];
+        if (img && img.storage === "sd" && img.pixels) {
+          const bin = window.LucarneAssets.exportRgb565Bin(img);
+          if (bin) {
+            files.push({ name: "assets/" + ident(id) + ".rgb565", content: bin, binary: true });
+          }
+        }
+      });
+    }
+
     return files;
   }
 

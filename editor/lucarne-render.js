@@ -227,16 +227,59 @@
       }
     }
 
-    drawIconRows(rows, x, y, scale, color) {
+    drawIcon(icon, x, y, scale, tint) {
+      if (!icon) return;
+      const sc = normalizeIconScale(scale);
+      const F = window.LucarneIconFmt;
+      const iw = icon.w || 16;
+      const ih = icon.h || iw;
+      if (icon.mono && icon.rows) {
+        this.drawIconRows(icon.rows, x, y, sc, tint, iw, ih);
+        return;
+      }
+      if (icon.pixels && F) {
+        const dw = iw * sc;
+        const dh = ih * sc;
+        F.blit565(this, x, y, icon, dw, dh, blend565);
+      }
+    }
+
+    drawIconRows(rows, x, y, scale, color, iw, ih) {
       if (!rows) return;
+      iw = iw || 16;
+      ih = ih || iw;
       if (scale < 1) scale = 1;
-      for (let ry = 0; ry < 16; ry++) {
+      for (let ry = 0; ry < ih; ry++) {
         const bits = rows[ry];
         if (!bits) continue;
-        for (let rx = 0; rx < 16; rx++) {
+        for (let rx = 0; rx < iw; rx++) {
           if (bits & (0x8000 >> rx)) {
             if (scale === 1) this.writePixel(x + rx, y + ry, color);
             else this.fillRect(x + rx * scale, y + ry * scale, scale, scale, color);
+          }
+        }
+      }
+    }
+
+    drawIconSized(icon, x, y, dw, dh, tint) {
+      if (!icon) return;
+      dw = Math.max(1, Math.round(dw));
+      dh = Math.max(1, Math.round(dh));
+      const F = window.LucarneIconFmt;
+      if (icon.pixels && F) {
+        F.blit565(this, x, y, icon, dw, dh, blend565);
+        return;
+      }
+      if (icon.mono && icon.rows) {
+        const sw = icon.w || 16;
+        const sh = icon.h || 16;
+        for (let py = 0; py < dh; py++) {
+          const sy = Math.floor((py * sh) / dh);
+          const bits = icon.rows[sy];
+          if (!bits) continue;
+          for (let px = 0; px < dw; px++) {
+            const sx = Math.floor((px * sw) / dw);
+            if (bits & (0x8000 >> sx)) this.writePixel(x + px, y + py, tint);
           }
         }
       }
@@ -304,10 +347,92 @@
     disp.printClassic(cx, cy, text, color, size);
   }
 
+  function iconScaleValue(itemScale, menuScale) {
+    const item = parseInt(itemScale, 10);
+    if (item > 0) return Math.min(4, item);
+    const menu = parseInt(menuScale, 10);
+    if (menu > 0) return Math.min(4, menu);
+    return 1;
+  }
+
+  function menuIconTargetPx(rh, itemScale, menuScale) {
+    const mul = iconScaleValue(itemScale, menuScale);
+    const maxFit = Math.max(8, rh - 4);
+    const baseAt1 = Math.min(16, Math.floor(maxFit * 0.55));
+    return Math.min(maxFit, Math.round(baseAt1 * mul));
+  }
+
+  function normalizeIconScale(scale) {
+    const n = parseInt(scale, 10);
+    if (!(n > 0)) return 1;
+    return Math.min(4, n);
+  }
+
   function iconRows(name) {
     if (!name || name === "none") return null;
     const tbl = window.LUCARNE_ICONS || {};
     return tbl[name] || null;
+  }
+
+  function resolveIcon(name, env) {
+    if (!name || name === "none") return null;
+    const F = window.LucarneIconFmt;
+    if (name.indexOf("tabler:") === 0) {
+      const n = name.slice(7);
+      if (window.LucarneIconPacks) {
+        const emb = window.LucarneIconPacks.getIcon(name);
+        if (emb) return emb;
+      }
+      if (window.LucarneTabler) {
+        const ic = window.LucarneTabler.getIcon(n);
+        if (ic) return ic;
+      }
+      return null;
+    }
+    if (name.indexOf("streamline:") === 0 || name.indexOf("glyphs:") === 0) {
+      if (window.LucarneIconPacks) return window.LucarneIconPacks.getIcon(name);
+      return null;
+    }
+    if (name.indexOf("c:") === 0 && env && env.customIconAtlas) {
+      const raw = env.customIconAtlas(name.slice(2));
+      if (!raw) return null;
+      if (F && F.isMonoRows(raw)) return F.monoFromRows(raw);
+      if (raw.pixels) return raw;
+      if (raw.rows) return F ? F.monoFromRows(raw.rows) : { mono: true, w: 16, h: 16, rows: raw.rows };
+      return null;
+    }
+    const rows = iconRows(name);
+    if (rows && F) return F.monoFromRows(rows);
+    return null;
+  }
+
+  function resolveIconRows(name, env) {
+    const ic = resolveIcon(name, env);
+    if (!ic) return null;
+    if (ic.mono) return ic.rows;
+    return ic;
+  }
+
+  function insideRoundRect(x, y, w, h, r) {
+    if (r <= 0) return true;
+    if (x >= r && x < w - r) return true;
+    if (y >= r && y < h - r) return true;
+    const cx = x < r ? r : w - r - 1;
+    const cy = y < r ? r : h - r - 1;
+    const dx = x - cx;
+    const dy = y - cy;
+    return dx * dx + dy * dy <= r * r;
+  }
+
+  function maskScreenCorners(disp, bezel, r) {
+    if (r <= 0) return;
+    const w = disp.width;
+    const h = disp.height;
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        if (!insideRoundRect(x, y, w, h, r)) disp.writePixel(x, y, bezel);
+      }
+    }
   }
 
   function formatMetric(rec, unit, decimals) {
@@ -390,8 +515,15 @@
       }
     } else if (w.type === "icon") {
       const color = w.color ? hexTo565(w.color) : t.text;
-      const scale = w.scale || 1;
-      disp.drawIconRows(iconRows(w.icon), w.x, w.y, scale, color);
+      const scale = normalizeIconScale(w.scale);
+      disp.drawIcon(resolveIcon(w.icon, env), w.x, w.y, scale, color);
+    } else if (w.type === "image") {
+      const asset = env.imageAtlas ? env.imageAtlas(w.imageId) : null;
+      if (asset && asset.pixels) {
+        const bw = w.w > 0 ? w.w : asset.w;
+        const bh = w.h > 0 ? w.h : asset.h;
+        blitRGB565(disp, w.x, w.y, asset.pixels, asset.w, asset.h, bw, bh);
+      }
     } else if (w.type === "menu") {
       let rowH = t.rowHeight;
       if (rowH < 16) rowH = 16;
@@ -399,6 +531,8 @@
       if (visible < 1) visible = 1;
       const items = w.items || [];
       const selected = env.menuSelection(w.id, items.length);
+      const menuIconScale = w.iconScale;
+      const menuBadgeScale = w.badgeScale;
       let scroll = 0;
       if (selected < scroll) scroll = selected;
       if (selected >= scroll + visible) scroll = selected - visible + 1;
@@ -417,31 +551,89 @@
         if (!sel) disp.drawRoundRect(w.x, ry, w.w, rh, t.radius, t.surfaceEdge);
         const pad = t.padding;
         let contentX = w.x + pad;
-        const ic = iconRows(it.icon);
+        const ic = resolveIcon(it.icon, env);
         if (ic) {
-          const iconY = ry + idiv(rh - 16, 2);
-          disp.drawIconRows(ic, contentX, iconY, 1, txt);
-          contentX += 16 + pad;
+          const side = menuIconTargetPx(rh, it.iconScale, menuIconScale);
+          const iconY = ry + idiv(rh - side, 2);
+          disp.drawIconSized(ic, contentX, iconY, side, side, txt);
+          contentX += side + pad;
         }
         const labelW = w.x + w.w - pad - contentX;
         drawText(disp, it.label || "", contentX, ry, labelW, rh, "left", txt, t.textSize, fill, fontBody);
-        if (it.target) {
-          const arrow = iconRows("arrow_right");
-          const aY = ry + idiv(rh - 16, 2);
-          disp.drawIconRows(arrow, w.x + w.w - pad - 16, aY, 1, txt);
+        const ri = it.rightIcon || "auto";
+        const hideBadge = ri === "none";
+        if (!hideBadge) {
+          let badgeRef = ri;
+          if (badgeRef === "auto" || badgeRef === "") {
+            if (it.target) badgeRef = "arrow_right";
+            else badgeRef = "none";
+          }
+          const badge = badgeRef !== "none" ? resolveIcon(badgeRef, env) : null;
+          if (badge) {
+            const side = menuIconTargetPx(rh, it.rightIconScale, menuBadgeScale);
+            const aY = ry + idiv(rh - side, 2);
+            disp.drawIconSized(badge, w.x + w.w - pad - side, aY, side, side, txt);
+          }
         }
       }
     }
   }
 
+  function blitRGB565(disp, dx, dy, src, sw, sh, dw, dh) {
+    if (dw === sw && dh === sh) {
+      for (let y = 0; y < sh; y++) {
+        for (let x = 0; x < sw; x++) {
+          disp.writePixel(dx + x, dy + y, src[y * sw + x]);
+        }
+      }
+      return;
+    }
+    for (let y = 0; y < dh; y++) {
+      const sy = Math.floor((y * sh) / dh);
+      for (let x = 0; x < dw; x++) {
+        const sx = Math.floor((x * sw) / dw);
+        disp.writePixel(dx + x, dy + y, src[sy * sw + sx]);
+      }
+    }
+  }
+
+  function drawSplashProgress(disp, theme, durationMs, elapsedMs) {
+    if (!durationMs) return;
+    let ratio = elapsedMs / durationMs;
+    if (ratio < 0) ratio = 0;
+    if (ratio > 1) ratio = 1;
+    const sw = disp.width;
+    const sh = disp.height;
+    const barH = 6;
+    const margin = theme.padding;
+    const trackW = sw - margin * 2;
+    const fillW = Math.floor(trackW * ratio);
+    const y = sh - margin - barH;
+    disp.fillRoundRect(margin, y, trackW, barH, 3, theme.surface);
+    if (fillW > 0) disp.fillRoundRect(margin, y, fillW, barH, 3, theme.primary);
+  }
+
   function drawScreen(disp, screen, theme, env) {
-    disp.fillScreen(theme.background);
+    const sw = disp.width;
+    const sh = disp.height;
+    const cr = screen.cornerRadius || 0;
+    const bezel = theme.surfaceEdge;
+    if (cr <= 0) {
+      disp.fillScreen(theme.background);
+    } else {
+      disp.fillScreen(bezel);
+      disp.fillRoundRect(0, 0, sw, sh, cr, theme.background);
+    }
     const widgets = screen.widgets || [];
     for (let i = 0; i < widgets.length; i++) {
       const w = widgets[i];
       if (w.visible === false) continue;
       drawWidget(disp, w, theme, env);
     }
+    if (screen.splash && screen.splash.showProgress && env.splashElapsedMs !== undefined) {
+      drawSplashProgress(disp, theme, screen.splash.durationMs || 2000, env.splashElapsedMs);
+    }
+    if (cr > 0) maskScreenCorners(disp, bezel, cr);
   }
 
   function themeTo565(theme, fontBody, fontTitle) {
@@ -527,6 +719,8 @@
     textWidth: textWidthClassic,
     getAATextBounds,
     iconRows,
+    resolveIcon,
+    resolveIconRows,
     composeFB,
   };
 })();

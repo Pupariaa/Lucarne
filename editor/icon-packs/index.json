@@ -1,0 +1,19 @@
+{
+  "size": 32,
+  "packs": [
+    {
+      "id": "streamline",
+      "label": "Streamline Ultimate Color",
+      "refPrefix": "streamline:",
+      "count": 998,
+      "manifest": "streamline/manifest.json"
+    },
+    {
+      "id": "glyphs",
+      "label": "Glyphs Poly",
+      "refPrefix": "glyphs:",
+      "count": 863,
+      "manifest": "glyphs/manifest.json"
+    }
+  ]
+}

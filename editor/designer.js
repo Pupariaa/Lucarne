@@ -15,6 +15,7 @@
     { type: "metric", label: "Metric" },
     { type: "bar", label: "Bar" },
     { type: "icon", label: "Icon" },
+    { type: "image", label: "Image" },
     { type: "menu", label: "Menu" },
   ];
 
@@ -27,6 +28,9 @@
     back.textContent = "< Blueprint";
     const nameInput = el("input", "field", bar);
     nameInput.style.maxWidth = "180px";
+    const deselectBtn = el("button", "btn", bar);
+    deselectBtn.textContent = "Deselect";
+    deselectBtn.hidden = true;
     const spacer = el("div", "", bar);
     spacer.style.flex = "1";
     const startBtn = el("button", "btn", bar);
@@ -46,7 +50,11 @@
     canvas.id = "designerCanvas";
     const overlay = el("div", "overlay", stack);
 
-    const layers = el("div", "layers", wrap);
+    const layersCol = el("div", "layers-panel", body);
+    const layersTitle = el("div", "layers-title", layersCol);
+    layersTitle.textContent = "Layers";
+    const layers = el("div", "layers-list", layersCol);
+
     const controls = el("div", "preview-controls", wrap);
     const realChk = el("label", "check", controls);
     const realInput = document.createElement("input");
@@ -101,9 +109,11 @@
       else if (type === "bar")
         w = { id, type, x: 14, y: 24, w: Math.min(212, d.w - 16), h: 18, key: "", min: 0, max: 1, showValue: true };
       else if (type === "icon")
-        w = { id, type, x: 20, y: 20, w: 16, h: 16, icon: "chart", scale: 1 };
+        w = { id, type, x: 20, y: 20, w: 32, h: 32, icon: "chart", scale: 1 };
+      else if (type === "image")
+        w = { id, type, x: 0, y: 0, w: d.w, h: d.h, imageId: "" };
       else if (type === "menu")
-        w = { id, type, x: 12, y: 24, w: d.w - 24, h: d.h - 48, items: [] };
+        w = { id, type, x: 12, y: 24, w: d.w - 24, h: d.h - 48, iconScale: 1, badgeScale: 1, items: [] };
       s.widgets.push(w);
       LE.selection = { widgetId: id };
       LE.markDirty();
@@ -119,6 +129,7 @@
       nameInput.value = s.name || "";
       startBtn.textContent = LE.project.startScreen === s.id ? "Start screen" : "Set as start";
       startBtn.classList.toggle("primary", LE.project.startScreen === s.id);
+      deselectBtn.hidden = !(LE.selection && LE.selection.widgetId);
 
       canvas.width = d.w;
       canvas.height = d.h;
@@ -164,12 +175,45 @@
           tag.textContent = w.type;
           const grip = el("div", "grip", h);
           grip.addEventListener("pointerdown", (ev) => startResize(ev, w, scale));
+          const d = LE.dims();
+          if (bw >= d.w - 2 && bh >= d.h - 2) h.classList.add("fullscreen");
         }
         h.addEventListener("pointerdown", (ev) => {
           if (ev.target.classList.contains("grip")) return;
+          ev.stopPropagation();
           startMove(ev, w, scale);
         });
       });
+    }
+
+    function widgetSize(w) {
+      const bw = w.w && w.w > 0 ? w.w : measureW(w);
+      const bh = w.h && w.h > 0 ? w.h : measureH(w);
+      return { bw, bh };
+    }
+
+    function clampPos(w) {
+      const d = LE.dims();
+      const { bw, bh } = widgetSize(w);
+      if (w.x < 0) w.x = 0;
+      if (w.y < 0) w.y = 0;
+      if (w.x + bw > d.w) w.x = d.w - bw;
+      if (w.y + bh > d.h) w.y = d.h - bh;
+    }
+
+    function clampSize(w) {
+      const d = LE.dims();
+      if (w.w < 4) w.w = 4;
+      if (w.h < 4) w.h = 4;
+      if (w.x + w.w > d.w) w.w = d.w - w.x;
+      if (w.y + w.h > d.h) w.h = d.h - w.y;
+    }
+
+    function deselect() {
+      LE.selection = {};
+      deselectBtn.hidden = true;
+      LE.refreshDock();
+      render();
     }
 
     function measureW(w) {
@@ -204,8 +248,7 @@
       function move(e) {
         w.x = Math.round(ox + (e.clientX - sx) / scale);
         w.y = Math.round(oy + (e.clientY - sy) / scale);
-        if (w.x < 0) w.x = 0;
-        if (w.y < 0) w.y = 0;
+        clampPos(w);
         render();
       }
       function up() {
@@ -227,6 +270,7 @@
       function move(e) {
         w.w = Math.max(4, Math.round(ow + (e.clientX - sx) / scale));
         w.h = Math.max(4, Math.round(oh + (e.clientY - sy) / scale));
+        clampSize(w);
         render();
       }
       function up() {
@@ -240,8 +284,6 @@
 
     function buildLayers(s) {
       layers.innerHTML = "";
-      const title = el("div", "section-title", layers);
-      title.textContent = "Layers";
       for (let i = s.widgets.length - 1; i >= 0; i--) {
         const w = s.widgets[i];
         const row = el("div", "layer", layers);
@@ -266,6 +308,7 @@
     }
 
     back.addEventListener("click", () => LE.exitDesigner());
+    deselectBtn.addEventListener("click", deselect);
     nameInput.addEventListener("input", () => {
       const s = currentScreen();
       if (s) {
@@ -292,12 +335,23 @@
     });
     zoomInput.addEventListener("input", render);
 
-    overlay.addEventListener("pointerdown", (ev) => {
-      if (ev.target === overlay) {
-        LE.selection = {};
-        LE.refreshDock();
-        render();
-      }
+    function pointerDeselect(ev) {
+      if (ev.target.closest(".grip")) return;
+      const handle = ev.target.closest(".handle");
+      if (handle && !handle.classList.contains("fullscreen")) return;
+      deselect();
+    }
+
+    wrap.addEventListener("pointerdown", pointerDeselect);
+    layersCol.addEventListener("pointerdown", (ev) => {
+      if (ev.target === layersCol || ev.target === layers || ev.target === layersTitle) deselect();
+    });
+    palette.addEventListener("pointerdown", (ev) => {
+      if (ev.target === palette) deselect();
+    });
+
+    document.addEventListener("keydown", (ev) => {
+      if (ev.key === "Escape" && LE.designerScreen) deselect();
     });
 
     function open(screenId) {

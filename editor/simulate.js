@@ -48,11 +48,11 @@
       return screen.widgets.find((w) => w.type === "menu") || null;
     }
 
-    function renderTo(disp, screen) {
-      R.drawScreen(disp, screen, LE.renderTheme(), LE.env(screen, state.sel));
+    function renderTo(disp, screen, extra) {
+      R.drawScreen(disp, screen, LE.renderTheme(), LE.env(screen, state.sel, extra));
     }
 
-    function paint() {
+    function paint(extra) {
       const d = LE.dims();
       const scale = scaleFor();
       canvas.width = d.w;
@@ -62,7 +62,7 @@
       const s = LE.getScreen(state.current);
       if (!s) return;
       const disp = new R.Display(d.w, d.h);
-      renderTo(disp, s);
+      renderTo(disp, s, extra);
       disp.blitTo(canvas.getContext("2d"));
       if (LE.live && LE.live.isConnected()) LE.live.sendDisplay(disp);
     }
@@ -154,6 +154,12 @@
       const m = activeMenu(LE.getScreen(state.current));
       if (!m || !m.items || !m.items.length) return;
       const it = m.items[state.sel[m.id] || 0];
+      if (!it) return;
+      if (it.action === "callback") {
+        const id = (it.callbackId || it.label || "callback").replace(/[^a-zA-Z0-9_]/g, "_").toUpperCase();
+        LE.toast("Callback ACTION_" + id + " — handle in loop() with ui.pollMenuAction()");
+        return;
+      }
       if (it && it.target) {
         const t = resolveTrans(it.transition);
         state.stack.push({ id: state.current, trans: t });
@@ -185,11 +191,42 @@
     }
     document.addEventListener("keydown", keyHandler);
 
+    let splashTimer = null;
+
+    function clearSplashTimer() {
+      if (splashTimer) {
+        clearInterval(splashTimer);
+        splashTimer = null;
+      }
+    }
+
+    function maybeStartSplash(screen) {
+      clearSplashTimer();
+      if (!screen || !screen.splash || !screen.splash.enabled) return;
+      const dur = screen.splash.durationMs || 2000;
+      const next = screen.splash.nextScreen;
+      if (!next) return;
+      const start = performance.now();
+      splashTimer = setInterval(() => {
+        const elapsed = performance.now() - start;
+        paint({ splashElapsedMs: elapsed });
+        if (elapsed >= dur) {
+          clearSplashTimer();
+          const t = resolveTrans("Fade");
+          if (state.stack.length === 0) state.stack.push({ id: state.current, trans: t });
+          animate(next, t);
+        }
+      }, 50);
+    }
+
     function open() {
       state.current = LE.project.startScreen || (LE.project.screens[0] && LE.project.screens[0].id);
       state.stack = [];
       state.sel = {};
+      clearSplashTimer();
       paint();
+      const s = LE.getScreen(state.current);
+      maybeStartSplash(s);
     }
 
     return { render: paint, open };

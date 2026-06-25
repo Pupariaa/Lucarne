@@ -18,12 +18,23 @@
         <div class="tb-group">
           <input id="projectName" class="proj-name" type="text" spellcheck="false" />
           <select id="deviceSel" class="select"></select>
+          <input id="panelW" class="panel-num" type="number" min="1" max="480" title="Panel width (native)" />
+          <span class="panel-x">×</span>
+          <input id="panelH" class="panel-num" type="number" min="1" max="480" title="Panel height (native)" />
           <select id="rotationSel" class="select">
-            <option value="0">0</option>
-            <option value="1">90</option>
-            <option value="2">180</option>
-            <option value="3">270</option>
+            <option value="0">0°</option>
+            <option value="1">90°</option>
+            <option value="2">180°</option>
+            <option value="3">270°</option>
           </select>
+          <select id="liveSpeed" class="select live-speed" title="Live preview serial speed">
+            <option value="eco">Eco</option>
+            <option value="balanced">Balanced</option>
+            <option value="fast">Fast</option>
+            <option value="turbo" selected>Turbo</option>
+            <option value="realtime">Realtime</option>
+          </select>
+          <button id="btnLive" class="btn">Live</button>
         </div>
 
         <div class="modeTabs">
@@ -32,7 +43,6 @@
         </div>
 
         <div class="tb-group right">
-          <button id="btnLive" class="btn">Live</button>
           <button id="btnExport" class="btn primary">Export .h</button>
           <button id="btnSave" class="btn">Save</button>
           <button id="btnLoad" class="btn">Load</button>
@@ -53,12 +63,14 @@
             <button class="dockTab active" data-tab="inspector">Inspector</button>
             <button class="dockTab" data-tab="theme">Theme</button>
             <button class="dockTab" data-tab="fonts">Fonts</button>
+            <button class="dockTab" data-tab="assets">Assets</button>
             <button class="dockTab" data-tab="data">Data</button>
           </div>
           <div id="dockBody">
             <div id="tab-inspector" class="dockPane"></div>
             <div id="tab-theme" class="dockPane" hidden></div>
             <div id="tab-fonts" class="dockPane" hidden></div>
+            <div id="tab-assets" class="dockPane" hidden></div>
             <div id="tab-data" class="dockPane" hidden></div>
           </div>
         </aside>
@@ -81,10 +93,15 @@
 
     <div id="toast" class="toast" hidden></div>
 
+    <script src="icon-format.js"></script>
+    <script src="tabler-icons.js"></script>
+    <script src="icon-packs.js"></script>
+    <script src="icon-picker.js"></script>
     <script src="lucarne-font.js"></script>
     <script src="lucarne-icons.js"></script>
     <script src="lucarne-render.js"></script>
     <script src="fonts.js"></script>
+    <script src="assets.js"></script>
     <script src="state.js"></script>
     <script src="graph.js"></script>
     <script src="designer.js"></script>

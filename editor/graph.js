@@ -73,6 +73,10 @@
         const badge = el("span", "node-start", head);
         badge.textContent = "start";
       }
+      if (screen.splash && screen.splash.enabled) {
+        const sb = el("span", "node-splash", head);
+        sb.textContent = "splash";
+      }
 
       const box = thumbBox(d);
       const cv = el("canvas", "node-thumb", node);
@@ -86,6 +90,7 @@
       screen.widgets.forEach((w) => {
         if (w.type !== "menu") return;
         (w.items || []).forEach((it) => {
+          if (it.action === "callback") return;
           const pin = el("div", "pin", pins);
           const lbl = el("span", "pin-label", pin);
           lbl.textContent = it.label || "(item)";
