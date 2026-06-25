@@ -1,9 +1,0 @@
-{
-  "name": "lucarne-tools",
-  "version": "0.1.0",
-  "private": true,
-  "description": "Asset generators for the Lucarne library",
-  "dependencies": {
-    "opentype.js": "^1.3.4"
-  }
-}
