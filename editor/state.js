@@ -89,8 +89,8 @@
     return {
       type: "buttons",
       activeLow: true,
-      buttons: { up: 25, down: 26, ok: 27, back: 14 },
-      encoder: { a: 25, b: 26, btn: 27 },
+      buttons: { up: 6, down: 7, ok: 8, back: 9 },
+      encoder: { a: 6, b: 7, btn: 8 },
     };
   }
 
