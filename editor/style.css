@@ -186,6 +186,11 @@ body {
   padding: 4px 8px;
   font-size: 11px;
 }
+.btn.on {
+  color: #5ee88c;
+  border-color: rgba(94, 232, 140, 0.45);
+  background: rgba(94, 232, 140, 0.12);
+}
 
 /* ---------- Workspace ---------- */
 .workspace {

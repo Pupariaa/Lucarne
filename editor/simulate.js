@@ -64,6 +64,7 @@
       const disp = new R.Display(d.w, d.h);
       renderTo(disp, s);
       disp.blitTo(canvas.getContext("2d"));
+      if (LE.live && LE.live.isConnected()) LE.live.sendDisplay(disp);
     }
 
     function resolveTrans(t) {
@@ -120,6 +121,7 @@
         const e = 1 - (1 - p) * (1 - p) * (1 - p);
         R.composeFB(out.fb, A.fb, B.fb, d.w, d.h, type, e);
         out.blitTo(ctx);
+        if (LE.live && LE.live.isConnected()) LE.live.sendDisplay(out);
         if (p < 1) {
           requestAnimationFrame(frame);
         } else {

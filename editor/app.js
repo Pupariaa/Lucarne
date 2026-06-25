@@ -91,6 +91,24 @@
     if (mode === "blueprint") graph.render();
     else if (mode === "designer") designer.render();
     else if (mode === "simulate") simulate.render();
+    pushLive();
+  }
+
+  function focusedScreenId() {
+    if (mode === "designer" && LE.designerScreen) return LE.designerScreen;
+    if (LE.graphSel && LE.graphSel.type === "node") return LE.graphSel.id;
+    return LE.project.startScreen || (LE.project.screens[0] && LE.project.screens[0].id);
+  }
+
+  function pushLive() {
+    if (!LE.live || !LE.live.isConnected()) return;
+    if (mode === "simulate") return;
+    const s = LE.getScreen(focusedScreenId());
+    if (!s) return;
+    const d = LE.live.deviceDims() || LE.dims();
+    const disp = new R.Display(d.w, d.h);
+    R.drawScreen(disp, s, LE.renderTheme(), LE.env(s, {}));
+    LE.live.sendDisplay(disp);
   }
 
   function setMode(m) {
@@ -104,6 +122,7 @@
     if (m === "blueprint") graph.render();
     else if (m === "simulate") simulate.open();
     refreshDock();
+    pushLive();
   }
 
   function openDesigner(id) {
@@ -112,8 +131,10 @@
     dom.designerHost.hidden = false;
     dom.simHost.hidden = true;
     LE.selection = {};
+    LE.designerScreen = id;
     designer.open(id);
     refreshDock();
+    pushLive();
   }
 
   function exitDesigner() {
@@ -804,6 +825,7 @@
       })
     );
 
+    $("btnLive").addEventListener("click", toggleLive);
     $("btnExport").addEventListener("click", openExport);
     $("btnSave").addEventListener("click", saveProject);
     $("btnLoad").addEventListener("click", () => dom.fileLoad.click());
@@ -919,10 +941,33 @@
   }
 
   /* ---------------- Boot ---------------- */
+  function updateLiveBtn(on) {
+    const b = $("btnLive");
+    if (!b) return;
+    b.classList.toggle("on", on);
+    b.textContent = on ? "Live \u25CF" : "Live";
+  }
+
+  async function toggleLive() {
+    if (!LE.live) return;
+    if (LE.live.isConnected()) {
+      await LE.live.disconnect();
+    } else {
+      try {
+        await LE.live.connect();
+        pushLive();
+        toast("Live connected");
+      } catch (e) {
+        toast("Live: " + (e && e.message ? e.message : "connection failed"));
+      }
+    }
+  }
+
   function boot() {
     graph = window.LucarneGraph.init(dom.graphHost, LE);
     designer = window.LucarneDesigner.init(dom.designerHost, LE);
     simulate = window.LucarneSimulate.init(dom.simHost, LE);
+    LE.live = window.LucarneLive.init({ onState: updateLiveBtn });
     LE.graph = graph;
     LE.designer = designer;
     LE.simulate = simulate;
