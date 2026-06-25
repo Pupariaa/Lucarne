@@ -1,4 +1,6 @@
 #include "LucarneUI.h"
+#include "widgets/LucarneButton.h"
+#include "widgets/LucarneSwitch.h"
 #include "../core/LucarneColor.h"
 #include <Arduino.h>
 #include <string.h>
@@ -78,16 +80,42 @@ void UI::setSplash(Screen *next, uint16_t durationMs, bool showProgress) {
     _dirty = true;
 }
 
+void UI::activateAt(int16_t px, int16_t py) {
+    if (!_current) return;
+    for (Widget *w = _current->first(); w; w = w->_next) {
+        if (!w->visible || !w->contains(px, py)) continue;
+        Button *btn = w->asButton();
+        if (btn) {
+            if (btn->isCallback()) {
+                uint8_t id = btn->callbackActionId();
+                if (id) _pendingMenuAction = id;
+                if (_menuHandler) _menuHandler(id);
+            } else if (btn->navigateTarget()) {
+                navigate(btn->navigateTarget(), btn->navigateTransition());
+            }
+            return;
+        }
+        Switch *sw = w->asSwitch();
+        if (sw) {
+            sw->toggle(_store);
+            _dirty = true;
+            return;
+        }
+    }
+}
+
 void UI::select() {
-    if (!_activeMenu) return;
-    if (_activeMenu->selectedKind() == MenuItemKind::Callback) {
-        uint8_t id = _activeMenu->selectedActionId();
-        if (id) _pendingMenuAction = id;
-        if (_menuHandler) _menuHandler(id);
+    if (_activeMenu) {
+        if (_activeMenu->selectedKind() == MenuItemKind::Callback) {
+            uint8_t id = _activeMenu->selectedActionId();
+            if (id) _pendingMenuAction = id;
+            if (_menuHandler) _menuHandler(id);
+            return;
+        }
+        Screen *target = _activeMenu->selectedTarget();
+        if (target) navigate(target, _activeMenu->selectedTransition());
         return;
     }
-    Screen *target = _activeMenu->selectedTarget();
-    if (target) navigate(target, _activeMenu->selectedTransition());
 }
 
 uint8_t UI::pollMenuAction() {

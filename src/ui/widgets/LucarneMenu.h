@@ -2,7 +2,6 @@
 #define LUCARNE_MENU_H
 
 #include "../LucarneWidget.h"
-#include "../LucarneIcons.h"
 #include "../LucarneTransition.h"
 
 namespace lucarne {
@@ -12,7 +11,7 @@ class Screen;
 enum class MenuItemKind : uint8_t { Navigate, Callback };
 
 struct MenuItemOpts {
-    IconId badge = IconId::None;
+    const char *badge = nullptr;
     bool noBadge = false;
     uint8_t iconScale = 0;
     uint8_t badgeScale = 0;
@@ -27,9 +26,9 @@ class Menu : public Widget {
     void setIconScale(uint8_t scale);
     void setBadgeScale(uint8_t scale);
 
-    void addItem(const char *label, IconId icon = IconId::None, Screen *target = nullptr,
+    void addItem(const char *label, const char *iconRef, Screen *target = nullptr,
                  Transition transition = Transition::Inherit, const MenuItemOpts &opts = MenuItemOpts());
-    void addCallbackItem(const char *label, IconId icon, uint8_t actionId,
+    void addCallbackItem(const char *label, const char *iconRef, uint8_t actionId,
                          const MenuItemOpts &opts = MenuItemOpts());
     void clearItems();
 
@@ -51,8 +50,8 @@ class Menu : public Widget {
   private:
     struct Item {
         const char *label;
-        IconId icon;
-        IconId badge;
+        const char *icon;
+        const char *badge;
         bool noBadge;
         uint8_t iconScale;
         uint8_t badgeScale;

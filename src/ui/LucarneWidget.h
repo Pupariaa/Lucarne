@@ -19,6 +19,12 @@ class Widget {
 
     virtual void draw(Gfx &g, const Theme &theme, Store &store) = 0;
     virtual Menu *asMenu() { return nullptr; }
+    virtual class Button *asButton() { return nullptr; }
+    virtual class Switch *asSwitch() { return nullptr; }
+
+    bool contains(int16_t px, int16_t py) const {
+        return px >= x && py >= y && px < x + w && py < y + h;
+    }
 
     void setBounds(int16_t x, int16_t y, int16_t w, int16_t h);
     void setVisible(bool v) { visible = v; }
@@ -38,6 +44,8 @@ class Widget {
                          uint16_t color);
     static void drawIconFit(Gfx &g, const uint16_t *rows, int16_t x, int16_t y, int16_t dw,
                             int16_t dh, uint16_t color);
+    static void drawImageAsset(Gfx &g, const ImageAsset *asset, int16_t x, int16_t y, int16_t dw,
+                               int16_t dh, uint16_t bg);
 };
 
 }

@@ -14,6 +14,7 @@ enum class ImageStorage : uint8_t {
 
 struct ImageAsset {
     const uint16_t *data;
+    const uint8_t *alpha;
     int16_t width;
     int16_t height;
     ImageStorage storage;

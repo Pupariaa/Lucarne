@@ -145,7 +145,9 @@ void TouchInput::feed(int16_t x, int16_t y, bool pressed) {
                 _ui->invalidate();
                 _ui->select();
             }
+            return;
         }
+        _ui->activateAt(x, y);
     } else if (!pressed && _last) {
         _last = false;
     }

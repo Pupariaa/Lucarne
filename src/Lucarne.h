@@ -11,6 +11,7 @@
 #include "ui/LucarneTheme.h"
 #include "ui/LucarneStore.h"
 #include "ui/LucarneIcons.h"
+#include "ui/LucarneIconDraw.h"
 #include "ui/LucarneFonts.h"
 #include "ui/LucarneWidget.h"
 #include "ui/LucarneScreen.h"
@@ -24,5 +25,11 @@
 #include "ui/widgets/LucarneMenu.h"
 #include "ui/widgets/LucarneImage.h"
 #include "ui/LucarneImageAsset.h"
+#include "ui/widgets/LucarneButton.h"
+#include "ui/widgets/LucarneSwitch.h"
+#include "ui/widgets/LucarneSlider.h"
+#include "ui/widgets/LucarneChart.h"
+#include "ui/widgets/LucarneList.h"
+#include "ui/widgets/LucarneGauge.h"
 
 #endif

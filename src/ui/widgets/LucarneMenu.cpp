@@ -1,4 +1,5 @@
 #include "LucarneMenu.h"
+#include "../LucarneIconDraw.h"
 
 namespace lucarne {
 
@@ -31,11 +32,11 @@ int16_t Menu::targetIconPx(int16_t rh, uint8_t itemScale, uint8_t menuScale) con
     return target;
 }
 
-void Menu::addItem(const char *label, IconId icon, Screen *target, Transition transition,
+void Menu::addItem(const char *label, const char *iconRef, Screen *target, Transition transition,
                    const MenuItemOpts &opts) {
     if (_count >= MAX_ITEMS) return;
     _items[_count].label = label;
-    _items[_count].icon = icon;
+    _items[_count].icon = iconRef;
     _items[_count].badge = opts.badge;
     _items[_count].noBadge = opts.noBadge;
     _items[_count].iconScale = opts.iconScale;
@@ -47,11 +48,11 @@ void Menu::addItem(const char *label, IconId icon, Screen *target, Transition tr
     _count++;
 }
 
-void Menu::addCallbackItem(const char *label, IconId icon, uint8_t actionId,
+void Menu::addCallbackItem(const char *label, const char *iconRef, uint8_t actionId,
                            const MenuItemOpts &opts) {
     if (_count >= MAX_ITEMS) return;
     _items[_count].label = label;
-    _items[_count].icon = icon;
+    _items[_count].icon = iconRef;
     _items[_count].badge = opts.badge;
     _items[_count].noBadge = opts.noBadge;
     _items[_count].iconScale = opts.iconScale;
@@ -143,11 +144,10 @@ void Menu::draw(Gfx &g, const Theme &theme, Store &store) {
         int16_t contentX = (int16_t)(x + pad);
 
         const Item &it = _items[idx];
-        const uint16_t *icon = iconData(it.icon);
-        if (icon) {
+        if (iconRefValid(it.icon)) {
             int16_t side = targetIconPx(rh, it.iconScale, _iconScale);
             int16_t iconY = (int16_t)(ry + (rh - side) / 2);
-            drawIconFit(g, icon, contentX, iconY, side, side, txt);
+            drawIconRef(g, it.icon, contentX, iconY, side, side, txt, fill);
             contentX += (int16_t)(side + pad);
         }
 
@@ -156,15 +156,14 @@ void Menu::draw(Gfx &g, const Theme &theme, Store &store) {
                  theme.textSize, fill, theme.font);
 
         if (!it.noBadge) {
-            IconId badgeId = it.badge;
-            if (badgeId == IconId::None && it.kind == MenuItemKind::Navigate && it.target) {
-                badgeId = IconId::ArrowRight;
+            const char *badgeRef = it.badge;
+            if (!badgeRef && it.kind == MenuItemKind::Navigate && it.target) {
+                badgeRef = "arrow_right";
             }
-            const uint16_t *badge = iconData(badgeId);
-            if (badge) {
+            if (badgeRef && iconRefValid(badgeRef)) {
                 int16_t side = targetIconPx(rh, it.badgeScale, _badgeScale);
                 int16_t aY = (int16_t)(ry + (rh - side) / 2);
-                drawIconFit(g, badge, (int16_t)(x + w - pad - side), aY, side, side, txt);
+                drawIconRef(g, badgeRef, (int16_t)(x + w - pad - side), aY, side, side, txt, fill);
             }
         }
     }

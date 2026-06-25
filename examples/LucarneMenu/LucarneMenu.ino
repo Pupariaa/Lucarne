@@ -62,13 +62,9 @@ void setup() {
     humMetric.setAccent(color565(94, 150, 255));
     loadBar.setShowValue(true);
 
-    menu.addItem("Dashboard", iconFromName("chart"), &dash, Transition::Inherit);
-    menu.addItem("Sensors", iconFromName("thermo"), &dash, Transition::Fade);
-    menu.addCallbackItem(
-        "Settings",
-        iconFromName("settings"),
-        ACTION_OPEN_SETTINGS,
-        MenuItemOpts{IconId::Power, false, 0, 0});
+    menu.addItem("Dashboard", "chart", &dash, Transition::Inherit);
+    menu.addItem("Sensors", "thermo", &dash, Transition::Fade);
+    menu.addCallbackItem("Settings", "settings", ACTION_OPEN_SETTINGS, MenuItemOpts{"power", false, 0, 0});
 
     home.add(&homeTitle);
     home.add(&menu);

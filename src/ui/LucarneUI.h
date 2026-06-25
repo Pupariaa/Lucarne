@@ -34,6 +34,7 @@ class UI {
     void next();
     void prev();
     void select();
+    void activateAt(int16_t x, int16_t y);
     Menu *activeMenu() const { return _activeMenu; }
 
     uint8_t pollMenuAction();

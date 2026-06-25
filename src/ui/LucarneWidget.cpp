@@ -96,4 +96,27 @@ void Widget::drawIconFit(Gfx &g, const uint16_t *rows, int16_t x, int16_t y, int
     }
 }
 
+void Widget::drawImageAsset(Gfx &g, const ImageAsset *asset, int16_t x, int16_t y, int16_t dw,
+                            int16_t dh, uint16_t bg) {
+    if (!asset || !asset->data || dw < 1 || dh < 1) return;
+    int16_t sw = asset->width;
+    int16_t sh = asset->height;
+    if (sw < 1) sw = 1;
+    if (sh < 1) sh = 1;
+    const uint16_t *pix = asset->data;
+    const uint8_t *alpha = asset->alpha;
+    for (int16_t py = 0; py < dh; py++) {
+        int16_t sy = (int16_t)((py * sh) / dh);
+        for (int16_t px = 0; px < dw; px++) {
+            int16_t sx = (int16_t)((px * sw) / dw);
+            size_t si = (size_t)sy * (size_t)sw + (size_t)sx;
+            uint8_t a = alpha ? alpha[si] : 255;
+            if (a < 8) continue;
+            uint16_t fg = pix[si];
+            uint16_t out = a >= 250 ? fg : colorBlend(bg, fg, a);
+            g.drawPixel((int16_t)(x + px), (int16_t)(y + py), out);
+        }
+    }
+}
+
 }
