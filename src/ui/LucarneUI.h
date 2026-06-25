@@ -10,6 +10,8 @@
 
 namespace lucarne {
 
+typedef void (*MenuActionHandler)(uint8_t actionId);
+
 class UI {
   public:
     static const uint8_t STACK_SIZE = 8;
@@ -20,6 +22,9 @@ class UI {
     const Theme &theme() const { return _theme; }
 
     void setTransition(Transition def, uint16_t durationMs = 220);
+    void setMenuHandler(MenuActionHandler handler) { _menuHandler = handler; }
+
+    void setSplash(Screen *next, uint16_t durationMs, bool showProgress = false);
 
     void show(Screen *screen);
     void navigate(Screen *screen, Transition transition = Transition::Inherit);
@@ -30,6 +35,9 @@ class UI {
     void prev();
     void select();
     Menu *activeMenu() const { return _activeMenu; }
+
+    uint8_t pollMenuAction();
+    bool hasMenuAction() const { return _pendingMenuAction != 0; }
 
     void begin();
     void update();
@@ -52,6 +60,7 @@ class UI {
 
     void scanActiveMenu();
     void runTransition(Screen *toScreen, Transition t);
+    void drawSplashProgress(uint32_t elapsedMs);
     static void composeFrame(uint16_t *fb, const uint16_t *a, const uint16_t *b, int16_t w,
                              int16_t h, Transition t, float p);
     static Transition reverseTransition(Transition t);
@@ -66,6 +75,14 @@ class UI {
     Transition _defaultTransition;
     uint16_t _transitionMs;
     bool _dirty;
+
+    MenuActionHandler _menuHandler;
+    uint8_t _pendingMenuAction;
+    Screen *_splashNext;
+    uint16_t _splashDuration;
+    bool _splashProgress;
+    bool _splashActive;
+    uint32_t _splashStart;
 };
 
 }

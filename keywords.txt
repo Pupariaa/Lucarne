@@ -21,6 +21,7 @@ Metric	KEYWORD1
 Bar	KEYWORD1
 Icon	KEYWORD1
 Menu	KEYWORD1
+MenuItemOpts	KEYWORD1
 IconId	KEYWORD1
 TextAlign	KEYWORD1
 ValueType	KEYWORD1
@@ -60,6 +61,10 @@ setDecimals	KEYWORD2
 setBounds	KEYWORD2
 setVisible	KEYWORD2
 addItem	KEYWORD2
+addCallbackItem	KEYWORD2
+setIconScale	KEYWORD2
+setBadgeScale	KEYWORD2
+pollMenuAction	KEYWORD2
 moveNext	KEYWORD2
 movePrev	KEYWORD2
 navigate	KEYWORD2

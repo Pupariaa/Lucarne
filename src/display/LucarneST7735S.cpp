@@ -137,7 +137,7 @@ void ST7735S::computeRotation(uint8_t r) {
         case 1:
             m = MADCTL_MY | MADCTL_MV;
             _xstart = _rowStart;
-            _ystart = _colStart;
+            _ystart = _colStart2;
             _width = _panelH;
             _height = _panelW;
             break;
@@ -151,7 +151,7 @@ void ST7735S::computeRotation(uint8_t r) {
         case 3:
             m = MADCTL_MX | MADCTL_MV;
             _xstart = _rowStart2;
-            _ystart = _colStart2;
+            _ystart = _colStart;
             _width = _panelH;
             _height = _panelW;
             break;

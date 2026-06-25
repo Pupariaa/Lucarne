@@ -7,7 +7,9 @@ namespace lucarne {
 
 UI::UI(Display &display)
     : _display(display), _current(nullptr), _activeMenu(nullptr), _stackTop(0),
-      _defaultTransition(Transition::None), _transitionMs(220), _dirty(true) {}
+      _defaultTransition(Transition::None), _transitionMs(220), _dirty(true), _menuHandler(nullptr),
+      _pendingMenuAction(0), _splashNext(nullptr), _splashDuration(0), _splashProgress(false),
+      _splashActive(false), _splashStart(0) {}
 
 void UI::setTheme(const Theme &theme) {
     _theme = theme;
@@ -67,10 +69,31 @@ void UI::prev() {
     _dirty = true;
 }
 
+void UI::setSplash(Screen *next, uint16_t durationMs, bool showProgress) {
+    _splashNext = next;
+    _splashDuration = durationMs;
+    _splashProgress = showProgress;
+    _splashStart = millis();
+    _splashActive = (next != nullptr && durationMs > 0);
+    _dirty = true;
+}
+
 void UI::select() {
     if (!_activeMenu) return;
+    if (_activeMenu->selectedKind() == MenuItemKind::Callback) {
+        uint8_t id = _activeMenu->selectedActionId();
+        if (id) _pendingMenuAction = id;
+        if (_menuHandler) _menuHandler(id);
+        return;
+    }
     Screen *target = _activeMenu->selectedTarget();
     if (target) navigate(target, _activeMenu->selectedTransition());
+}
+
+uint8_t UI::pollMenuAction() {
+    uint8_t id = _pendingMenuAction;
+    _pendingMenuAction = 0;
+    return id;
 }
 
 Transition UI::reverseTransition(Transition t) {
@@ -231,12 +254,42 @@ void UI::begin() {
 void UI::render() {
     if (!_current) return;
     _current->draw(_display, _theme, _store);
+    if (_splashActive && _splashProgress) {
+        drawSplashProgress((uint32_t)(millis() - _splashStart));
+    }
     _display.display();
     _store.clearDirty();
     _dirty = false;
 }
 
+void UI::drawSplashProgress(uint32_t elapsedMs) {
+    if (!_splashActive || _splashDuration == 0) return;
+    float ratio = (float)elapsedMs / (float)_splashDuration;
+    if (ratio < 0.0f) ratio = 0.0f;
+    if (ratio > 1.0f) ratio = 1.0f;
+    int16_t sw = _display.width();
+    int16_t sh = _display.height();
+    int16_t barH = 6;
+    int16_t margin = _theme.padding;
+    int16_t trackW = (int16_t)(sw - margin * 2);
+    int16_t fillW = (int16_t)(trackW * ratio);
+    int16_t y = (int16_t)(sh - margin - barH);
+    _display.fillRoundRect(margin, y, trackW, barH, 3, _theme.surface);
+    if (fillW > 0) {
+        _display.fillRoundRect(margin, y, fillW, barH, 3, _theme.primary);
+    }
+}
+
 void UI::update() {
+    if (_splashActive) {
+        uint32_t elapsed = (uint32_t)(millis() - _splashStart);
+        if (elapsed >= _splashDuration) {
+            _splashActive = false;
+            if (_splashNext) navigate(_splashNext, Transition::Fade);
+            return;
+        }
+        if (_splashProgress) _dirty = true;
+    }
     if (_dirty || _store.dirty()) {
         render();
     }

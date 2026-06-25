@@ -19,6 +19,8 @@ Bar loadBar(14, 166, 212, 20, "load", 0.0f, 1.0f);
 
 ButtonInput buttons;
 
+static const uint8_t ACTION_OPEN_SETTINGS = 1;
+
 void setup() {
     Serial.begin(115200);
 
@@ -62,7 +64,11 @@ void setup() {
 
     menu.addItem("Dashboard", iconFromName("chart"), &dash, Transition::Inherit);
     menu.addItem("Sensors", iconFromName("thermo"), &dash, Transition::Fade);
-    menu.addItem("Settings", iconFromName("settings"), nullptr, Transition::Inherit);
+    menu.addCallbackItem(
+        "Settings",
+        iconFromName("settings"),
+        ACTION_OPEN_SETTINGS,
+        MenuItemOpts{IconId::Power, false, 0, 0});
 
     home.add(&homeTitle);
     home.add(&menu);
@@ -77,7 +83,6 @@ void setup() {
     ui.setFloat("hum", 48.0f);
     ui.setFloat("load", 0.32f);
 
-    // Up, Down, OK, Back GPIO pins (active low with internal pull-ups).
     buttons.begin(25, 26, 27, 14, true);
     buttons.attach(&ui);
 
@@ -87,6 +92,12 @@ void setup() {
 
 void loop() {
     buttons.update();
+
+    switch (ui.pollMenuAction()) {
+        case ACTION_OPEN_SETTINGS:
+            Serial.println("Settings callback");
+            break;
+    }
 
     static uint32_t last = 0;
     if (millis() - last > 1000) {

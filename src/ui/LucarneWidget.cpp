@@ -80,4 +80,20 @@ void Widget::drawIcon(Gfx &g, const uint16_t *rows, int16_t x, int16_t y, uint8_
     }
 }
 
+void Widget::drawIconFit(Gfx &g, const uint16_t *rows, int16_t x, int16_t y, int16_t dw,
+                         int16_t dh, uint16_t color) {
+    if (!rows || dw < 1 || dh < 1) return;
+    for (int16_t py = 0; py < dh; py++) {
+        int16_t sy = (int16_t)((py * 16) / dh);
+        uint16_t bits = rows[sy];
+        if (!bits) continue;
+        for (int16_t px = 0; px < dw; px++) {
+            int16_t sx = (int16_t)((px * 16) / dw);
+            if (bits & (uint16_t)(0x8000 >> sx)) {
+                g.drawPixel((int16_t)(x + px), (int16_t)(y + py), color);
+            }
+        }
+    }
+}
+
 }

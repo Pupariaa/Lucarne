@@ -10,16 +10,33 @@
 // Do not print to Serial in this sketch: the port carries the binary preview
 // protocol and any extra bytes would corrupt the stream.
 
+// Match Serial.begin() with the baud value in Lucarne Studio (toolbar, default 2000000).
+//
+// Optional SD load: define LUCARNE_LIVE_SD, wire your SD pins, call SD.begin().
+// Host sends LOAD_REQ with a path; firmware streams the JSON back over serial.
+
 #include <Lucarne.h>
 #include <tools/LucarneLivePreview.h>
+
+#ifdef LUCARNE_LIVE_SD
+#include <SPI.h>
+#include <SD.h>
+#include <tools/LucarneLiveSD.h>
+#endif
 
 using namespace lucarne;
 
 ST7789 display;
 LivePreview preview(display, Serial);
 
+#ifdef LUCARNE_LIVE_SD
+void onLiveLoad(const char *path, LivePreview *self) {
+    liveLoadFromSd(path, self);
+}
+#endif
+
 void setup() {
-    Serial.begin(115200);
+    Serial.begin(2000000);
 
     DisplayPins pins;
     pins.cs = 1;
@@ -44,6 +61,11 @@ void setup() {
     buffer.maxBytes = 0;
 
     display.begin(pins, options, buffer);
+
+#ifdef LUCARNE_LIVE_SD
+    SPI.begin(12, 13, 11, 10);
+    if (SD.begin(10)) preview.setLoadHandler(onLiveLoad);
+#endif
 
     preview.begin();
 }

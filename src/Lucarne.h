@@ -22,5 +22,7 @@
 #include "ui/widgets/LucarneBar.h"
 #include "ui/widgets/LucarneIcon.h"
 #include "ui/widgets/LucarneMenu.h"
+#include "ui/widgets/LucarneImage.h"
+#include "ui/LucarneImageAsset.h"
 
 #endif

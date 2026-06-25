@@ -17,6 +17,7 @@ class Display : public Gfx {
                const BufferOptions &buffer = BufferOptions(), SPIClass *spi = &SPI);
 
     void setRotation(uint8_t r);
+    void applyPanelConfig(int16_t panelW, int16_t panelH, uint8_t rotation);
     void invertDisplay(bool invert);
     void backlight(bool on);
 

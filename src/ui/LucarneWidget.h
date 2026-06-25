@@ -36,6 +36,8 @@ class Widget {
                          uint16_t bg, const AAFont *aafont);
     static void drawIcon(Gfx &g, const uint16_t *rows, int16_t x, int16_t y, uint8_t scale,
                          uint16_t color);
+    static void drawIconFit(Gfx &g, const uint16_t *rows, int16_t x, int16_t y, int16_t dw,
+                            int16_t dh, uint16_t color);
 };
 
 }

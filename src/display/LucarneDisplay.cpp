@@ -185,6 +185,22 @@ void Display::setRotation(uint8_t r) {
     _spi->endTransaction();
 }
 
+void Display::applyPanelConfig(int16_t panelW, int16_t panelH, uint8_t rotation) {
+    _panelW = panelW;
+    _panelH = panelH;
+    setupOffsets();
+    if (_opt.colStart >= 0) _colStart = _opt.colStart;
+    if (_opt.rowStart >= 0) _rowStart = _opt.rowStart;
+    if (_opt.colStart2 >= 0) _colStart2 = _opt.colStart2;
+    if (_opt.rowStart2 >= 0) _rowStart2 = _opt.rowStart2;
+    setRotation(rotation);
+    fillScreen(0);
+    if (_bufMode == BufferMode::Full && _buffer) {
+        _dirty = true;
+        display();
+    }
+}
+
 void Display::invertDisplay(bool invert) {
     _spi->beginTransaction(_spiSettings);
     if (_pins.cs >= 0) digitalWrite(_pins.cs, LOW);

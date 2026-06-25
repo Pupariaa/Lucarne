@@ -15,14 +15,20 @@ namespace lucarne {
 //   FRAME (0x10), host->device: x(2) y(2) w(2) h(2) enc(1) data...
 //     enc 0 = raw RGB565 LE; enc 1 = RLE pairs [count(2 LE)][value(2 LE)].
 //   HELLO (0x01)/PING (0x03), host->device: triggers an INFO reply.
-//   INFO  (0x02), device->host: version(1) driver(1) width(2 LE) height(2 LE).
+//   SETUP (0x04), host->device: panelW(2 LE) panelH(2 LE) rotation(1) — native size, rotation 0..3.
+//   LOAD_REQ (0x05), host->device: path UTF-8 (device reads file, e.g. SD, replies with LOAD).
+//   LOAD (0x06), device->host: flags(1) data... — flags bit0 last, bit1 error.
+//   INFO  (0x02), device->host: version(1) driver(1) width(2 LE) height(2 LE) — logical size after rotation.
 //   ACK   (0x11), device->host: status(1).
 class LivePreview {
   public:
+    typedef void (*LoadHandlerFn)(const char *path, LivePreview *self);
+
     LivePreview(Display &display, Stream &io)
         : _d(display), _io(io), _st(S_MAGIC1), _hdrPos(0), _type(0), _len(0), _payLeft(0),
           _cksum(0), _calcCksum(0), _fhPos(0), _enc(0), _x(0), _y(0), _w(0), _h(0),
-          _curCol(0), _curRow(0), _pairPos(0), _pixPos(0), _pixLo(0), _frameOk(false) {}
+          _curCol(0), _curRow(0), _pairPos(0), _pixPos(0), _pixLo(0), _frameOk(false),
+          _setupPos(0), _loadPos(0), _loadHandler(nullptr) {}
 
     void begin() { sendInfo(); }
 
@@ -30,6 +36,17 @@ class LivePreview {
         while (_io.available() > 0) {
             feed((uint8_t)_io.read());
         }
+    }
+
+    void setLoadHandler(LoadHandlerFn fn) { _loadHandler = fn; }
+
+    void sendLoadChunk(const uint8_t *data, uint32_t len, uint8_t flags) {
+        uint8_t pl[513];
+        pl[0] = flags;
+        uint32_t n = len;
+        if (n > 512) n = 512;
+        if (n && data) memcpy(pl + 1, data, n);
+        sendPacket(T_LOAD, pl, 1 + n);
     }
 
   private:
@@ -40,14 +57,19 @@ class LivePreview {
         S_FRAME_HDR,
         S_FRAME_RLE,
         S_FRAME_RAW,
+        S_SETUP,
+        S_LOAD_PATH,
         S_SKIP,
         S_CKSUM
     };
 
-    static const uint8_t PROTO_VERSION = 1;
+    static const uint8_t PROTO_VERSION = 2;
     static const uint8_t T_HELLO = 0x01;
     static const uint8_t T_INFO = 0x02;
     static const uint8_t T_PING = 0x03;
+    static const uint8_t T_SETUP = 0x04;
+    static const uint8_t T_LOAD_REQ = 0x05;
+    static const uint8_t T_LOAD = 0x06;
     static const uint8_t T_FRAME = 0x10;
     static const uint8_t T_ACK = 0x11;
 
@@ -84,6 +106,12 @@ class LivePreview {
             case S_FRAME_RAW:
                 frameRawByte(b);
                 break;
+            case S_SETUP:
+                setupByte(b);
+                break;
+            case S_LOAD_PATH:
+                loadPathByte(b);
+                break;
             case S_SKIP:
                 _calcCksum ^= b;
                 if (--_payLeft == 0) _st = S_CKSUM;
@@ -105,9 +133,27 @@ class LivePreview {
             _fhPos = 0;
             _frameOk = false;
             _st = S_FRAME_HDR;
+        } else if (_type == T_SETUP) {
+            _setupPos = 0;
+            _st = S_SETUP;
+        } else if (_type == T_LOAD_REQ) {
+            _loadPos = 0;
+            _st = S_LOAD_PATH;
         } else {
             _st = S_SKIP;
         }
+    }
+
+    void setupByte(uint8_t b) {
+        _calcCksum ^= b;
+        if (_setupPos < sizeof(_setupPl)) _setupPl[_setupPos++] = b;
+        if (--_payLeft == 0) _st = S_CKSUM;
+    }
+
+    void loadPathByte(uint8_t b) {
+        _calcCksum ^= b;
+        if (_loadPos < sizeof(_loadPl) - 1) _loadPl[_loadPos++] = b;
+        if (--_payLeft == 0) _st = S_CKSUM;
     }
 
     void frameHdrByte(uint8_t b) {
@@ -179,6 +225,21 @@ class LivePreview {
         if (_calcCksum != _cksum) return;
         if (_type == T_HELLO || _type == T_PING) {
             sendInfo();
+        } else if (_type == T_SETUP && _setupPos >= 5) {
+            int16_t pw = (int16_t)rd16(_setupPl, 0);
+            int16_t ph = (int16_t)rd16(_setupPl, 2);
+            uint8_t rot = (uint8_t)(_setupPl[4] & 3);
+            if (pw > 0 && ph > 0) {
+                _d.applyPanelConfig(pw, ph, rot);
+            }
+            sendInfo();
+        } else if (_type == T_LOAD_REQ) {
+            _loadPl[_loadPos] = 0;
+            if (_loadHandler) {
+                _loadHandler((const char *)_loadPl, this);
+            } else {
+                sendLoadChunk(nullptr, 0, 2);
+            }
         } else if (_type == T_FRAME && _frameOk) {
             _d.display();
             uint8_t status = 0;
@@ -244,6 +305,11 @@ class LivePreview {
     uint32_t _pixPos;
     uint8_t _pixLo;
     bool _frameOk;
+    uint8_t _setupPl[8];
+    uint8_t _setupPos;
+    uint8_t _loadPl[256];
+    uint8_t _loadPos;
+    LoadHandlerFn _loadHandler;
 };
 
 }

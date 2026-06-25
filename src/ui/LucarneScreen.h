@@ -14,10 +14,14 @@ class Screen {
     const char *name() const { return _name; }
     Widget *first() const { return _head; }
 
+    void setCornerRadius(uint8_t r) { _cornerRadius = r; }
+    uint8_t cornerRadius() const { return _cornerRadius; }
+
   private:
     const char *_name;
     Widget *_head;
     Widget *_tail;
+    uint8_t _cornerRadius;
 };
 
 }
