@@ -1,0 +1,1685 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lucarne — Documentation</title>
+  <link rel="icon" href="../assets/brand/Lucarne-logo-only-dark.png" type="image/png" />
+  <style>
+    :root, [data-theme="light"] {
+      --bg: #f4f5f7;
+      --surface: #fff;
+      --text: #111318;
+      --muted: #5c6370;
+      --faint: #8b929e;
+      --line: #e2e5ea;
+      --accent: #2563eb;
+      --accent-bg: #dbeafe;
+      --code: #f0f2f5;
+      --code-inline-bg: #fafbfc;
+      --code-inline-fg: #24292e;
+      --code-block: #1e1e1e;
+      --hl-kw: #569cd6;
+      --hl-ty: #4ec9b0;
+      --hl-st: #ce9178;
+      --hl-num: #b5cea8;
+      --hl-cm: #6a9955;
+      --hl-pr: #c586c0;
+      --hl-fn: #dcdcaa;
+      --nav-w: 272px;
+      --header: 56px;
+      --shadow: 0 8px 30px rgba(0,0,0,.08);
+    }
+    [data-theme="dark"] {
+      --bg: #0e1014;
+      --surface: #161a22;
+      --text: #f0f2f5;
+      --muted: #a8b0bd;
+      --faint: #7a8290;
+      --line: #2a3140;
+      --accent: #5b9aff;
+      --accent-bg: rgba(91,154,255,.15);
+      --code: #0c0f14;
+      --code-inline-bg: #0d1117;
+      --code-inline-fg: #d4d4d4;
+      --code-block: #0d1117;
+      --hl-kw: #79c0ff;
+      --hl-ty: #56d4c4;
+      --hl-st: #f0a67a;
+      --hl-num: #a8d9a0;
+      --hl-cm: #8b949e;
+      --hl-pr: #d2a8ff;
+      --hl-fn: #e6c07b;
+      --shadow: 0 12px 40px rgba(0,0,0,.45);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    body.lang-en .fr { display: none !important; }
+    body.lang-fr .en { display: none !important; }
+    html[lang="en"] .fr { display: none !important; }
+    html[lang="fr"] .en { display: none !important; }
+    a { color: var(--accent); }
+    code {
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: .88em;
+      color: var(--code-inline-fg);
+      background: var(--code-inline-bg);
+      padding: .12em .4em;
+      border-radius: 4px;
+      border: 1px solid var(--line);
+    }
+    :not(pre) > code .hl-kw,
+    :not(pre) > code .hl-ty,
+    :not(pre) > code .hl-st,
+    :not(pre) > code .hl-num,
+    :not(pre) > code .hl-cm,
+    :not(pre) > code .hl-pr,
+    :not(pre) > code .hl-fn,
+    :not(pre) > code .hl-op,
+    pre code .hl-kw,
+    pre code .hl-ty,
+    pre code .hl-st,
+    pre code .hl-num,
+    pre code .hl-cm,
+    pre code .hl-pr,
+    pre code .hl-fn,
+    pre code .hl-op { font-size: inherit; }
+    a.sym-link {
+      text-decoration: none;
+      border-bottom: 1px dashed var(--accent);
+    }
+    a.sym-link:hover code { background: var(--accent-bg); }
+    a.sym-link code { cursor: pointer; color: inherit; }
+    pre code a.sym-in-code {
+      color: inherit;
+      text-decoration: underline;
+      text-decoration-style: dotted;
+      text-underline-offset: 2px;
+    }
+    pre code a.sym-in-code:hover { text-decoration-color: var(--accent); }
+    .api-toc {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .35rem .5rem;
+      margin: 1rem 0 1.5rem;
+      font-size: 13px;
+    }
+    .api-toc a {
+      padding: .2rem .55rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      text-decoration: none;
+      background: var(--surface);
+    }
+    .api-toc a:hover { border-color: var(--accent); background: var(--accent-bg); }
+    details.api-entry {
+      margin: .5rem 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+    details.api-entry summary {
+      padding: .65rem .85rem;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    details.api-entry summary code {
+      font-weight: 500;
+      background: transparent;
+      border: none;
+      padding: 0;
+      font-size: 13px;
+    }
+    details.api-entry .inner {
+      padding: 0 .85rem .85rem;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    details.api-entry .inner p { margin: .35rem 0; }
+    details.api-entry[open] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-bg); }
+    details.api-entry:target { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-bg); }
+    @keyframes api-sym-pulse {
+      0%, 100% {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px var(--accent-bg);
+        background: var(--surface);
+      }
+      10%, 30%, 50% {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 5px var(--accent-bg), 0 0 22px var(--accent-bg);
+        background: var(--accent-bg);
+      }
+      20%, 40%, 60% {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px var(--accent-bg);
+        background: var(--surface);
+      }
+    }
+    details.api-entry.sym-pulse {
+      animation: api-sym-pulse 2.5s ease-in-out 1;
+      border-color: var(--accent);
+    }
+    pre {
+      background: var(--code-block);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 1rem 1.15rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    pre code {
+      background: none;
+      border: none;
+      padding: 0;
+      color: #d4d4d4;
+      font-size: 13px;
+    }
+    [data-theme="light"] pre code { color: #24292e; }
+    [data-theme="light"] pre { background: #fafbfc; }
+    [data-theme="light"] .hl-kw { color: #0033b3; }
+    [data-theme="light"] .hl-ty { color: #067d68; }
+    [data-theme="light"] .hl-st { color: #0a5a2a; }
+    [data-theme="light"] .hl-num { color: #1750eb; }
+    [data-theme="light"] .hl-cm { color: #6a737d; }
+    [data-theme="light"] .hl-pr { color: #6f42c1; }
+    [data-theme="light"] .hl-fn { color: #795e26; }
+    .hl-kw { color: var(--hl-kw); }
+    .hl-ty { color: var(--hl-ty); }
+    .hl-st { color: var(--hl-st); }
+    .hl-num { color: var(--hl-num); }
+    .hl-cm { color: var(--hl-cm); font-style: italic; }
+    .hl-pr { color: var(--hl-pr); }
+    .hl-fn { color: var(--hl-fn); }
+    .hl-op { color: #d4d4d4; }
+    [data-theme="light"] .hl-op { color: #24292e; }
+    .app { min-height: 100vh; display: flex; flex-direction: column; }
+    .header {
+      height: var(--header);
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      padding: 0 1rem;
+      background: var(--surface);
+      border-bottom: 1px solid var(--line);
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+    .menu-btn {
+      display: none;
+      width: 40px;
+      height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .menu-btn span {
+      display: block;
+      width: 18px;
+      height: 2px;
+      background: var(--text);
+      margin: 4px auto;
+      border-radius: 1px;
+    }
+    .doc-brand {
+      display: flex;
+      align-items: center;
+      gap: .45rem;
+      color: inherit;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+    .doc-brand-icon {
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+      flex-shrink: 0;
+      display: block;
+    }
+    .doc-brand-wordmark {
+      height: 18px;
+      width: auto;
+      object-fit: contain;
+      display: block;
+    }
+    .doc-brand-tag {
+      color: var(--faint);
+      font-weight: 500;
+      font-size: .85rem;
+      white-space: nowrap;
+    }
+    [data-theme="dark"] .doc-brand-icon--light,
+    [data-theme="dark"] .doc-brand-wordmark--light,
+    [data-theme="light"] .doc-brand-icon--dark,
+    [data-theme="light"] .doc-brand-wordmark--dark,
+    [data-theme="dark"] .doc-hero-logo--light,
+    [data-theme="light"] .doc-hero-logo--dark {
+      display: none;
+    }
+    .doc-hero-logo {
+      height: 72px;
+      width: auto;
+      display: block;
+      margin-bottom: 1rem;
+    }
+    .header-fill { flex: 1; }
+    .pill {
+      display: inline-flex;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 2px;
+      background: var(--bg);
+    }
+    .pill button {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 12px;
+      padding: .35rem .7rem;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .pill button.on { background: var(--accent-bg); color: var(--accent); font-weight: 600; }
+    .body { display: flex; flex: 1; min-height: 0; }
+    .backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.4);
+      z-index: 45;
+    }
+    .backdrop.open { display: block; }
+    .sidebar {
+      width: var(--nav-w);
+      flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--line);
+      padding: 1rem .75rem 2rem;
+      overflow-y: auto;
+      position: sticky;
+      top: var(--header);
+      height: calc(100vh - var(--header));
+    }
+    .nav-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      color: var(--faint);
+      margin: 1.25rem .5rem .35rem;
+    }
+    .nav-label:first-child { margin-top: 0; }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .55rem .65rem;
+      border-radius: 8px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      font-family: inherit;
+    }
+    .nav-link:hover { background: var(--bg); color: var(--text); }
+    .nav-link.active {
+      background: var(--accent-bg);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .content {
+      flex: 1;
+      min-width: 0;
+      width: 100%;
+      padding: 1.5rem clamp(1rem, 3vw, 2.5rem) 4rem;
+    }
+    .content-inner { width: 100%; max-width: none; }
+    .page { display: none; animation: fade .2s ease; }
+    .page.active { display: block; }
+    @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    h1 { font-size: clamp(1.75rem, 4vw, 2.25rem); letter-spacing: -.03em; line-height: 1.2; margin-bottom: .5rem; }
+    .subtitle { color: var(--muted); font-size: 1.05rem; margin-bottom: 1.5rem; max-width: 52rem; }
+    h2 { font-size: 1.35rem; margin: 2rem 0 .75rem; letter-spacing: -.02em; }
+    h3 { font-size: 1rem; margin: 1.25rem 0 .5rem; }
+    p { margin: .65rem 0; color: var(--muted); }
+    p strong, li strong { color: var(--text); }
+    ul, ol { margin: .65rem 0; padding-left: 1.25rem; color: var(--muted); }
+    li { margin: .3rem 0; }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: .75rem;
+      margin: 1.5rem 0;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 1.1rem 1.15rem;
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+      transition: border-color .15s, box-shadow .15s;
+      font-family: inherit;
+      text-align: left;
+      display: block;
+      width: 100%;
+    }
+    .card:hover {
+      border-color: var(--accent);
+      box-shadow: var(--shadow);
+      text-decoration: none;
+    }
+    .card h3 { margin: 0 0 .35rem; font-size: 1rem; color: var(--text); }
+    .card p { margin: 0; font-size: 14px; line-height: 1.45; }
+    .steps { counter-reset: step; list-style: none; padding: 0; margin: 1rem 0; }
+    .steps li {
+      counter-increment: step;
+      position: relative;
+      padding: .85rem 0 .85rem 2.75rem;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+    }
+    .steps li:last-child { border-bottom: none; }
+    .steps li::before {
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: .8rem;
+      width: 1.75rem;
+      height: 1.75rem;
+      border-radius: 50%;
+      background: var(--accent-bg);
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .steps li strong { display: block; margin-bottom: .15rem; color: var(--text); }
+    .tip {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 10px 10px 0;
+      padding: .85rem 1rem;
+      margin: 1rem 0;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .table-wrap { overflow-x: auto; margin: 1rem 0; -webkit-overflow-scrolling: touch; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 280px; }
+    th, td { border: 1px solid var(--line); padding: .55rem .65rem; text-align: left; }
+    th { background: var(--code); color: var(--text); font-weight: 600; }
+    td { color: var(--muted); }
+    details {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      margin: .5rem 0;
+    }
+    details summary {
+      padding: .75rem 1rem;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      list-style: none;
+    }
+    details summary::-webkit-details-marker { display: none; }
+    details summary::after {
+      content: "+";
+      float: right;
+      color: var(--faint);
+      font-weight: 400;
+    }
+    details[open] summary::after { content: "−"; }
+    details .inner { padding: 0 1rem 1rem; font-size: 14px; color: var(--muted); }
+    figure {
+      margin: 1.25rem 0;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--surface);
+    }
+    figure img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    figure figcaption {
+      padding: .55rem .85rem;
+      font-size: 12px;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+      line-height: 1.45;
+    }
+    figure.figure--modal {
+      max-width: min(940px, 100%);
+      margin-inline: auto;
+    }
+    figure.figure--panel {
+      max-width: min(320px, 88%);
+      margin-inline: auto;
+    }
+    figure.figure--badge {
+      display: inline-block;
+      vertical-align: middle;
+      width: auto;
+      max-width: 120px;
+      margin: 0;
+      border-radius: 8px;
+    }
+    figure.figure--badge img {
+      width: auto;
+      max-width: 100%;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+    }
+    .live-badge-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: .35rem;
+    }
+    .live-badge-row span { flex: 1; min-width: 12rem; }
+    .pager {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      justify-content: space-between;
+      margin-top: 2.5rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--line);
+    }
+    .pager button {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      border-radius: 8px;
+      padding: .55rem .85rem;
+      font: inherit;
+      font-size: 13px;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .pager button:hover { border-color: var(--accent); color: var(--accent); }
+    .faq-group { margin: 1.5rem 0; }
+    .faq-group h3 { margin-bottom: .5rem; font-size: 1rem; color: var(--text); }
+    details.faq { margin: .4rem 0; }
+    details.faq summary { font-weight: 600; font-size: 14px; }
+    details.faq .inner p { margin: .5rem 0 0; }
+    .ack-list { list-style: none; padding: 0; margin: 1rem 0; }
+    .ack-list li {
+      padding: .65rem 0;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .ack-list li strong { display: block; color: var(--text); margin-bottom: .15rem; }
+    @media (min-width: 1200px) {
+      .cards { grid-template-columns: repeat(4, 1fr); }
+    }
+    @media (max-width: 768px) {
+      .menu-btn { display: block; }
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        z-index: 50;
+        transform: translateX(-100%);
+        transition: transform .22s ease;
+        box-shadow: var(--shadow);
+        padding-top: calc(var(--header) + 1rem);
+      }
+      .sidebar.open { transform: translateX(0); }
+      .content { padding: 1rem .85rem 3rem; }
+      .pill button { padding: .35rem .55rem; }
+    }
+  </style>
+</head>
+<body class="lang-fr">
+  <div class="app">
+    <header class="header">
+      <button type="button" class="menu-btn" id="menuBtn" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+      <a href="../" class="doc-brand">
+        <img class="doc-brand-icon doc-brand-icon--light" src="../assets/brand/Lucarne-logo-only.png" alt="" width="28" height="28" />
+        <img class="doc-brand-icon doc-brand-icon--dark" src="../assets/brand/Lucarne-logo-only-dark.png" alt="" width="28" height="28" />
+        <img class="doc-brand-wordmark doc-brand-wordmark--light" src="../assets/brand/Lucarne-text.png" alt="Lucarne" height="18" />
+        <img class="doc-brand-wordmark doc-brand-wordmark--dark" src="../assets/brand/Lucarne-text-dark.png" alt="Lucarne" height="18" />
+        <span class="doc-brand-tag">docs</span>
+      </a>
+      <div class="header-fill"></div>
+      <div class="pill" id="langPill">
+        <button type="button" data-lang="fr" class="on">FR</button>
+        <button type="button" data-lang="en">EN</button>
+      </div>
+      <div class="pill" id="themePill" style="margin-left:.35rem">
+        <button type="button" data-theme="light" class="on">Light</button>
+        <button type="button" data-theme="dark">Dark</button>
+      </div>
+    </header>
+
+    <div class="body">
+      <div class="backdrop" id="backdrop"></div>
+      <aside class="sidebar" id="sidebar">
+        <div class="nav-label fr">Menu</div>
+        <div class="nav-label en">Menu</div>
+        <button type="button" class="nav-link active" data-page="home">
+          <span class="fr">Accueil</span><span class="en">Home</span>
+        </button>
+
+        <div class="nav-label fr">Par où commencer</div>
+        <div class="nav-label en">Start here</div>
+        <button type="button" class="nav-link" data-page="install">
+          <span class="fr">Installation</span><span class="en">Installation</span>
+        </button>
+        <button type="button" class="nav-link" data-page="studio">
+          <span class="fr">Lucarne Studio</span><span class="en">Lucarne Studio</span>
+        </button>
+        <button type="button" class="nav-link" data-page="export">
+          <span class="fr">Export Arduino</span><span class="en">Arduino export</span>
+        </button>
+
+        <div class="nav-label fr">Référence</div>
+        <div class="nav-label en">Reference</div>
+        <button type="button" class="nav-link" data-page="api">
+          <span class="fr">API (classes &amp; fonctions)</span>
+          <span class="en">API (classes &amp; functions)</span>
+        </button>
+        <button type="button" class="nav-link" data-page="widgets">
+          <span class="fr">Widgets</span><span class="en">Widgets</span>
+        </button>
+        <button type="button" class="nav-link" data-page="hardware">
+          <span class="fr">Câblage</span><span class="en">Wiring</span>
+        </button>
+        <button type="button" class="nav-link" data-page="live">
+          Live Preview
+        </button>
+        <button type="button" class="nav-link" data-page="extras">
+          <span class="fr">Polices &amp; exemples</span><span class="en">Fonts &amp; examples</span>
+        </button>
+        <button type="button" class="nav-link" data-page="faq">
+          <span class="fr">FAQ &amp; remerciements</span><span class="en">FAQ &amp; credits</span>
+        </button>
+      </aside>
+
+      <main class="content">
+        <div class="content-inner">
+
+          <article class="page active" id="page-home">
+            <img class="doc-hero-logo doc-hero-logo--light" src="../assets/brand/Lucarne-logo.png" alt="Lucarne" width="1000" height="1000" />
+            <img class="doc-hero-logo doc-hero-logo--dark" src="../assets/brand/Lucarne-logo-dark.png" alt="Lucarne" width="1000" height="1000" />
+            <h1>Lucarne</h1>
+            <p class="subtitle fr">Interfaces pour petits écrans SPI (ST7789, ST7735S) sur Arduino et ESP32. Dessinez dans Studio, exportez du C++, flashez.</p>
+            <p class="subtitle en">UIs for small SPI displays (ST7789, ST7735S) on Arduino and ESP32. Design in Studio, export C++, flash.</p>
+
+            <div class="cards">
+              <button type="button" class="card" data-goto="studio">
+                <h3>Lucarne Studio</h3>
+                <p class="fr">Créer des écrans visuellement, simuler, exporter.</p>
+                <p class="en">Design screens visually, simulate, export.</p>
+              </button>
+              <button type="button" class="card" data-goto="export">
+                <h3 class="fr">Mettre sur la carte</h3>
+                <h3 class="en">Put it on the board</h3>
+                <p class="fr">Intégrer Projet.h dans votre croquis.</p>
+                <p class="en">Integrate Projet.h in your sketch.</p>
+              </button>
+              <button type="button" class="card" data-goto="hardware">
+                <h3 class="fr">Brancher l'écran</h3>
+                <h3 class="en">Wire the display</h3>
+                <p class="fr">SPI, boutons, encodeur, tactile.</p>
+                <p class="en">SPI, buttons, encoder, touch.</p>
+              </button>
+              <button type="button" class="card" data-goto="widgets">
+                <h3>Widgets</h3>
+                <p class="fr">Label, Metric, Menu, Button…</p>
+                <p class="en">Label, Metric, Menu, Button…</p>
+              </button>
+              <button type="button" class="card" data-goto="api">
+                <h3>API</h3>
+                <p class="fr">Classes, fonctions, namespace projet.</p>
+                <p class="en">Classes, functions, projet namespace.</p>
+              </button>
+            </div>
+
+            <h2 class="fr">En bref</h2>
+            <h2 class="en">In short</h2>
+            <ol class="steps">
+              <li>
+                <strong class="fr">Installer la lib</strong>
+                <strong class="en">Install the library</strong>
+                <span class="fr">Copiez Lucarne dans <code>Arduino/libraries</code>.</span>
+                <span class="en">Copy Lucarne to <code>Arduino/libraries</code>.</span>
+              </li>
+              <li>
+                <strong class="fr">Ouvrir Studio</strong>
+                <strong class="en">Open Studio</strong>
+                <span class="fr"><code>editor/index.html</code> — bientôt aussi en ligne.</span>
+                <span class="en"><code>editor/index.html</code> — hosted version coming.</span>
+              </li>
+              <li>
+                <strong class="fr">Exporter &amp; flasher</strong>
+                <strong class="en">Export &amp; flash</strong>
+                <span class="fr">Export .h → copier à côté du .ino → compiler.</span>
+                <span class="en">Export .h → copy next to .ino → build.</span>
+              </li>
+            </ol>
+          </article>
+
+          <article class="page" id="page-install">
+            <h1 class="fr">Installation</h1>
+            <h1 class="en">Installation</h1>
+            <p class="subtitle fr">Librairie firmware + éditeur web (aucun npm requis).</p>
+            <p class="subtitle en">Firmware library + web editor (no npm required).</p>
+
+            <h3>Arduino IDE</h3>
+            <p class="fr">Dossier du repo → <code>Documents/Arduino/libraries/Lucarne</code></p>
+            <p class="en">Repo folder → <code>Documents/Arduino/libraries/Lucarne</code></p>
+            <h3>PlatformIO</h3>
+            <p><code>lib/Lucarne/</code> <span class="fr">ou</span><span class="en">or</span> <code>lib_deps</code></p>
+            <h3>Lucarne Studio</h3>
+            <p class="fr">Servez <code>editor/</code> (Live Server, <code>python -m http.server</code>…) et ouvrez <code>index.html</code>. Le projet se sauvegarde dans le navigateur ; <strong>Save</strong> / <strong>Load</strong> pour un fichier <code>.lucarne.json</code>.</p>
+            <p class="en">Serve <code>editor/</code> (Live Server, <code>python -m http.server</code>…) and open <code>index.html</code>. Project auto-saves in the browser; <strong>Save</strong> / <strong>Load</strong> for a <code>.lucarne.json</code> file.</p>
+
+            <h2 class="fr">Sans Studio (code direct)</h2>
+            <h2 class="en">Without Studio (code only)</h2>
+            <pre><code>#include &lt;Lucarne.h&gt;
+using namespace lucarne;
+ST7789 display;
+
+void setup() {
+  DisplayPins pins;
+  pins.cs = 1; pins.dc = 2; pins.rst = 3;
+  pins.mosi = 4; pins.sclk = 5;
+  DisplayOptions opt;
+  opt.panelWidth = 240; opt.panelHeight = 280;
+  opt.spiMode = 3; opt.invert = true;
+  BufferOptions buf; buf.mode = BufferMode::Full;
+  display.begin(pins, opt, buf);
+  display.fillScreen(0);
+  display.print("Hello");
+  display.display();
+}</code></pre>
+            <div class="tip fr"><strong><a class="sym-link" href="#api/buffer-full" data-sym="buffer-full"><code>BufferMode::Full</code></a></strong> = framebuffer en RAM, transitions animées possibles. <strong>None</strong> = dessin direct, pas d'animation.</div>
+            <div class="tip en"><strong><a class="sym-link" href="#api/buffer-full" data-sym="buffer-full"><code>BufferMode::Full</code></a></strong> = RAM framebuffer, animated transitions. <strong>None</strong> = direct draw, no animation.</div>
+          </article>
+
+          <article class="page" id="page-studio">
+            <h1>Lucarne Studio</h1>
+            <p class="subtitle fr">Éditeur visuel : blueprint → designer → simulate → export.</p>
+            <p class="subtitle en">Visual editor: blueprint → designer → simulate → export.</p>
+            <figure>
+              <img src="images/screenshot-studio-overview.png" width="1918" height="928" loading="lazy" alt="Lucarne Studio — blueprint, barre d'outils et inspecteur" />
+              <figcaption><span class="fr">Vue d'ensemble : blueprint, réglages écran et inspecteur projet.</span><span class="en">Overview: blueprint, display settings and project inspector.</span></figcaption>
+            </figure>
+
+            <ol class="steps">
+              <li>
+                <strong>Blueprint</strong>
+                <span class="fr">Ajoutez des écrans (+ Screen). Reliez les entrées de menu d'un écran à un autre en tirant un lien. Double-clic = ouvrir le designer.</span>
+                <span class="en">Add screens (+ Screen). Drag menu item links between screens. Double-click = open designer.</span>
+              </li>
+              <li>
+                <strong>Designer</strong>
+                <span class="fr">Placez widgets (palette à gauche), déplacez, redimensionnez. Templates prêts à l'emploi. Calques = ordre d'affichage.</span>
+                <span class="en">Place widgets (left palette), move, resize. Ready-made templates. Layers = draw order.</span>
+              </li>
+              <li>
+                <strong class="fr">Onglets droits</strong>
+                <strong class="en">Right tabs</strong>
+                <span class="fr"><strong>Theme</strong> couleurs · <strong>Fonts</strong> polices · <strong>Assets</strong> images/icônes · <strong>Data</strong> clés (temp, wifi…)</span>
+                <span class="en"><strong>Theme</strong> colors · <strong>Fonts</strong> · <strong>Assets</strong> images/icons · <strong>Data</strong> keys (temp, wifi…)</span>
+              </li>
+              <li>
+                <strong>Simulate</strong>
+                <span class="fr">Flèches ou pad = menu. Clic sur boutons/switches. Teste les transitions.</span>
+                <span class="en">Arrows or pad = menu. Click buttons/switches. Tests transitions.</span>
+              </li>
+            </ol>
+
+            <h2 class="fr">Barre du haut</h2>
+            <h2 class="en">Top bar</h2>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th><span class="fr">Élément</span><span class="en">Item</span></th>
+                    <th><span class="fr">Rôle</span><span class="en">Role</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Device</td>
+                    <td><span class="fr">Modèle d'écran et résolution (240×280, 128×128…)</span><span class="en">Panel preset and resolution (240×280, 128×128…)</span></td>
+                  </tr>
+                  <tr>
+                    <td>Rotation</td>
+                    <td><span class="fr">Orientation logique 0° à 270°</span><span class="en">Logical orientation 0° to 270°</span></td>
+                  </tr>
+                  <tr>
+                    <td>Live</td>
+                    <td><span class="fr">Connexion USB pour aperçu sur carte réelle</span><span class="en">USB connection for on-device preview</span></td>
+                  </tr>
+                  <tr>
+                    <td>Export .h</td>
+                    <td><span class="fr">Génère les headers C++ du projet</span><span class="en">Generates project C++ headers</span></td>
+                  </tr>
+                  <tr>
+                    <td>Save / Load</td>
+                    <td><span class="fr">Fichier projet <code>.lucarne.json</code></span><span class="en">Project file <code>.lucarne.json</code></span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <figure>
+              <img src="images/screenshot-blueprint.png" width="1599" height="874" loading="lazy" alt="Blueprint — écrans Home et Dashboard reliés" />
+              <figcaption><span class="fr">Blueprint : écrans, liens de menu et écran START.</span><span class="en">Blueprint: screens, menu links and START screen.</span></figcaption>
+            </figure>
+            <figure>
+              <img src="images/screenshot-designer.png" width="1918" height="874" loading="lazy" alt="Designer — édition de l'écran Home" />
+              <figcaption><span class="fr">Designer : palette widgets, canvas et calques.</span><span class="en">Designer: widget palette, canvas and layers.</span></figcaption>
+            </figure>
+          </article>
+
+          <article class="page" id="page-export">
+            <h1 class="fr">Export Arduino</h1>
+            <h1 class="en">Arduino export</h1>
+            <p class="subtitle fr">Studio génère le UI ; vous gardez le câblage SPI dans le .ino.</p>
+            <p class="subtitle en">Studio generates the UI; you keep SPI wiring in the .ino.</p>
+
+            <ol class="steps">
+              <li><strong>Export .h</strong><span class="fr"> dans Studio → copier ou télécharger.</span><span class="en"> in Studio → copy or download.</span></li>
+              <li><span class="fr"><strong>Projet.h</strong> (+ éventuellement Projet_fonts.h, Projet_images.h, Projet_icons.h) à côté du .ino.</span><span class="en"><strong>Projet.h</strong> (+ optional Projet_fonts.h, Projet_images.h, Projet_icons.h) next to .ino.</span></li>
+              <li><span class="fr">Câblez le display dans <a class="sym-link" href="#api/arduino-setup" data-sym="arduino-setup"><code>setup()</code></a> — l'export ne connaît pas vos broches.</span><span class="en">Wire the display in <a class="sym-link" href="#api/arduino-setup" data-sym="arduino-setup"><code>setup()</code></a> — export does not know your pins.</span></li>
+            </ol>
+
+            <pre><code>#include &lt;Lucarne.h&gt;
+#include "Projet.h"
+using namespace lucarne;
+ST7789 display;
+UI ui(display);
+
+void setup() {
+  // vos broches SPI ici
+  display.begin(pins, options, buffer);
+  projet::build(ui);
+  projet::attachInput(ui);
+  ui.begin();
+}
+
+void loop() {
+  projet::update();
+  ui.setFloat("temp", readSensor());
+  ui.update();
+  switch (ui.pollMenuAction()) {
+    case projet::ACTION_OPEN_SETTINGS: break;
+  }
+}</code></pre>
+
+            <h2 class="fr">Entrées (menu sur un écran)</h2>
+            <h2 class="en">Input (screen with menu)</h2>
+            <p class="fr">Inspecteur projet : <strong>Buttons</strong> (haut/bas/OK/retour), <strong>Encoder</strong> (A/B/btn), ou <strong>Touch</strong> → vous appelez <a class="sym-link" href="#api/projet-input-feed" data-sym="projet-input-feed"><code>projet::input.feed(x,y,pressed)</code></a> au lieu de <a class="sym-link" href="#api/projet-update" data-sym="projet-update"><code>projet::update()</code></a>.</p>
+            <p class="en">Project inspector: <strong>Buttons</strong> (up/down/OK/back), <strong>Encoder</strong> (A/B/btn), or <strong>Touch</strong> → call <a class="sym-link" href="#api/projet-input-feed" data-sym="projet-input-feed"><code>projet::input.feed(x,y,pressed)</code></a> instead of <a class="sym-link" href="#api/projet-update" data-sym="projet-update"><code>projet::update()</code></a>.</p>
+
+            <h2 class="fr">Callbacks menu / bouton</h2>
+            <h2 class="en">Menu / button callbacks</h2>
+            <p class="fr">Dans Studio, action « Callback » + un ID → constante <code>projet::ACTION_MON_ID</code> dans Projet.h. Lisez-la dans <a class="sym-link" href="#api/arduino-loop" data-sym="arduino-loop"><code>loop()</code></a> avec <a class="sym-link" href="#api/ui-pollMenuAction" data-sym="ui-pollMenuAction"><code>ui.pollMenuAction()</code></a>.</p>
+            <p class="en">In Studio, action « Callback » + an ID → <code>projet::ACTION_MY_ID</code> in Projet.h. Read it in <a class="sym-link" href="#api/arduino-loop" data-sym="arduino-loop"><code>loop()</code></a> with <a class="sym-link" href="#api/ui-pollMenuAction" data-sym="ui-pollMenuAction"><code>ui.pollMenuAction()</code></a>.</p>
+
+            <div class="tip fr">Après chaque changement dans Studio : régénérez les .h. Votre .ino ne change pas.</div>
+            <div class="tip en">After each Studio change: regenerate .h files. Your .ino stays the same.</div>
+            <figure class="figure--modal">
+              <img src="images/screenshot-export-modal.png" width="893" height="732" loading="lazy" alt="Modale d'export Projet.h" />
+              <figcaption><span class="fr">Export .h : aperçu, copie ou téléchargement des headers.</span><span class="en">Export .h: preview, copy or download headers.</span></figcaption>
+            </figure>
+          </article>
+
+          <article class="page" id="page-widgets">
+            <h1>Widgets</h1>
+            <p class="subtitle fr">Ajoutez-les dans le Designer ou en C++. Liez les valeurs via l'onglet Data (<a class="sym-link" href="#api/ui-setFloat" data-sym="ui-setFloat"><code>ui.setFloat("temp", …)</code></a>).</p>
+            <p class="subtitle en">Add in Designer or C++. Bind values via Data tab (<a class="sym-link" href="#api/ui-setFloat" data-sym="ui-setFloat"><code>ui.setFloat("temp", …)</code></a>).</p>
+
+            <details><summary>Label</summary><div class="inner"><p class="fr">Texte fixe.</p><p class="en">Static text.</p><pre><code>Label(x, y, "Hello", TextAlign::Center);</code></pre></div></details>
+            <details><summary>Metric</summary><div class="inner"><p class="fr">Étiquette + valeur (float/int/bool/string).</p><p class="en">Label + live value.</p><pre><code>Metric(x,y,w,h, "Temp", "temp", "C");</code></pre></div></details>
+            <details><summary>Bar</summary><div class="inner"><pre><code>Bar(x,y,w,h, "level", 0, 100);</code></pre></div></details>
+            <details><summary>Icon</summary><div class="inner"><p class="fr">Réf. string : <code>"wifi"</code>, <code>"tabler:settings"</code>, <code>"c:myicon"</code></p><p class="en">String ref: <code>"wifi"</code>, <code>"tabler:settings"</code>, <code>"c:myicon"</code></p><pre><code>Icon(x, y, "chart", 1);</code></pre></div></details>
+            <details><summary>Image</summary><div class="inner"><pre><code>Image(x,y,w,h, &amp;Img_photo);</code></pre></div></details>
+            <details><summary>Menu</summary><div class="inner"><p class="fr">Navigation ou callback. Jusqu'à 16 items.</p><p class="en">Navigate or callback. Up to 16 items.</p><pre><code>menu.addItem("Home", "home", &amp;screen);
+menu.addCallbackItem("Off", "power", ACTION_ID);</code></pre></div></details>
+            <details><summary>Button</summary><div class="inner"><p class="fr">Touch : navigation ou callback.</p><p class="en">Touch: navigate or callback.</p><pre><code>Button(x,y,w,h, "Start");
+btn.setNavigate(&amp;screen);
+btn.setCallback(ACTION_ID);</code></pre></div></details>
+            <details><summary>Switch</summary><div class="inner"><p class="fr">Clé bool, touch pour basculer.</p><p class="en">Bool key, touch to toggle.</p><pre><code>Switch(x,y,w,h, "Wi-Fi", "wifi");</code></pre></div></details>
+            <details><summary>Slider</summary><div class="inner"><p class="fr">Affiche une valeur float (pas de drag firmware).</p><p class="en">Shows float value (no firmware drag).</p><pre><code>Slider(x,y,w,h, "brightness", 0, 100);</code></pre></div></details>
+            <details><summary>Chart</summary><div class="inner"><p class="fr">Courbe, 2 à 8 clés float.</p><p class="en">Sparkline, 2–8 float keys.</p><pre><code>chart.setKey(0, "temp");
+chart.setKey(1, "hum");</code></pre></div></details>
+            <details><summary>Gauge</summary><div class="inner"><pre><code>Gauge(x,y,w,h, "Speed", "speed", 0, 100);</code></pre></div></details>
+            <details><summary>List</summary><div class="inner"><p class="fr">Liste statique (12 items max).</p><p class="en">Static list (12 items max).</p><pre><code>list.addItem("Settings");</code></pre></div></details>
+
+            <h2 class="fr">Icônes intégrées</h2>
+            <h2 class="en">Built-in icons</h2>
+            <p style="font-size:14px"><code>home settings wifi bluetooth battery thermo drop fan bell chart power sun lock check cross arrow_up arrow_down arrow_left arrow_right play pause plus minus</code></p>
+            <figure class="figure--modal">
+              <img src="images/screenshot-icon-picker.png" width="937" height="734" loading="lazy" alt="Sélecteur d'icônes Streamline" />
+              <figcaption><span class="fr">Assets → icônes : packs Streamline, Tabler, recherche et export embarqué.</span><span class="en">Assets → icons: Streamline, Tabler packs, search and embedded export.</span></figcaption>
+            </figure>
+
+            <h2>Transitions</h2>
+            <p class="fr"><code>SlideLeft, Fade, Push…</code> — nécessitent <a class="sym-link" href="#api-buffer-full" data-sym="buffer-full"><code>BufferMode::Full</code></a>. <a class="sym-link" href="#api/ui-back" data-sym="ui-back"><code>back()</code></a> inverse les slides. Splash : écran START + durée dans l'inspecteur nœud.</p>
+            <p class="en"><code>SlideLeft, Fade, Push…</code> — need <a class="sym-link" href="#api/buffer-full" data-sym="buffer-full"><code>BufferMode::Full</code></a>. <a class="sym-link" href="#api/ui-back" data-sym="ui-back"><code>back()</code></a> reverses slides. Splash: START screen + duration in node inspector.</p>
+          </article>
+
+          <article class="page" id="page-hardware">
+            <h1 class="fr">Câblage</h1>
+            <h1 class="en">Wiring</h1>
+            <p class="subtitle fr">Écran SPI + entrées optionnelles.</p>
+            <p class="subtitle en">SPI display + optional inputs.</p>
+
+            <h2 class="fr">Écran SPI</h2>
+            <h2 class="en">SPI display</h2>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Signal</th><th>Pin</th></tr></thead>
+                <tbody>
+                  <tr><td>SCLK</td><td><code>pins.sclk</code></td></tr>
+                  <tr><td>MOSI</td><td><code>pins.mosi</code></td></tr>
+                  <tr><td>CS / DC / RST</td><td><code>pins.cs, dc, rst</code></td></tr>
+                  <tr><td>Backlight</td><td><code>pins.bl</code> (-1 si fixe)</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <pre><code>options.spiMode = 3;    // souvent requis ST7789
+options.invert = true;  // couleurs correctes</code></pre>
+            <div class="tip fr"><strong>Écran noir ?</strong> Essayez spiMode 3. <strong>Couleurs bizarres ?</strong> invert ou ColorOrder RGB/BGR.</div>
+            <div class="tip en"><strong>Black screen?</strong> Try spiMode 3. <strong>Wrong colors?</strong> invert or ColorOrder RGB/BGR.</div>
+
+            <h2 class="fr">Boutons</h2>
+            <h2 class="en">Buttons</h2>
+            <p class="fr">Vers GND, pull-up interne. Haut/bas = menu, OK = valider, retour = back.</p>
+            <p class="en">To GND, internal pull-up. Up/down = menu, OK = select, back = back.</p>
+
+            <h2 class="fr">Encodeur</h2>
+            <h2 class="en">Encoder</h2>
+            <p class="fr">Tourner = haut/bas. Clic court = OK. Clic long = back.</p>
+            <p class="en">Rotate = up/down. Short click = OK. Long press = back.</p>
+
+            <h2 class="fr">Tactile</h2>
+            <h2 class="en">Touch</h2>
+            <p class="fr">Votre pilote appelle <a class="sym-link" href="#api/touch-feed" data-sym="touch-feed"><code>touch.feed(x, y, pressed)</code></a>. Menu = sélection ; hors menu = boutons/switches.</p>
+            <p class="en">Your driver calls <a class="sym-link" href="#api/touch-feed" data-sym="touch-feed"><code>touch.feed(x, y, pressed)</code></a>. Menu = select; elsewhere = buttons/switches.</p>
+          </article>
+
+          <article class="page" id="page-live">
+            <h1>Live Preview</h1>
+            <p class="subtitle fr">Voir le design sur la vraie carte en USB — sans reflasher à chaque changement de widget.</p>
+            <p class="subtitle en">See the design on real hardware over USB — no reflash per widget change.</p>
+
+            <ol class="steps">
+              <li><strong class="fr">Flasher</strong><strong class="en">Flash</strong> <code>examples/LucarnePreview/LucarnePreview.ino</code><span class="fr"> — ESP32-S3 : USB CDC On Boot activé. Pas de Serial.print.</span><span class="en"> — ESP32-S3: USB CDC On Boot on. No Serial.print.</span></li>
+              <li>
+                <strong class="fr">Connecter</strong><strong class="en">Connect</strong>
+                <div class="live-badge-row">
+                  <figure class="figure--badge">
+                    <img src="images/screenshot-live-preview.png" width="93" height="48" loading="lazy" alt="Bouton Live" />
+                  </figure>
+                  <span class="fr">Chrome/Edge : bouton Live dans la barre du haut → choisir le port. Fermez le moniteur série Arduino.</span>
+                  <span class="en">Chrome/Edge: Live button in the top bar → pick the port. Close the Arduino serial monitor.</span>
+                </div>
+              </li>
+              <li><strong class="fr">Designer ou Simulate</strong><strong class="en">Designer or Simulate</strong><span class="fr"> = ce qui s'affiche sur l'écran.</span><span class="en"> = what appears on the panel.</span></li>
+            </ol>
+          </article>
+
+          <article class="page" id="page-extras">
+            <h1 class="fr">Polices &amp; exemples</h1>
+            <h1 class="en">Fonts &amp; examples</h1>
+
+            <h2 class="fr">Polices</h2>
+            <h2 class="en">Fonts</h2>
+            <p class="fr">Inclus : <code>LucarneFontBody</code> et <code>LucarneFontTitle</code> (Fira Sans, anti-aliasé). Studio → Fonts : Google ou TTF → assigner dans Theme → export <code>Projet_fonts.h</code>.</p>
+            <p class="en">Included: <code>LucarneFontBody</code> and <code>LucarneFontTitle</code> (Fira Sans, anti-aliased). Studio → Fonts: Google or TTF → assign in Theme → exports <code>Projet_fonts.h</code>.</p>
+            <figure class="figure--panel">
+              <img src="images/screenshot-theme-tab.png" width="320" height="711" loading="lazy" alt="Onglet Theme — couleurs, métriques et polices" />
+              <figcaption><span class="fr">Onglet Theme : palette, radius/padding et polices body/title.</span><span class="en">Theme tab: palette, radius/padding and body/title fonts.</span></figcaption>
+            </figure>
+
+            <h2 class="fr">Exemples Arduino</h2>
+            <h2 class="en">Arduino examples</h2>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Sketch</th>
+                    <th><span class="fr">Usage</span><span class="en">Purpose</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td><code>HelloLucarne</code></td><td><span class="fr">Gfx bas niveau, sans UI runtime</span><span class="en">Low-level Gfx, no UI runtime</span></td></tr>
+                  <tr><td><code>LucarneUI</code></td><td><span class="fr">Dashboard Metric/Bar et liaison de données</span><span class="en">Dashboard Metric/Bar and data binding</span></td></tr>
+                  <tr><td><code>LucarneMenu</code></td><td><span class="fr">Menus multi-écrans, transitions, callbacks</span><span class="en">Multi-screen menus, transitions, callbacks</span></td></tr>
+                  <tr><td><code>LucarnePreview</code></td><td><span class="fr">Récepteur Live Preview USB</span><span class="en">USB Live Preview receiver</span></td></tr>
+                  <tr><td><code>LucarneDiag</code></td><td><span class="fr">Test plein écran rouge/vert/bleu</span><span class="en">Full-screen red/green/blue test</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="page" id="page-api">
+            <h1>API</h1>
+            <p class="subtitle fr">Référence C++ Lucarne : namespace <code>lucarne</code>, classes UI/display, widgets, export <code>projet</code>.</p>
+            <p class="subtitle en">Lucarne C++ reference: <code>lucarne</code> namespace, UI/display classes, widgets, <code>projet</code> export.</p>
+
+            <nav class="api-toc">
+              <a href="#api/lucarne" data-sym="lucarne">lucarne</a>
+              <a href="#api/class-ui" data-sym="class-ui">UI</a>
+              <a href="#api/class-display" data-sym="class-display">Display</a>
+              <a href="#api/class-store" data-sym="class-store">Store</a>
+              <a href="#api/class-screen" data-sym="class-screen">Screen</a>
+              <a href="#api/ns-projet" data-sym="ns-projet">projet</a>
+              <a href="#api/input" data-sym="input">Input</a>
+              <a href="#api/widgets" data-sym="widgets">Widgets</a>
+              <a href="#api/icons" data-sym="icons">Icons</a>
+              <a href="#api/arduino-setup" data-sym="arduino-setup">Arduino</a>
+            </nav>
+
+            <h2 class="fr">Namespace lucarne</h2>
+            <h2 class="en">lucarne namespace</h2>
+            <details class="api-entry" id="sym-lucarne">
+              <summary><code>namespace lucarne</code></summary>
+              <div class="inner">
+                <p class="fr">Toute la bibliothèque vit dans ce namespace. Dans un croquis : <code>using namespace lucarne;</code> ou préfixer <code>lucarne::</code>.</p>
+                <p class="en">The whole library lives in this namespace. In a sketch: <code>using namespace lucarne;</code> or prefix <code>lucarne::</code>.</p>
+              </div>
+            </details>
+            <details class="api-entry" id="sym-color565">
+              <summary><code>uint16_t color565(r, g, b)</code></summary>
+              <div class="inner">
+                <p class="fr">Convertit RGB 8 bits en couleur 565 pour l'affichage.</p>
+                <p class="en">Converts 8-bit RGB to 565 display color.</p>
+              </div>
+            </details>
+            <details class="api-entry" id="sym-buffer-full">
+              <summary><code>BufferMode::Full</code> / <code>BufferMode::None</code></summary>
+              <div class="inner">
+                <p class="fr"><strong>Full</strong> : framebuffer en RAM, transitions animées. <strong>None</strong> : dessin direct, pas d'animation.</p>
+                <p class="en"><strong>Full</strong>: RAM framebuffer, animated transitions. <strong>None</strong>: direct draw, no animation.</p>
+              </div>
+            </details>
+            <details class="api-entry" id="sym-transition">
+              <summary><code>Transition</code></summary>
+              <div class="inner">
+                <p class="fr">Enum : <code>None, SlideLeft, SlideRight, SlideUp, SlideDown, Fade, Push, Cover, Inherit</code>. Passé à <code>UI::navigate</code> ou défini par défaut via <code>setTransition</code>.</p>
+                <p class="en">Enum: <code>None, SlideLeft, SlideRight, SlideUp, SlideDown, Fade, Push, Cover, Inherit</code>. Passed to <code>UI::navigate</code> or default via <code>setTransition</code>.</p>
+              </div>
+            </details>
+
+            <h2 class="fr">Classe UI</h2>
+            <h2 class="en">UI class</h2>
+            <details class="api-entry" id="sym-class-ui">
+              <summary><code>class UI</code></summary>
+              <div class="inner">
+                <p class="fr">Moteur de navigation, rendu des écrans, store de données, menus et transitions. Constructeur : <code>UI(Display &amp;display)</code>.</p>
+                <p class="en">Navigation engine, screen rendering, data store, menus and transitions. Constructor: <code>UI(Display &amp;display)</code>.</p>
+              </div>
+            </details>
+            <details class="api-entry" id="sym-ui-begin">
+              <summary><code>void UI::begin()</code></summary>
+              <div class="inner">
+                <p class="fr">Initialise l'UI après <code>projet::build</code> et le câblage display. Affiche l'écran START ou le premier écran.</p>
+                <p class="en">Initializes UI after <code>projet::build</code> and display wiring. Shows START screen or first screen.</p>
+              </div>
+            </details>
+            <details class="api-entry" id="sym-ui-update">
+              <summary><code>void UI::update()</code></summary>
+              <div class="inner">
+                <p class="fr">Rafraîchit l'affichage si nécessaire (widgets liés au store, splash, transition).</p>
+                <p class="en">Refreshes display when needed (store-bound widgets, splash, transition).</p>
+              </div>
+            </details>
+            <details class="api-entry" id="sym-ui-setFloat">
+              <summary><code>void UI::setFloat(const char *key, float v)</code></summary>
+              <div class="inner">
+                <p class="fr">Met à jour une clé float du store (Metric, Bar, Chart, Gauge, Slider…). Clé définie dans Studio → onglet Data.</p>
+                <p class="en">Updates a float store key (Metric, Bar, Chart, Gauge, Slider…). Key defined in Studio → Data tab.</p>
+              </div>
+            </details>
+            <details class="api-entry" id="sym-ui-setInt">
+              <summary><code>void UI::setInt / setBool / setString</code></summary>
+              <div class="inner">
+                <p class="fr">Autres types pour le même store : entier, booléen, chaîne (24 car. max).</p>
+                <p class="en">Other store types: integer, boolean, string (24 char max).</p>
+              </div>
+            </details>
+            <details class="api-entry" id="sym-ui-pollMenuAction">
+              <summary><code>uint8_t UI::pollMenuAction()</code></summary>
+              <div class="inner">
+                <p class="fr">Retourne l'ID callback du dernier item menu/bouton touch (0 si aucun). Constantes <code>projet::ACTION_*</code> générées par Studio.</p>
+                <p class="en">Returns callback ID from last menu/touch button item (0 if none). <code>projet::ACTION_*</code> constants generated by Studio.</p>
+              </div>
+            </details>
+            <details class="api-entry" id="sym-ui-show">
+              <summary><code>void UI::show(Screen *screen)</code></summary>
+              <div class="inner">
+                <p class="fr">Remplace l'écran courant sans empiler (pas de retour arrière).</p>
+                <p class="en">Replaces current screen without stack (no back navigation).</p>
+              </div>
+            </details>
+            <details class="api-entry" id="sym-ui-navigate">
+              <summary><code>void UI::navigate(Screen *, Transition)</code></summary>
+              <div class="inner">
+                <p class="fr">Change d'écran avec transition. Empile l'écran précédent pour <code>back()</code>.</p>
+                <p class="en">Changes screen with transition. Pushes previous screen for <code>back()</code>.</p>
+              </div>
+            </details>
+            <details class="api-entry" id="sym-ui-back">
+              <summary><code>void UI::back()</code></summary>
+              <div class="inner">
+                <p class="fr">Revient à l'écran empilé. Inverse les transitions slide si configurées.</p>
+                <p class="en">Returns to stacked screen. Reverses slide transitions when configured.</p>
+              </div>
+            </details>
+            <details class="api-entry" id="sym-ui-next">
+              <summary><code>void UI::next() / prev() / select()</code></summary>
+              <div class="inner">
+                <p class="fr">Contrôle menu actif : item suivant, précédent, validation. Utilisé par les entrées boutons/encodeur.</p>
+                <p class="en">Active menu control: next item, previous, confirm. Used by button/encoder inputs.</p>
+              </div>
+            </details>
+            <details class="api-entry" id="sym-ui-activateAt">
+              <summary><code>void UI::activateAt(int16_t x, int16_t y)</code></summary>
+              <div class="inner">
+                <p class="fr">Simule un touch aux coordonnées : sélection menu ou activation Button/Switch.</p>
+                <p class="en">Simulates touch at coordinates: menu select or Button/Switch activation.</p>
+              </div>
+            </details>
+            <details class="api-entry" id="sym-ui-setTheme">
+              <summary><code>void UI::setTheme(const Theme &amp;)</code></summary>
+              <div class="inner">
+                <p class="fr">Applique couleurs et polices du thème exporté.</p>
+                <p class="en">Applies exported theme colors and fonts.</p>
+              </div>
+            </details>
+            <details class="api-entry" id="sym-ui-setTransition">
+              <summary><code>void UI::setTransition(Transition, uint16_t ms)</code></summary>
+              <div class="inner">
+                <p class="fr">Transition par défaut et durée (ms) entre écrans.</p>
+                <p class="en">Default transition and duration (ms) between screens.</p>
+              </div>
+            </details>
+            <details class="api-entry" id="sym-ui-setSplash">
+              <summary><code>void UI::setSplash(Screen *, uint16_t ms, bool progress)</code></summary>
+              <div class="inner">
+                <p class="fr">Écran splash au démarrage avec durée et barre de progression optionnelle.</p>
+                <p class="en">Splash screen at boot with duration and optional progress bar.</p>
+              </div>
+            </details>
+
+            <h2 class="fr">Display</h2>
+            <h2 class="en">Display</h2>
+            <details class="api-entry" id="sym-class-display">
+              <summary><code>class Display</code> · <code>ST7789</code> · <code>ST7735S</code></summary>
+              <div class="inner">
+                <p class="fr">Pilote SPI + primitives Gfx. Instanciez <code>ST7789</code> ou <code>ST7735S</code> selon votre panneau.</p>
+                <p class="en">SPI driver + Gfx primitives. Instantiate <code>ST7789</code> or <code>ST7735S</code> for your panel.</p>
+              </div>
+            </details>
+            <details class="api-entry" id="sym-display-begin">
+              <summary><code>bool Display::begin(pins, options, buffer, spi)</code></summary>
+              <div class="inner">
+                <p class="fr">Initialise SPI, panneau et buffer. À appeler dans <code>setup()</code> avec vos broches.</p>
+                <p class="en">Initializes SPI, panel and buffer. Call in <code>setup()</code> with your pins.</p>
+              </div>
+            </details>
+            <details class="api-entry" id="sym-display-display">
+              <summary><code>void Display::display()</code></summary>
+              <div class="inner">
+                <p class="fr">Envoie le framebuffer vers l'écran (mode buffer) ou flush les dirty regions.</p>
+                <p class="en">Pushes framebuffer to panel (buffer mode) or flushes dirty regions.</p>
+              </div>
+            </details>
+            <details class="api-entry" id="sym-display-setRotation">
+              <summary><code>void Display::setRotation(uint8_t r)</code></summary>
+              <div class="inner">
+                <p class="fr">Rotation logique 0–3 (0°, 90°, 180°, 270°).</p>
+                <p class="en">Logical rotation 0–3 (0°, 90°, 180°, 270°).</p>
+              </div>
+            </details>
+
+            <h2 class="fr">Store &amp; Screen</h2>
+            <h2 class="en">Store &amp; Screen</h2>
+            <details class="api-entry" id="sym-class-store">
+              <summary><code>class Store</code></summary>
+              <div class="inner">
+                <p class="fr">32 clés max, types float/int/bool/string. Accès direct via <code>ui.store()</code> si besoin.</p>
+                <p class="en">32 keys max, float/int/bool/string types. Direct access via <code>ui.store()</code> if needed.</p>
+              </div>
+            </details>
+            <details class="api-entry" id="sym-class-screen">
+              <summary><code>class Screen</code></summary>
+              <div class="inner">
+                <p class="fr">Conteneur de widgets. <code>add(Widget *)</code>, <code>draw()</code>. Généré par l'export Studio (<code>projet::screen_*</code>).</p>
+                <p class="en">Widget container. <code>add(Widget *)</code>, <code>draw()</code>. Generated by Studio export (<code>projet::screen_*</code>).</p>
+              </div>
+            </details>
+            <details class="api-entry" id="sym-class-widget">
+              <summary><code>class Widget</code></summary>
+              <div class="inner">
+                <p class="fr">Base abstraite : position, taille, <code>draw(Gfx, Theme, Store)</code>. Sous-classes Label, Metric, Menu…</p>
+                <p class="en">Abstract base: position, size, <code>draw(Gfx, Theme, Store)</code>. Subclasses Label, Metric, Menu…</p>
+              </div>
+            </details>
+
+            <h2 class="fr">Export projet</h2>
+            <h2 class="en">projet export</h2>
+            <details class="api-entry" id="sym-ns-projet">
+              <summary><code>namespace projet</code></summary>
+              <div class="inner">
+                <p class="fr">Code généré dans <code>Projet.h</code> : écrans, widgets, constantes ACTION_*, helpers d'entrée.</p>
+                <p class="en">Generated code in <code>Projet.h</code>: screens, widgets, ACTION_* constants, input helpers.</p>
+              </div>
+            </details>
+            <details class="api-entry" id="sym-projet-build">
+              <summary><code>void projet::build(UI &amp;ui)</code></summary>
+              <div class="inner">
+                <p class="fr">Construit tous les écrans/widgets et les enregistre dans l'UI. Appeler une fois dans <code>setup()</code>.</p>
+                <p class="en">Builds all screens/widgets and registers them in UI. Call once in <code>setup()</code>.</p>
+              </div>
+            </details>
+            <details class="api-entry" id="sym-projet-attachInput">
+              <summary><code>void projet::attachInput(UI &amp;ui)</code></summary>
+              <div class="inner">
+                <p class="fr">Lie l'entrée configurée dans Studio (boutons, encodeur ou touch) à l'UI.</p>
+                <p class="en">Attaches input configured in Studio (buttons, encoder or touch) to UI.</p>
+              </div>
+            </details>
+            <details class="api-entry" id="sym-projet-update">
+              <summary><code>void projet::update()</code></summary>
+              <div class="inner">
+                <p class="fr">Lit boutons/encodeur et met à jour l'UI. À appeler dans <code>loop()</code> (mode boutons/encodeur).</p>
+                <p class="en">Reads buttons/encoder and updates UI. Call in <code>loop()</code> (button/encoder mode).</p>
+              </div>
+            </details>
+            <details class="api-entry" id="sym-projet-input-feed">
+              <summary><code>projet::input.feed(x, y, pressed)</code></summary>
+              <div class="inner">
+                <p class="fr">Mode touch : votre pilote tactile appelle cette fonction au lieu de <code>projet::update()</code>.</p>
+                <p class="en">Touch mode: your touch driver calls this instead of <code>projet::update()</code>.</p>
+              </div>
+            </details>
+
+            <h2 class="fr">Entrées</h2>
+            <h2 class="en">Input</h2>
+            <details class="api-entry" id="sym-input">
+              <summary><code>ButtonInput</code> · <code>EncoderInput</code> · <code>TouchInput</code></summary>
+              <div class="inner">
+                <p class="fr"><strong>ButtonInput</strong> : <code>begin(up, down, ok, back)</code>, <code>update()</code>. <strong>EncoderInput</strong> : pins A/B/btn. <strong>TouchInput</strong> : <code>feed(x,y,pressed)</code>.</p>
+                <p class="en"><strong>ButtonInput</strong>: <code>begin(up, down, ok, back)</code>, <code>update()</code>. <strong>EncoderInput</strong>: A/B/btn pins. <strong>TouchInput</strong>: <code>feed(x,y,pressed)</code>.</p>
+              </div>
+            </details>
+            <details class="api-entry" id="sym-touch-feed">
+              <summary><code>void TouchInput::feed(int16_t x, int16_t y, bool pressed)</code></summary>
+              <div class="inner">
+                <p class="fr">Transmet un événement tactile à l'UI (down/up). Coordonnées en pixels logiques.</p>
+                <p class="en">Forwards touch event to UI (down/up). Coordinates in logical pixels.</p>
+              </div>
+            </details>
+
+            <h2 class="fr">Widgets</h2>
+            <h2 class="en">Widgets</h2>
+            <details class="api-entry" id="sym-widgets">
+              <summary><code>Label · Metric · Bar · Icon · Image · Menu · Button · Switch · Slider · Chart · Gauge · List</code></summary>
+              <div class="inner">
+                <p class="fr">Constructeurs C++ exportés. Voir page Widgets pour exemples. Menu : <code>addItem</code>, <code>addCallbackItem</code>. Button : <code>setNavigate</code>, <code>setCallback</code>.</p>
+                <p class="en">Exported C++ constructors. See Widgets page for examples. Menu: <code>addItem</code>, <code>addCallbackItem</code>. Button: <code>setNavigate</code>, <code>setCallback</code>.</p>
+              </div>
+            </details>
+            <details class="api-entry" id="sym-widget-label">
+              <summary><code>Label(x, y, text, TextAlign)</code></summary>
+              <div class="inner"><p class="fr">Texte statique.</p><p class="en">Static text.</p></div>
+            </details>
+            <details class="api-entry" id="sym-widget-metric">
+              <summary><code>Metric(x, y, w, h, label, key, unit)</code></summary>
+              <div class="inner"><p class="fr">Valeur live liée à une clé store.</p><p class="en">Live value bound to store key.</p></div>
+            </details>
+            <details class="api-entry" id="sym-widget-menu">
+              <summary><code>Menu</code></summary>
+              <div class="inner"><p class="fr">Navigation ou callbacks, 16 items max.</p><p class="en">Navigation or callbacks, 16 items max.</p></div>
+            </details>
+
+            <h2 class="fr">Icônes</h2>
+            <h2 class="en">Icons</h2>
+            <details class="api-entry" id="sym-icons">
+              <summary><code>setIconLookups · drawIconRef</code></summary>
+              <div class="inner">
+                <p class="fr"><code>setIconLookups(rowsFn, imageFn)</code> enregistre les lookups exportés. <code>drawIconRef</code> dessine une icône par ref string (<code>"wifi"</code>, <code>"tabler:…"</code>).</p>
+                <p class="en"><code>setIconLookups(rowsFn, imageFn)</code> registers exported lookups. <code>drawIconRef</code> draws icon by string ref (<code>"wifi"</code>, <code>"tabler:…"</code>).</p>
+              </div>
+            </details>
+            <details class="api-entry" id="sym-setIconLookups">
+              <summary><code>void setIconLookups(IconRowsLookup, IconImageLookup)</code></summary>
+              <div class="inner"><p class="fr">Appelé dans <code>projet::build</code> pour lier les assets icônes.</p><p class="en">Called in <code>projet::build</code> to wire icon assets.</p></div>
+            </details>
+
+            <h2 class="fr">Arduino (hors Lucarne)</h2>
+            <h2 class="en">Arduino (not Lucarne)</h2>
+            <details class="api-entry" id="sym-arduino-setup">
+              <summary><code>void setup()</code></summary>
+              <div class="inner">
+                <p class="fr">Point d'entrée Arduino : initialisation une fois au démarrage. Câblage SPI, <code>display.begin</code>, <code>projet::build</code>, <code>ui.begin</code>.</p>
+                <p class="en">Arduino entry point: one-time init at boot. SPI wiring, <code>display.begin</code>, <code>projet::build</code>, <code>ui.begin</code>.</p>
+              </div>
+            </details>
+            <details class="api-entry" id="sym-arduino-loop">
+              <summary><code>void loop()</code></summary>
+              <div class="inner">
+                <p class="fr">Boucle Arduino : <code>projet::update</code>, mise à jour des données (<code>ui.setFloat</code>…), <code>ui.update</code>, callbacks menu.</p>
+                <p class="en">Arduino loop: <code>projet::update</code>, data updates (<code>ui.setFloat</code>…), <code>ui.update</code>, menu callbacks.</p>
+              </div>
+            </details>
+          </article>
+
+          <article class="page" id="page-faq">
+            <h1 class="fr">FAQ &amp; remerciements</h1>
+            <h1 class="en">FAQ &amp; acknowledgements</h1>
+            <p class="subtitle fr">Réponses aux questions fréquentes et crédits des ressources utilisées.</p>
+            <p class="subtitle en">Answers to common questions and credits for bundled resources.</p>
+
+            <div class="faq-group">
+              <h3 class="fr">Général</h3>
+              <h3 class="en">General</h3>
+              <details class="faq"><summary><span class="fr">Lucarne remplace-t-il LVGL ?</span><span class="en">Does Lucarne replace LVGL?</span></summary><div class="inner"><p class="fr">Non. Lucarne cible les petits écrans SPI avec un flux design → export C++ statique, léger en RAM, sans moteur de rendu lourd sur la carte. LVGL reste plus adapté aux UIs complexes multi-couches avec beaucoup de widgets dynamiques.</p><p class="en">No. Lucarne targets small SPI panels with a design → static C++ export flow, light on RAM, without a heavy on-device renderer. LVGL remains better for complex multi-layer UIs with many dynamic widgets.</p></div></details>
+              <details class="faq"><summary><span class="fr">Faut-il Internet pour utiliser Studio ?</span><span class="en">Do I need Internet for Studio?</span></summary><div class="inner"><p class="fr">Non pour l'édition de base. Internet sert surtout à charger des polices Google Fonts et les icônes Tabler si elles ne sont pas embarquées. Les packs Streamline/Glyphs inclus fonctionnent hors ligne.</p><p class="en">No for basic editing. Internet is mainly for Google Fonts and Tabler icons when not embedded. Bundled Streamline/Glyphs packs work offline.</p></div></details>
+              <details class="faq"><summary><span class="fr">Où est sauvegardé mon projet ?</span><span class="en">Where is my project saved?</span></summary><div class="inner"><p class="fr">Dans le stockage local du navigateur (<code>localStorage</code>). Utilisez <strong>Save</strong> pour un fichier <code>.lucarne.json</code> portable. Effacer les données du site supprime le projet non exporté.</p><p class="en">In browser <code>localStorage</code>. Use <strong>Save</strong> for a portable <code>.lucarne.json</code> file. Clearing site data deletes an unexported project.</p></div></details>
+            </div>
+
+            <div class="faq-group">
+              <h3>Studio &amp; export</h3>
+              <details class="faq"><summary><span class="fr">Dois-je re-exporter après chaque modification ?</span><span class="en">Must I re-export after every change?</span></summary><div class="inner"><p class="fr">Oui pour le firmware final. Live Preview affiche le design sans reflasher <code>Projet.h</code>. Dès que vous voulez le UI sur la carte dans votre app, régénérez les headers et recompilez.</p><p class="en">Yes for final firmware. Live Preview shows the design without reflashing <code>Projet.h</code>. Once you want the UI in your app on device, regenerate headers and rebuild.</p></div></details>
+              <details class="faq"><summary><span class="fr">Quels fichiers l'export produit-il ?</span><span class="en">What files does export produce?</span></summary><div class="inner"><p class="fr"><code>Projet.h</code> toujours. En plus si nécessaire : <code>Projet_fonts.h</code>, <code>Projet_images.h</code>, <code>Projet_icons.h</code>, et binaires <code>assets/*.rgb565</code> pour images SD.</p><p class="en"><code>Projet.h</code> always. Additionally when needed: <code>Projet_fonts.h</code>, <code>Projet_images.h</code>, <code>Projet_icons.h</code>, and <code>assets/*.rgb565</code> binaries for SD images.</p></div></details>
+              <details class="faq"><summary><span class="fr">Pourquoi l'export ne configure pas mes broches SPI ?</span><span class="en">Why doesn't export set my SPI pins?</span></summary><div class="inner"><p class="fr">Chaque carte a un câblage différent. Vous gardez <code>DisplayPins</code> et <code>display.begin()</code> dans votre <code>.ino</code>. L'export ne connaît que le UI (écrans, widgets, thème, entrées).</p><p class="en">Every board wires differently. You keep <code>DisplayPins</code> and <code>display.begin()</code> in your <code>.ino</code>. Export only knows UI (screens, widgets, theme, input).</p></div></details>
+              <details class="faq"><summary><span class="fr">Comment fonctionnent les callbacks menu/bouton ?</span><span class="en">How do menu/button callbacks work?</span></summary><div class="inner"><p class="fr">Dans Studio, choisissez l'action <strong>Callback</strong> et un ID (ex. <code>open_settings</code>). L'export crée <code>projet::ACTION_OPEN_SETTINGS</code>. Dans <code>loop()</code>, lisez <code>ui.pollMenuAction()</code> dans un <code>switch</code> — une seule action consommée par appel.</p><p class="en">In Studio, set action <strong>Callback</strong> and an ID (e.g. <code>open_settings</code>). Export creates <code>projet::ACTION_OPEN_SETTINGS</code>. In <code>loop()</code>, read <code>ui.pollMenuAction()</code> in a <code>switch</code> — one action consumed per call.</p></div></details>
+            </div>
+
+            <div class="faq-group">
+              <h3 class="fr">Affichage &amp; matériel</h3>
+              <h3 class="en">Display &amp; hardware</h3>
+              <details class="faq"><summary><span class="fr">Écran noir, rétroéclairage allumé</span><span class="en">Black screen, backlight on</span></summary><div class="inner"><p class="fr">Testez <code>options.spiMode = 3</code> (fréquent sur ST7789). Vérifiez MOSI/SCLK/CS/DC/RST. Lancez <code>LucarneDiag</code> pour valider le panneau.</p><p class="en">Try <code>options.spiMode = 3</code> (common on ST7789). Check MOSI/SCLK/CS/DC/RST. Run <code>LucarneDiag</code> to validate the panel.</p></div></details>
+              <details class="faq"><summary><span class="fr">Couleurs inversées ou rouge/bleu permutés</span><span class="en">Inverted or red/blue swapped colors</span></summary><div class="inner"><p class="fr">Basculez <code>options.invert</code> et/ou <code>options.colorOrder</code> (RGB vs BGR). Mêmes réglages que dans vos autres croquis qui fonctionnent.</p><p class="en">Toggle <code>options.invert</code> and/or <code>options.colorOrder</code> (RGB vs BGR). Match settings from sketches that already work.</p></div></details>
+              <details class="faq"><summary><span class="fr">Bande de bruit en bas (240×280)</span><span class="en">Garbage band at bottom (240×280)</span></summary><div class="inner"><p class="fr">Le ST7789 240×280 utilise un offset vertical. Lucarne l'applique par défaut ; sur module exotique, ajustez <code>rowStart</code> / <code>colStart</code> dans <code>DisplayOptions</code>.</p><p class="en">ST7789 240×280 uses a vertical offset. Lucarne applies it by default; on exotic modules, tune <code>rowStart</code> / <code>colStart</code> in <code>DisplayOptions</code>.</p></div></details>
+              <details class="faq"><summary><span class="fr">Les transitions ne s'animent pas</span><span class="en">Transitions don't animate</span></summary><div class="inner"><p class="fr">Il faut <code>BufferMode::Full</code> et assez de RAM pour deux snapshots temporaires. En <code>BufferMode::None</code>, les changements d'écran sont instantanés.</p><p class="en">You need <code>BufferMode::Full</code> and enough RAM for two temporary snapshots. With <code>BufferMode::None</code>, screen changes are instant.</p></div></details>
+            </div>
+
+            <div class="faq-group">
+              <h3 class="fr">Données, widgets, icônes</h3>
+              <h3 class="en">Data, widgets, icons</h3>
+              <details class="faq"><summary><span class="fr">Ma Metric affiche toujours la même valeur</span><span class="en">My Metric always shows the same value</span></summary><div class="inner"><p class="fr">Vérifiez que la clé dans l'onglet Data correspond au widget, et que vous appelez <code>ui.setFloat("ma_cle", valeur)</code> (ou int/bool/string) puis <code>ui.update()</code> dans <code>loop()</code>.</p><p class="en">Check the Data tab key matches the widget, and call <code>ui.setFloat("my_key", value)</code> (or int/bool/string) then <code>ui.update()</code> in <code>loop()</code>.</p></div></details>
+              <details class="faq"><summary><span class="fr">Icône pack absente à l'export</span><span class="en">Pack icon missing in export</span></summary><div class="inner"><p class="fr">Seules les icônes réellement utilisées dans le projet sont exportées. Ouvrez le projet avec les packs chargés (serveur local sur <code>editor/</code>) avant d'exporter.</p><p class="en">Only icons actually used in the project are exported. Open the project with packs loaded (local server on <code>editor/</code>) before exporting.</p></div></details>
+              <details class="faq"><summary><span class="fr">Le Slider ne réagit pas au toucher</span><span class="en">Slider doesn't respond to touch</span></summary><div class="inner"><p class="fr">Normal : le Slider est affichage seul. Mettez à jour la clé depuis votre code ou un autre contrôle. Le drag tactile n'est pas implémenté côté firmware.</p><p class="en">Expected: Slider is display-only. Update the key from your code or another control. Touch drag is not implemented in firmware.</p></div></details>
+            </div>
+
+            <div class="faq-group">
+              <h3>Live Preview</h3>
+              <details class="faq"><summary><span class="fr">Le bouton Live ne fait rien</span><span class="en">Live button does nothing</span></summary><div class="inner"><p class="fr">Utilisez Chrome ou Edge (Web Serial). Fermez le moniteur série de l'IDE Arduino. Flashez <code>LucarnePreview.ino</code> avec USB CDC activé sur ESP32-S3.</p><p class="en">Use Chrome or Edge (Web Serial). Close the Arduino IDE serial monitor. Flash <code>LucarnePreview.ino</code> with USB CDC enabled on ESP32-S3.</p></div></details>
+              <details class="faq"><summary><span class="fr">Live vs firmware exporté</span><span class="en">Live vs exported firmware</span></summary><div class="inner"><p class="fr">Live envoie des images calculées par Studio. Votre app avec <code>Projet.h</code> exécute le vrai runtime UI sur la carte. Utilisez Live pour itérer visuellement, puis exportez pour le produit final.</p><p class="en">Live sends frames rendered by Studio. Your app with <code>Projet.h</code> runs the real UI runtime on device. Use Live to iterate visually, then export for production.</p></div></details>
+            </div>
+
+            <h2 class="fr">Remerciements &amp; licences</h2>
+            <h2 class="en">Acknowledgements &amp; licenses</h2>
+            <ul class="ack-list">
+              <li>
+                <strong>Fira Sans</strong>
+                <span class="fr">Police par défaut (corps et titre). SIL Open Font License 1.1 — Mozilla Foundation.</span>
+                <span class="en">Default body and title font. SIL Open Font License 1.1 — Mozilla Foundation.</span>
+              </li>
+              <li>
+                <strong>Tabler Icons</strong>
+                <span class="fr">Pack d'icônes optionnel dans Studio. MIT License — Tabler.</span>
+                <span class="en">Optional icon pack in Studio. MIT License — Tabler.</span>
+              </li>
+              <li>
+                <strong>Streamline &amp; Glyphs packs</strong>
+                <span class="fr">Icônes couleur 32×32 embarquées dans l'éditeur. Voir les licences des packs respectifs dans le dépôt distributeur.</span>
+                <span class="en">32×32 color icons embedded in the editor. See respective pack licenses in the distribution repo.</span>
+              </li>
+              <li>
+                <strong>Arduino &amp; ESP32</strong>
+                <span class="fr">Toolchains et cores utilisés pour compiler les exemples — non inclus dans Lucarne.</span>
+                <span class="en">Toolchains and cores used to build examples — not bundled with Lucarne.</span>
+              </li>
+            </ul>
+            <p class="fr">Lucarne est un projet open source. Contributions et retours bienvenus sur le dépôt GitHub.</p>
+            <p class="en">Lucarne is an open source project. Contributions and feedback welcome on the GitHub repository.</p>
+          </article>
+
+          <nav class="pager" id="pager"></nav>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var PAGES = ["home","install","studio","export","widgets","hardware","live","extras","api","faq"];
+      var LABELS = {
+        fr: { home:"Accueil", install:"Installation", studio:"Studio", export:"Export", widgets:"Widgets", hardware:"Câblage", live:"Live", extras:"Polices", api:"API", faq:"FAQ" },
+        en: { home:"Home", install:"Install", studio:"Studio", export:"Export", widgets:"Widgets", hardware:"Wiring", live:"Live", extras:"Fonts", api:"API", faq:"FAQ" }
+      };
+
+      var CPP_TYPES = "ST7789|ST7735S|Display|UI|Screen|Label|Metric|Bar|Icon|Menu|Button|Switch|Slider|Chart|Gauge|List|Image|Store|Widget|Gfx|DisplayPins|DisplayOptions|BufferOptions|ButtonInput|EncoderInput|TouchInput|Theme|TextAlign|BufferMode|BufferMemory|ColorOrder|LucarneFontBody|LucarneFontTitle|Transition|ValueType|uint8_t|uint16_t|int16_t|SPIClass";
+      var CPP_KW = "void|using|namespace|return|switch|case|break|const|true|false|float|int|long|bool|if|else|for|while|struct|class|enum|static|virtual|override|public|private|protected";
+      var SLOT_BASE = 0xE000;
+
+      var CODE_SYM_LINKS = [
+        [/ui<span class="hl-op">\.<\/span><span class="hl-fn">setFloat<\/span>/g, "ui-setFloat"],
+        [/ui<span class="hl-op">\.<\/span><span class="hl-fn">setInt<\/span>/g, "ui-setInt"],
+        [/ui<span class="hl-op">\.<\/span><span class="hl-fn">setBool<\/span>/g, "ui-setInt"],
+        [/ui<span class="hl-op">\.<\/span><span class="hl-fn">setString<\/span>/g, "ui-setInt"],
+        [/ui<span class="hl-op">\.<\/span><span class="hl-fn">pollMenuAction<\/span>/g, "ui-pollMenuAction"],
+        [/ui<span class="hl-op">\.<\/span><span class="hl-fn">update<\/span>/g, "ui-update"],
+        [/ui<span class="hl-op">\.<\/span><span class="hl-fn">begin<\/span>/g, "ui-begin"],
+        [/ui<span class="hl-op">\.<\/span><span class="hl-fn">show<\/span>/g, "ui-show"],
+        [/ui<span class="hl-op">\.<\/span><span class="hl-fn">navigate<\/span>/g, "ui-navigate"],
+        [/ui<span class="hl-op">\.<\/span><span class="hl-fn">back<\/span>/g, "ui-back"],
+        [/ui<span class="hl-op">\.<\/span><span class="hl-fn">next<\/span>/g, "ui-next"],
+        [/ui<span class="hl-op">\.<\/span><span class="hl-fn">prev<\/span>/g, "ui-next"],
+        [/ui<span class="hl-op">\.<\/span><span class="hl-fn">select<\/span>/g, "ui-next"],
+        [/ui<span class="hl-op">\.<\/span><span class="hl-fn">activateAt<\/span>/g, "ui-activateAt"],
+        [/ui<span class="hl-op">\.<\/span><span class="hl-fn">setTheme<\/span>/g, "ui-setTheme"],
+        [/ui<span class="hl-op">\.<\/span><span class="hl-fn">setTransition<\/span>/g, "ui-setTransition"],
+        [/ui<span class="hl-op">\.<\/span><span class="hl-fn">setSplash<\/span>/g, "ui-setSplash"],
+        [/display<span class="hl-op">\.<\/span><span class="hl-fn">begin<\/span>/g, "display-begin"],
+        [/display<span class="hl-op">\.<\/span><span class="hl-fn">display<\/span>/g, "display-display"],
+        [/display<span class="hl-op">\.<\/span><span class="hl-fn">setRotation<\/span>/g, "display-setRotation"],
+        [/<span class="hl-ty">projet<\/span><span class="hl-op">::<\/span><span class="hl-fn">build<\/span>/g, "projet-build"],
+        [/<span class="hl-ty">projet<\/span><span class="hl-op">::<\/span><span class="hl-fn">attachInput<\/span>/g, "projet-attachInput"],
+        [/<span class="hl-ty">projet<\/span><span class="hl-op">::<\/span><span class="hl-fn">update<\/span>/g, "projet-update"],
+        [/<span class="hl-ty">projet<\/span><span class="hl-op">::<\/span><span class="hl-fn">input<\/span><span class="hl-op">\.<\/span><span class="hl-fn">feed<\/span>/g, "projet-input-feed"],
+        [/<span class="hl-ty">projet<\/span><span class="hl-op">::<\/span><span class="hl-fn">ACTION_[\w]+<\/span>/g, "ns-projet"],
+        [/<span class="hl-fn">setup<\/span>/g, "arduino-setup"],
+        [/<span class="hl-fn">loop<\/span>/g, "arduino-loop"],
+        [/<span class="hl-ty">ST7789<\/span>/g, "class-display"],
+        [/<span class="hl-ty">ST7735S<\/span>/g, "class-display"],
+        [/<span class="hl-ty">UI<\/span>/g, "class-ui"],
+        [/<span class="hl-ty">BufferMode<\/span><span class="hl-op">::<\/span><span class="hl-fn">Full<\/span>/g, "buffer-full"],
+        [/<span class="hl-ty">BufferMode<\/span><span class="hl-op">::<\/span><span class="hl-fn">None<\/span>/g, "buffer-full"],
+        [/<span class="hl-ty">Label<\/span>/g, "widget-label"],
+        [/<span class="hl-ty">Metric<\/span>/g, "widget-metric"],
+        [/<span class="hl-ty">Menu<\/span>/g, "widget-menu"],
+        [/<span class="hl-fn">setIconLookups<\/span>/g, "setIconLookups"],
+        [/<span class="hl-fn">color565<\/span>/g, "color565"],
+        [/touch<span class="hl-op">\.<\/span><span class="hl-fn">feed<\/span>/g, "touch-feed"]
+      ];
+
+      function escHtml(s) {
+        return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      }
+
+      function slotMarker(id) {
+        return "\x01" + String.fromCharCode(SLOT_BASE + id) + "\x01";
+      }
+
+      function resolveSlots(out, slots) {
+        return out.replace(/\x01([\uE000-\uF8FF])\x01/g, function (_, ch) {
+          return slots[ch.charCodeAt(0) - SLOT_BASE];
+        });
+      }
+
+      function highlightCpp(src) {
+        var slots = [];
+        function slot(cls, text) {
+          var id = slots.length;
+          slots.push('<span class="' + cls + '">' + text + '</span>');
+          return slotMarker(id);
+        }
+        var out = escHtml(src);
+        out = out.replace(/(#include[^\n]*)/g, function (m) { return slot("hl-pr", m); });
+        out = out.replace(/(\/\/[^\n]*)/g, function (m) { return slot("hl-cm", m); });
+        out = out.replace(/("(?:[^"\\]|\\.)*")/g, function (m) { return slot("hl-st", m); });
+        out = out.replace(/\b(\d+\.?\d*f?)\b/g, function (m) { return slot("hl-num", m); });
+        out = out.replace(/\b([A-Za-z_][\w]*)::(\w+)/g, function (_, a, b) {
+          return slot("hl-ty", a) + '<span class="hl-op">::</span>' + slot("hl-fn", b);
+        });
+        out = out.replace(new RegExp("\\b(" + CPP_TYPES + ")\\b", "g"), function (m) { return slot("hl-ty", m); });
+        out = out.replace(new RegExp("\\b(" + CPP_KW + ")\\b", "g"), function (m) { return slot("hl-kw", m); });
+        out = out.replace(/\.([A-Za-z_]\w*)\s*(?=\()/g, function (_, name) {
+          return "." + slot("hl-fn", name);
+        });
+        out = out.replace(/\b(void|bool|uint8_t|uint16_t|int16_t|float|int|long)\s+([A-Za-z_]\w*)\s*(?=\()/g, function (_, ty, name) {
+          return slot("hl-kw", ty) + " " + slot("hl-fn", name);
+        });
+        return resolveSlots(out, slots);
+      }
+
+      function linkifyCodeHtml(html) {
+        CODE_SYM_LINKS.forEach(function (pair) {
+          html = html.replace(pair[0], function (m) {
+            return '<a class="sym-in-code" href="#api/' + pair[1] + '" data-sym="' + pair[1] + '">' + m + '</a>';
+          });
+        });
+        return html;
+      }
+
+      function captureRaw(block) {
+        if (block.dataset.raw) return block.dataset.raw;
+        block.dataset.raw = block.textContent;
+        return block.dataset.raw;
+      }
+
+      function highlightAll() {
+        document.querySelectorAll("pre code").forEach(function (block) {
+          var raw = captureRaw(block);
+          block.innerHTML = linkifyCodeHtml(highlightCpp(raw));
+        });
+        document.querySelectorAll(".content-inner code").forEach(function (block) {
+          if (block.closest("pre")) return;
+          if (block.closest("summary")) return;
+          var raw = captureRaw(block);
+          block.innerHTML = highlightCpp(raw);
+        });
+      }
+
+      var body = document.body;
+      var html = document.documentElement;
+      var sidebar = document.getElementById("sidebar");
+      var backdrop = document.getElementById("backdrop");
+      var pendingSym = "";
+      var symPulseTimer = null;
+
+      function lang() { return body.classList.contains("lang-en") ? "en" : "fr"; }
+
+      function closeDrawer() {
+        sidebar.classList.remove("open");
+        backdrop.classList.remove("open");
+      }
+      function openDrawer() {
+        sidebar.classList.add("open");
+        backdrop.classList.add("open");
+      }
+
+      function openApiSym(id) {
+        if (!id) return null;
+        var target = document.getElementById("sym-" + id);
+        if (!target || !target.matches("details")) return null;
+        document.querySelectorAll("#page-api details.api-entry[open]").forEach(function (d) {
+          if (d !== target) d.removeAttribute("open");
+        });
+        target.setAttribute("open", "");
+        return target;
+      }
+
+      function pulseApiSym(el) {
+        if (!el) return;
+        document.querySelectorAll("#page-api details.api-entry.sym-pulse").forEach(function (d) {
+          d.classList.remove("sym-pulse");
+        });
+        if (symPulseTimer) window.clearTimeout(symPulseTimer);
+        void el.offsetWidth;
+        el.classList.add("sym-pulse");
+        symPulseTimer = window.setTimeout(function () {
+          el.classList.remove("sym-pulse");
+          symPulseTimer = null;
+        }, 2500);
+      }
+
+      function revealApiSym(id) {
+        if (!id) return;
+        var el = openApiSym(id);
+        if (!el) return;
+        function align(startPulse) {
+          openApiSym(id);
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+          if (startPulse) pulseApiSym(el);
+        }
+        align(false);
+        window.setTimeout(function () { align(false); }, 0);
+        window.setTimeout(function () { align(true); }, 180);
+      }
+
+      function goToSym(id) {
+        pendingSym = id;
+        showPage("api", id);
+        var hash = "api/" + id;
+        if (location.hash.replace("#", "") !== hash) {
+          history.replaceState(null, "", "#" + hash);
+        }
+      }
+
+      function showPage(id, scrollSym) {
+        if (PAGES.indexOf(id) < 0) id = "home";
+        PAGES.forEach(function (p) {
+          var el = document.getElementById("page-" + p);
+          if (el) el.classList.toggle("active", p === id);
+        });
+        document.querySelectorAll(".nav-link[data-page]").forEach(function (a) {
+          a.classList.toggle("active", a.dataset.page === id);
+        });
+        var sym = scrollSym || (id === "api" ? pendingSym : "");
+        pendingSym = "";
+        var hash = id === "home" ? "" : sym ? id + "/" + sym : id;
+        if (location.hash.replace("#", "") !== hash) {
+          history.replaceState(null, "", hash ? "#" + hash : location.pathname + location.search);
+        }
+        buildPager(id);
+        closeDrawer();
+        if (id === "api" && sym) openApiSym(sym);
+        highlightAll();
+        if (sym) revealApiSym(sym);
+        else {
+          window.scrollTo(0, 0);
+          document.querySelector(".content").scrollTop = 0;
+        }
+      }
+
+      function buildPager(id) {
+        var i = PAGES.indexOf(id);
+        var pg = document.getElementById("pager");
+        pg.innerHTML = "";
+        var L = LABELS[lang()];
+        if (i > 0) {
+          var prev = document.createElement("button");
+          prev.type = "button";
+          prev.textContent = "\u2190 " + L[PAGES[i-1]];
+          prev.onclick = function () { showPage(PAGES[i-1]); };
+          pg.appendChild(prev);
+        }
+        if (i < PAGES.length - 1) {
+          var next = document.createElement("button");
+          next.type = "button";
+          next.textContent = L[PAGES[i+1]] + " \u2192";
+          next.style.marginLeft = "auto";
+          next.onclick = function () { showPage(PAGES[i+1]); };
+          pg.appendChild(next);
+        }
+      }
+
+      document.querySelectorAll(".nav-link[data-page], .card[data-goto]").forEach(function (el) {
+        el.addEventListener("click", function () {
+          showPage(el.dataset.page || el.dataset.goto);
+        });
+      });
+
+      document.addEventListener("click", function (e) {
+        var a = e.target.closest("[data-sym]");
+        if (!a) return;
+        e.preventDefault();
+        goToSym(a.dataset.sym);
+      });
+
+      document.getElementById("menuBtn").addEventListener("click", function () {
+        sidebar.classList.contains("open") ? closeDrawer() : openDrawer();
+      });
+      backdrop.addEventListener("click", closeDrawer);
+
+      function route() {
+        var h = location.hash.replace(/^#/, "");
+        var slash = h.indexOf("/");
+        var page = slash >= 0 ? h.slice(0, slash) : h;
+        var sym = slash >= 0 ? h.slice(slash + 1) : "";
+        showPage(page || "home", sym);
+      }
+      window.addEventListener("hashchange", route);
+
+      function setLang(l) {
+        body.classList.toggle("lang-en", l === "en");
+        body.classList.toggle("lang-fr", l !== "en");
+        html.lang = l;
+        document.querySelectorAll("#langPill button").forEach(function (b) {
+          b.classList.toggle("on", b.dataset.lang === l);
+        });
+        try {
+          localStorage.setItem("lucarne_site_lang", l);
+          localStorage.setItem("lucarne_doc_lang", l);
+        } catch (e) {}
+        buildPager(PAGES.find(function (p) {
+          var el = document.getElementById("page-" + p);
+          return el && el.classList.contains("active");
+        }) || "home");
+      }
+      function setTheme(t) {
+        html.dataset.theme = t;
+        document.querySelectorAll("#themePill button").forEach(function (b) {
+          b.classList.toggle("on", b.dataset.theme === t);
+        });
+        try { localStorage.setItem("lucarne_doc_theme", t); } catch (e) {}
+      }
+      document.querySelectorAll("#langPill button").forEach(function (b) {
+        b.addEventListener("click", function () { setLang(b.dataset.lang); });
+      });
+      document.querySelectorAll("#themePill button").forEach(function (b) {
+        b.addEventListener("click", function () { setTheme(b.dataset.theme); });
+      });
+
+      try {
+        var sl = localStorage.getItem("lucarne_site_lang") || localStorage.getItem("lucarne_doc_lang");
+        if (sl) setLang(sl);
+        var st = localStorage.getItem("lucarne_doc_theme");
+        if (st) setTheme(st);
+      } catch (e) {}
+      highlightAll();
+      route();
+    })();
+  </script>
+</body>
+</html>
