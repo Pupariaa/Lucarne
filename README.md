@@ -17,7 +17,7 @@ Standalone drivers, a lightweight UI runtime, and a visual web Studio with C++ e
 [![ST7789](https://img.shields.io/badge/ST7789-supported-2563EB)](docs/HARDWARE.md)
 [![ST7735S](https://img.shields.io/badge/ST7735S-supported-2563EB)](docs/HARDWARE.md)
 
-[Documentation](https://lucarne.techalchemy.fr/doc/) · [Studio](https://lucarne.techalchemy.fr/editor/) · [Issues](https://github.com/Pupariaa/Lucarne/issues) · [Releases](https://github.com/Pupariaa/Lucarne/releases)
+[Documentation](https://techalchemy.fr/Lucarne/doc/) · [Studio](https://techalchemy.fr/Lucarne/editor/) · [Issues](https://github.com/Pupariaa/Lucarne/issues) · [Releases](https://github.com/Pupariaa/Lucarne/releases)
 
 </div>
 
@@ -267,7 +267,7 @@ Design screens in the browser, simulate navigation, export firmware-ready header
 | **Simulate** | Keyboard or on-screen D-pad |
 | **Export** | Download `Projet.h` (+ `Projet_fonts.h` if needed) |
 
-- **Online:** [lucarne.techalchemy.fr/editor](https://lucarne.techalchemy.fr/editor/)
+- **Online:** [lucarne.techalchemy.fr/editor](https://techalchemy.fr/Lucarne/editor/)
 - **Local:** open `editor/index.html` in a browser (no build step)
 - **Live Preview:** flash [`examples/LucarnePreview`](examples/LucarnePreview/LucarnePreview.ino), click **Live** in the editor ([guide](docs/LIVE_PREVIEW.md))
 
@@ -329,7 +329,7 @@ You keep control of `display.begin()` — the editor does not know your wiring. 
 | `List` | Scrollable text list |
 | `Image` | Embedded bitmap asset |
 
-API details: [`docs/RUNTIME.md`](docs/RUNTIME.md) · [online API reference](https://lucarne.techalchemy.fr/doc/#api).
+API details: [`docs/RUNTIME.md`](docs/RUNTIME.md) · [online API reference](https://techalchemy.fr/Lucarne/doc/#api).
 
 ---
 
@@ -360,7 +360,7 @@ API details: [`docs/RUNTIME.md`](docs/RUNTIME.md) · [online API reference](http
 
 | Resource | Link |
 | --- | --- |
-| **Online manual** (FR/EN) | [lucarne.techalchemy.fr/doc](https://lucarne.techalchemy.fr/doc/) |
+| **Online manual** (FR/EN) | [lucarne.techalchemy.fr/doc](https://techalchemy.fr/Lucarne/doc/) |
 | Changelog | [`CHANGELOG.md`](CHANGELOG.md) |
 | Runtime API | [`docs/RUNTIME.md`](docs/RUNTIME.md) |
 | Studio & export | [`docs/EDITOR.md`](docs/EDITOR.md) |
