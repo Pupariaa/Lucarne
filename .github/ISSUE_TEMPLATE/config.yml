@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://lucarne.techalchemy.fr/doc/
+    about: Installation, API, Studio, Live Preview
+  - name: Lucarne Studio
+    url: https://lucarne.techalchemy.fr/editor/
+    about: Online visual editor

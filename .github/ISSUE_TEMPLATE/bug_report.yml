@@ -1,0 +1,90 @@
+name: Bug report
+description: Something does not work as documented or expected
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Check the [documentation](https://lucarne.techalchemy.fr/doc/) and [FAQ](https://lucarne.techalchemy.fr/doc/#faq) first.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Firmware library (src/)
+        - Example sketch
+        - Lucarne Studio (editor/)
+        - Export (Projet.h)
+        - Live Preview
+        - Documentation / website
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Lucarne version
+      description: From library.properties, git tag, or Studio version selector
+      placeholder: "0.1.0"
+    validations:
+      required: true
+
+  - type: input
+    id: board
+    attributes:
+      label: Board
+      placeholder: "ESP32-S3-DevKitC-1, Arduino Uno, …"
+    validations:
+      required: true
+
+  - type: input
+    id: display
+    attributes:
+      label: Display
+      placeholder: "ST7789 240×280, ST7735S 128×160, …"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Flash example …
+        2. Set panel to …
+        3. See black screen / crash / …
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / screenshots
+      description: Serial output, browser console, or screenshots
+      render: shell
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues before opening this report
+          required: true

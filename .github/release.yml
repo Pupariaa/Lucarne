@@ -1,0 +1,19 @@
+changelog:
+  exclude:
+    labels:
+      - ignore-for-release
+  categories:
+    - title: Firmware
+      labels:
+        - firmware
+        - bug
+        - enhancement
+    - title: Studio
+      labels:
+        - studio
+    - title: Documentation
+      labels:
+        - documentation
+    - title: Other
+      labels:
+        - "*"

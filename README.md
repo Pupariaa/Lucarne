@@ -1,25 +1,124 @@
+<div align="center">
+
+<img src="images/Lucarne-logo.png" alt="Lucarne" width="220" />
+
 # Lucarne
 
-UI toolkit for small SPI displays (ST7789, ST7735S) on Arduino and ESP32. No Adafruit dependency.
+**UI toolkit for small SPI displays on Arduino and ESP32**
 
-Three parts work together:
+Standalone drivers, a lightweight UI runtime, and a visual web Studio with C++ export.
 
-1. **Graphics** — SPI drivers, drawing primitives, optional framebuffer.
-2. **UI runtime** — screens, widgets, menus, animated transitions, data binding.
-3. **Lucarne Studio** — browser editor to design screens, simulate navigation, export C++ headers.
+[![Version](https://img.shields.io/badge/version-0.1.0-blue)](https://github.com/Pupariaa/Lucarne/releases)
+[![License: MIT](https://img.shields.io/github/license/Pupariaa/Lucarne)](LICENSE)
+[![Arduino](https://img.shields.io/badge/Arduino-IDE-00979D?logo=arduino&logoColor=white)](https://www.arduino.cc/)
+[![PlatformIO](https://img.shields.io/badge/PlatformIO-lib-FF5722?logo=platformio&logoColor=white)](https://platformio.org/)
+[![ESP32](https://img.shields.io/badge/ESP32-supported-E7352C?logo=espressif&logoColor=white)](https://www.espressif.com/)
+[![ST7789](https://img.shields.io/badge/ST7789-supported-2563EB)](docs/HARDWARE.md)
+[![ST7735S](https://img.shields.io/badge/ST7735S-supported-2563EB)](docs/HARDWARE.md)
+
+[Documentation](https://lucarne.techalchemy.fr/doc/) · [Studio](https://lucarne.techalchemy.fr/editor/) · [Issues](https://github.com/Pupariaa/Lucarne/issues) · [Releases](https://github.com/Pupariaa/Lucarne/releases)
+
+</div>
+
+---
+
+## Table of contents
+
+- [Overview](#overview)
+- [Features](#features)
+- [Supported hardware](#supported-hardware)
+- [Installation](#installation)
+- [Quick start](#quick-start)
+- [UI in code](#ui-in-code)
+- [Lucarne Studio](#lucarne-studio)
+- [Exported projects](#exported-projects)
+- [Widgets](#widgets)
+- [Examples](#examples)
+- [Memory modes](#memory-modes)
+- [Documentation](#documentation)
+- [Repository layout](#repository-layout)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
+
+## Overview
+
+Lucarne targets **small color SPI panels** (ST7789, ST7735S) on **Arduino** and **ESP32**. It combines three layers:
+
+| Layer | Role |
+| --- | --- |
+| **Graphics** | SPI drivers, drawing primitives, optional framebuffer |
+| **UI runtime** | Screens, widgets, menus, transitions, data binding |
+| **Lucarne Studio** | Browser editor: design, simulate, export `Projet.h` |
+
+No Adafruit GFX dependency. No LVGL-style heavyweight renderer on the device: design in Studio, ship static C++ headers.
+
+---
+
+## Features
+
+- **ST7789 & ST7735S** drivers with panel offsets and rotation
+- **Framebuffer modes** — full (transitions + partial flush) or direct draw
+- **PSRAM-aware** allocation with automatic fallback
+- **Widgets** — labels, metrics, bars, icons, menus, buttons, switches, sliders, charts, gauges, lists, images
+- **Animated transitions** — slide, fade, push, cover, and more
+- **Data binding** — named keys (`ui.setFloat("temp", …)`) drive widget updates
+- **Physical input** — GPIO buttons, rotary encoder, touch feed
+- **Lucarne Studio** — visual designer, blueprint, simulation, font import, C++ export
+- **Live Preview** — stream the framebuffer to an ESP32-S3 over USB (Chrome/Edge)
+- **Built-in fonts** — anti-aliased Fira Sans (`LucarneFontBody`, `LucarneFontTitle`)
+
+---
+
+## Supported hardware
+
+| Display | Common sizes |
+| --- | --- |
+| **ST7789** | 135×240, 240×240, 172×320, 240×280, 240×320 |
+| **ST7735S** | 80×160, 128×128, 128×160 |
+
+| Platform | Notes |
+| --- | --- |
+| **ESP32 / ESP32-S3** | Recommended; PSRAM used when available |
+| **Arduino (AVR, SAMD, …)** | Works with `BufferMode::None` or small panels |
+
+Pin wiring, SPI modes, and troubleshooting: [`docs/HARDWARE.md`](docs/HARDWARE.md).
+
+---
+
+## Installation
+
+### Arduino IDE
+
+1. Download or clone this repository.
+2. Copy the folder to `Documents/Arduino/libraries/Lucarne`.
+3. Restart the IDE.
+4. Open **File → Examples → Lucarne**.
+
+### PlatformIO
+
+Add to `platformio.ini`:
+
+```ini
+lib_deps =
+    file://../Lucarne
+```
+
+Or place the library under `lib/Lucarne/` in your project.
+
+### Include
+
+```cpp
+#include <Lucarne.h>
+using namespace lucarne;
+```
 
 ---
 
 ## Quick start
 
-### Install
-
-- **Arduino IDE** — copy this repo to `Documents/Arduino/libraries/Lucarne`
-- **PlatformIO** — put it in `lib/Lucarne/` or add it via `lib_deps`
-
-Then `#include <Lucarne.h>`. Everything is in the `lucarne` namespace.
-
-### Hello screen
+Minimal sketch — draw text on an ST7789 panel:
 
 ```cpp
 #include <Lucarne.h>
@@ -29,12 +128,16 @@ ST7789 display;
 
 void setup() {
     DisplayPins pins;
-    pins.cs = 1; pins.dc = 2; pins.rst = 3; pins.mosi = 4; pins.sclk = 5;
+    pins.cs = 5;
+    pins.dc = 16;
+    pins.rst = 17;
+    pins.mosi = 21;
+    pins.sclk = 18;
 
     DisplayOptions options;
     options.panelWidth = 240;
     options.panelHeight = 280;
-    options.spiMode = 3;      // many ST7789 boards need mode 3
+    options.spiMode = 3;
     options.invert = true;
 
     BufferOptions buffer;
@@ -51,13 +154,11 @@ void setup() {
 void loop() {}
 ```
 
-With `BufferMode::Full`, drawing goes to RAM and `display()` pushes dirty regions to the panel. With `BufferMode::None`, drawing goes straight to the screen.
+> **Black screen?** Try `options.spiMode = 3` and `options.invert = true`. Run the `LucarneDiag` example to validate wiring.
 
 ---
 
-## Build a UI in code
-
-A UI needs a `Theme`, one or more `Screen` objects with widgets, and a `UI` controller.
+## UI in code
 
 ```cpp
 ST7789 display;
@@ -92,119 +193,35 @@ void loop() {
 }
 ```
 
-Widgets: `Label`, `Metric`, `Bar`, `Icon`, `Menu`, `Image`. Full API: [docs/RUNTIME.md](docs/RUNTIME.md).
+**Menus, transitions, callbacks, buttons** — see [`examples/LucarneMenu`](examples/LucarneMenu/LucarneMenu.ino) and [`docs/RUNTIME.md`](docs/RUNTIME.md).
 
-### Data binding
-
-Widgets read named keys from the UI store. Update a key, the screen redraws.
-
-```cpp
-ui.setFloat("temp", 21.7f);
-ui.setInt("rssi", -62);
-ui.setBool("fan", true);
-ui.setString("mode", "AUTO");
-```
-
-`Metric` and `Bar` bind to a key. `ui.update()` only redraws when a bound value changed.
-
----
-
-## Menus
-
-Menu items either **go to another screen** or **run your code** in `loop()`.
-
-```cpp
-Screen home("Home");
-Screen settings("Settings");
-Menu menu(12, 24, 216, 230);
-
-static const uint8_t ACTION_ABOUT = 1;
-
-menu.addItem("Sensors", iconFromName("thermo"), &dashboard, Transition::SlideLeft);
-menu.addItem("Settings", iconFromName("settings"), &settings, Transition::Fade);
-menu.addCallbackItem("About", iconFromName("home"), ACTION_ABOUT);
-
-home.add(&menu);
-ui.show(&home);
-```
-
-Handle callbacks in `loop()`:
-
-```cpp
-switch (ui.pollMenuAction()) {
-    case ACTION_ABOUT:
-        Serial.println("About tapped");
-        break;
-}
-```
-
-Navigation:
-
-| Call | Effect |
-|------|--------|
-| `ui.next()` / `ui.prev()` | Move menu selection |
-| `ui.select()` | Open target screen or queue callback |
-| `ui.pollMenuAction()` | Read callback id (0 if none) |
-| `ui.back()` | Go to previous screen |
-
-Each item has a left icon and an optional right icon (`MenuItemOpts`). Default right icon: arrow when navigating to a screen, hidden otherwise. Scales: `menu.setIconScale(2)`, `menu.setBadgeScale(2)`.
-
-Animated transitions need `BufferMode::Full`. Types: `SlideLeft`, `SlideRight`, `Fade`, `Push`, `Cover`, and more.
-
----
-
-## Physical input
-
-Wire buttons, encoder, or touch to the UI.
-
-**Buttons** (up, down, OK, back):
-
-```cpp
-ButtonInput buttons;
-buttons.begin(25, 26, 27, 14, true);  // pins, active low
-buttons.attach(&ui);
-
-void loop() {
-    buttons.update();
-    ui.update();
-}
-```
-
-**Encoder** — rotation moves selection, press selects, long press goes back.
-
-**Touch** — call `touch.feed(x, y, pressed)` from your touch driver.
-
-Pin wiring details: [docs/HARDWARE.md](docs/HARDWARE.md).
+**Data binding keys:** `ui.setFloat`, `ui.setInt`, `ui.setBool`, `ui.setString`. Widgets bound to a key redraw only when the value changes.
 
 ---
 
 ## Lucarne Studio
 
-Open `editor/index.html` in a browser. No install, no build step.
+Design screens in the browser, simulate navigation, export firmware-ready headers.
 
-| Tab | What it does |
-|-----|----------------|
-| Blueprint | Connect screens via menu links |
-| Designer | Place widgets, edit theme and layout |
-| Fonts | Import or pick fonts (exported as C++) |
-| Simulate | Test navigation with keyboard or on-screen pad |
-| Export | Download `Projet.h` (+ `Projet_fonts.h` if needed) |
+| Mode | Purpose |
+| --- | --- |
+| **Blueprint** | Connect screens through menu links |
+| **Designer** | Place widgets, edit theme and layout |
+| **Fonts** | Google fonts or TTF → exported as C++ |
+| **Simulate** | Keyboard or on-screen D-pad |
+| **Export** | Download `Projet.h` (+ `Projet_fonts.h` if needed) |
 
-Projects auto-save in the browser. Use Save/Load for JSON backup.
+- **Online:** [lucarne.techalchemy.fr/editor](https://lucarne.techalchemy.fr/editor/)
+- **Local:** open `editor/index.html` in a browser (no build step)
+- **Live Preview:** flash [`examples/LucarnePreview`](examples/LucarnePreview/LucarnePreview.ino), click **Live** in the editor ([guide](docs/LIVE_PREVIEW.md))
 
-Full editor guide: [docs/EDITOR.md](docs/EDITOR.md).
-
-### Live preview (USB)
-
-Flash `examples/LucarnePreview` once, plug in ESP32-S3, click **Live** in the editor (Chrome/Edge). The editor streams the framebuffer over USB; the board just displays it.
-
-Details: [docs/LIVE_PREVIEW.md](docs/LIVE_PREVIEW.md).
+Full editor reference: [`docs/EDITOR.md`](docs/EDITOR.md).
 
 ---
 
-## Use exported UI in your sketch
+## Exported projects
 
-Export gives you `Projet.h` (and `Projet_fonts.h` if you added custom fonts). Drop them next to your `.ino`.
+Drop `Projet.h` (and optional `Projet_fonts.h`) next to your sketch:
 
 ```cpp
 #include <Lucarne.h>
@@ -216,8 +233,7 @@ ST7789 display;
 UI ui(display);
 
 void setup() {
-    display.begin(/* your pins and panel options */);
-
+    display.begin(/* your pins and panel */);
     projet::build(ui);
     projet::attachInput(ui);
     ui.begin();
@@ -236,82 +252,111 @@ void loop() {
 }
 ```
 
-You own `display.begin()` — the editor does not know your wiring.
-
-Data keys from the editor Data tab map to `ui.setFloat`, `setInt`, `setBool`, `setString`.
-
-Menu callbacks: the export defines `projet::ACTION_<NAME>` constants. Read them with `ui.pollMenuAction()` in `loop()`. No extra `.cpp` file needed.
-
-Re-export `Projet.h` after editor changes. Your `.ino` stays the same unless you add new callback names.
+You keep control of `display.begin()` — the editor does not know your wiring. Re-export after Studio changes; your `.ino` stays stable unless you add new menu callback names.
 
 ---
 
-## Displays
+## Widgets
 
-Set `panelWidth` and `panelHeight` to the native size at rotation 0. Lucarne applies offsets per panel size; override with `colStart`, `rowStart`, etc. if needed.
+| Widget | Description |
+| --- | --- |
+| `Label` | Static or bound text |
+| `Metric` | Title + large value + unit |
+| `Bar` | Horizontal progress bar |
+| `Icon` | Tabler / mono icon by name |
+| `Menu` | Navigable list with icons and transitions |
+| `Button` | Tappable control with callback id |
+| `Switch` | On/off toggle |
+| `Slider` | Numeric value slider |
+| `Chart` | Simple series chart |
+| `Gauge` | Arc gauge |
+| `List` | Scrollable text list |
+| `Image` | Embedded bitmap asset |
 
-| Driver | Common sizes |
-|--------|--------------|
-| ST7789 | 135x240, 240x240, 172x320, 240x280, 240x320 |
-| ST7735S | 80x160, 128x128, 128x160 |
-
-If the screen stays black, try `spiMode = 3` and `invert = true`.
-
----
-
-## Memory
-
-| Mode | RAM | Transitions |
-|------|-----|-------------|
-| `BufferMode::Full` | Framebuffer (PSRAM or internal) | Animated |
-| `BufferMode::None` | Minimal | Instant only |
-
-`BufferMemory::Auto` picks PSRAM when available. `maxBytes` caps allocation; Lucarne falls back to direct mode if memory is too low.
-
----
-
-## Fonts
-
-Built-in anti-aliased fonts (Fira Sans):
-
-- `LucarneFontBody` — body text
-- `LucarneFontTitle` — titles
-
-Custom fonts are created in the editor and exported to `Projet_fonts.h`. Details: [docs/FONTS.md](docs/FONTS.md).
+API details: [`docs/RUNTIME.md`](docs/RUNTIME.md) · [online API reference](https://lucarne.techalchemy.fr/doc/#api).
 
 ---
 
 ## Examples
 
-| Sketch | Shows |
-|--------|-------|
-| `HelloLucarne` | Basic drawing and text |
-| `LucarneDiag` | Panel test pattern |
-| `LucarneUI` | Dashboard with live data |
-| `LucarneMenu` | Menus, transitions, callbacks, buttons |
-| `LucarnePreview` | USB live preview firmware |
+| Sketch | Description |
+| --- | --- |
+| [`HelloLucarne`](examples/HelloLucarne/HelloLucarne.ino) | Low-level drawing and text |
+| [`LucarneDiag`](examples/LucarneDiag/LucarneDiag.ino) | Full-screen RGB test pattern |
+| [`LucarneUI`](examples/LucarneUI/LucarneUI.ino) | Dashboard with live data binding |
+| [`LucarneMenu`](examples/LucarneMenu/LucarneMenu.ino) | Menus, transitions, callbacks, buttons |
+| [`LucarnePreview`](examples/LucarnePreview/LucarnePreview.ino) | USB Live Preview receiver |
 
 ---
 
-## Repo layout
+## Memory modes
+
+| `BufferMode` | RAM usage | Transitions |
+| --- | --- | --- |
+| `Full` | Framebuffer (PSRAM or internal) | Animated |
+| `None` | Minimal | Instant only |
+
+`BufferMemory::Auto` prefers PSRAM when available. Set `maxBytes` to cap allocation; Lucarne falls back to direct mode if memory is insufficient.
+
+---
+
+## Documentation
+
+| Resource | Link |
+| --- | --- |
+| **Online manual** (FR/EN) | [lucarne.techalchemy.fr/doc](https://lucarne.techalchemy.fr/doc/) |
+| Changelog | [`CHANGELOG.md`](CHANGELOG.md) |
+| Runtime API | [`docs/RUNTIME.md`](docs/RUNTIME.md) |
+| Studio & export | [`docs/EDITOR.md`](docs/EDITOR.md) |
+| Live Preview | [`docs/LIVE_PREVIEW.md`](docs/LIVE_PREVIEW.md) |
+| Wiring & panels | [`docs/HARDWARE.md`](docs/HARDWARE.md) |
+| Custom fonts | [`docs/FONTS.md`](docs/FONTS.md) |
+
+---
+
+## Repository layout
 
 ```
 Lucarne/
-├── src/          SDK (display, UI, widgets)
-├── editor/       Lucarne Studio (web app)
-├── examples/     Arduino sketches
-├── scripts/      Font/icon build tools
-└── docs/         Detailed reference
+├── src/              Firmware SDK (display, UI, widgets)
+├── editor/           Lucarne Studio (web app)
+├── examples/         Arduino sketches
+├── docs/             Reference guides + online manual source
+├── images/           Brand assets
+├── site/             Project website sources
+├── scripts/          Build tools (web, fonts, icons)
+├── library.properties
+├── keywords.txt
+└── LICENSE
 ```
 
-## More docs
+---
 
-- [docs/RUNTIME.md](docs/RUNTIME.md) — widgets and API reference
-- [docs/EDITOR.md](docs/EDITOR.md) — Studio and export
-- [docs/LIVE_PREVIEW.md](docs/LIVE_PREVIEW.md) — USB preview
-- [docs/HARDWARE.md](docs/HARDWARE.md) — wiring
-- [docs/FONTS.md](docs/FONTS.md) — custom fonts
+## Contributing
+
+Contributions are welcome: bug reports, examples, docs, and pull requests.
+
+1. Open an [issue](https://github.com/Pupariaa/Lucarne/issues) for bugs or feature ideas.
+2. Fork the repo and create a branch from `main`.
+3. Keep changes focused; match existing code style.
+4. Open a pull request with a clear description and test notes (board + panel if relevant).
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for details.
+
+**Releases** follow [Semantic Versioning](https://semver.org/). Git tags match `library.properties` (`v0.1.0` → version `0.1.0`).
+
+---
 
 ## License
 
-Default font: **Fira Sans** (SIL Open Font License). See the repo for library license terms.
+Lucarne is released under the [MIT License](LICENSE).
+
+Default UI fonts use **Fira Sans** ([SIL Open Font License 1.1](https://scripts.sil.org/OFL)). Custom fonts exported from Studio may carry their own licenses.
+
+---
+
+<div align="center">
+
+Made by [Techalchemy](https://techalchemy.fr/)
+
+</div>

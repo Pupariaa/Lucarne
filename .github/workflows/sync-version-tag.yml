@@ -1,0 +1,24 @@
+name: Release tag check
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Match tag to library.properties
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          VERSION=$(grep -E '^version=' library.properties | cut -d= -f2 | tr -d '\r')
+          if [ "$TAG" != "$VERSION" ]; then
+            echo "Tag v$TAG does not match library.properties version=$VERSION"
+            exit 1
+          fi
+          echo "OK: tag v$TAG matches version $VERSION"
