@@ -16,4 +16,4 @@ jobs:
       - name: Arduino lint
         uses: arduino/arduino-lint-action@v1
         with:
-          library-manager: false
+          library-manager: true
