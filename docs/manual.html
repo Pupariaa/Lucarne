@@ -259,6 +259,24 @@
       font-size: .85rem;
       white-space: nowrap;
     }
+    .doc-nav {
+      display: flex;
+      align-items: center;
+      gap: .15rem;
+      flex-shrink: 0;
+    }
+    .doc-nav a {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 500;
+      text-decoration: none;
+      padding: .4rem .65rem;
+      border-radius: 8px;
+    }
+    .doc-nav a:hover {
+      color: var(--text);
+      background: var(--accent-bg);
+    }
     [data-theme="dark"] .doc-brand-icon--light,
     [data-theme="dark"] .doc-brand-wordmark--light,
     [data-theme="light"] .doc-brand-icon--dark,
@@ -569,6 +587,10 @@
         <img class="doc-brand-wordmark doc-brand-wordmark--dark" src="../assets/brand/Lucarne-text-dark.png" alt="Lucarne" height="18" />
         <span class="doc-brand-tag">docs</span>
       </a>
+      <nav class="doc-nav" aria-label="Site">
+        <a href="../"><span class="fr">Site</span><span class="en">Home</span></a>
+        <a href="../editor/"><span class="fr">Studio</span><span class="en">Studio</span></a>
+      </nav>
       <div class="header-fill"></div>
       <div class="pill" id="langPill">
         <button type="button" data-lang="fr" class="on">FR</button>

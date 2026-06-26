@@ -11,11 +11,13 @@ Standalone drivers, a lightweight UI runtime, and a visual web Studio with C++ e
 [![Version](https://img.shields.io/badge/version-0.1.1-blue)](https://github.com/Pupariaa/Lucarne/releases)
 [![Status](https://img.shields.io/badge/status-experimental-orange)](https://github.com/Pupariaa/Lucarne/releases)
 [![License: MIT](https://img.shields.io/github/license/Pupariaa/Lucarne)](LICENSE)
+[![Arduino Library Manager](https://www.ardu-badge.com/badge/Lucarne.svg)](https://www.ardu-badge.com/Lucarne)
 [![Arduino](https://img.shields.io/badge/Arduino-IDE-00979D?logo=arduino&logoColor=white)](https://www.arduino.cc/)
 [![PlatformIO](https://img.shields.io/badge/PlatformIO-lib-FF5722?logo=platformio&logoColor=white)](https://platformio.org/)
 [![ESP32](https://img.shields.io/badge/ESP32-supported-E7352C?logo=espressif&logoColor=white)](https://www.espressif.com/)
 [![ST7789](https://img.shields.io/badge/ST7789-supported-2563EB)](docs/HARDWARE.md)
 [![ST7735S](https://img.shields.io/badge/ST7735S-supported-2563EB)](docs/HARDWARE.md)
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-support-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/pupsbot)
 
 [Documentation](https://lucarnelib.techalchemy.fr/doc/) · [Studio](https://lucarnelib.techalchemy.fr/editor/) · [Issues](https://github.com/Pupariaa/Lucarne/issues) · [Releases](https://github.com/Pupariaa/Lucarne/releases)
 
@@ -147,8 +149,8 @@ Pin wiring, SPI modes, offsets: [`docs/HARDWARE.md`](docs/HARDWARE.md).
 
 ### Arduino IDE
 
-1. Download or clone this repository.
-2. Copy the folder to `Documents/Arduino/libraries/Lucarne`.
+1. **Library Manager** — **Sketch → Include Library → Manage Libraries**, search `Lucarne`, install.
+2. Or download / clone this repository and copy the folder to `Documents/Arduino/libraries/Lucarne`.
 3. Restart the IDE.
 4. Open **File → Examples → Lucarne**.
 
@@ -267,7 +269,7 @@ Design screens in the browser, simulate navigation, export firmware-ready header
 | **Simulate** | Keyboard or on-screen D-pad |
 | **Export** | Download `Projet.h` (+ `Projet_fonts.h` if needed) |
 
-- **Online:** [lucarne.techalchemy.fr/editor](https://lucarnelib.techalchemy.fr/editor/)
+- **Online:** [lucarnelib.techalchemy.fr/editor](https://lucarnelib.techalchemy.fr/editor/)
 - **Local:** open `editor/index.html` in a browser (no build step)
 - **Live Preview:** flash [`examples/LucarnePreview`](examples/LucarnePreview/LucarnePreview.ino), click **Live** in the editor ([guide](docs/LIVE_PREVIEW.md))
 
@@ -360,7 +362,7 @@ API details: [`docs/RUNTIME.md`](docs/RUNTIME.md) · [online API reference](http
 
 | Resource | Link |
 | --- | --- |
-| **Online manual** (FR/EN) | [lucarne.techalchemy.fr/doc](https://lucarnelib.techalchemy.fr/doc/) |
+| **Online manual** (FR/EN) | [lucarnelib.techalchemy.fr/doc](https://lucarnelib.techalchemy.fr/doc/) |
 | Changelog | [`CHANGELOG.md`](CHANGELOG.md) |
 | Runtime API | [`docs/RUNTIME.md`](docs/RUNTIME.md) |
 | Studio & export | [`docs/EDITOR.md`](docs/EDITOR.md) |
@@ -400,6 +402,12 @@ Contributions are welcome: bug reports, examples, docs, and pull requests.
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for details.
 
 **Releases** follow [Semantic Versioning](https://semver.org/). Git tags match `library.properties` (`v0.1.0` → version `0.1.0`).
+
+---
+
+## Support
+
+Lucarne is open source and free to use. If it helps your projects, you can [support development on Ko-fi](https://ko-fi.com/pupsbot).
 
 ---
 
