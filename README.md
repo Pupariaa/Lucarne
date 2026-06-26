@@ -9,6 +9,7 @@
 Standalone drivers, a lightweight UI runtime, and a visual web Studio with C++ export.
 
 [![Version](https://img.shields.io/badge/version-0.1.0-blue)](https://github.com/Pupariaa/Lucarne/releases)
+[![Status](https://img.shields.io/badge/status-experimental-orange)](https://github.com/Pupariaa/Lucarne/releases)
 [![License: MIT](https://img.shields.io/github/license/Pupariaa/Lucarne)](LICENSE)
 [![Arduino](https://img.shields.io/badge/Arduino-IDE-00979D?logo=arduino&logoColor=white)](https://www.arduino.cc/)
 [![PlatformIO](https://img.shields.io/badge/PlatformIO-lib-FF5722?logo=platformio&logoColor=white)](https://platformio.org/)
@@ -20,13 +21,37 @@ Standalone drivers, a lightweight UI runtime, and a visual web Studio with C++ e
 
 </div>
 
+### Preview
+
+<p align="center">
+  <img src="docs/images/screenshot-studio-overview.png" alt="Lucarne Studio — overview" width="31%" />
+  <img src="docs/images/screenshot-designer.png" alt="Lucarne Studio — designer" width="31%" />
+  <img src="docs/images/screenshot-blueprint.png" alt="Lucarne Studio — blueprint and navigation" width="31%" />
+</p>
+
+<p align="center">
+  <sub><strong>Studio</strong> — design screens, wire menu flows, export <code>Projet.h</code></sub><br />
+  <sub><strong>Live Preview</strong> (ESP32-S3 + USB) — <img src="docs/images/screenshot-live-preview.png" alt="Live" height="20" style="vertical-align:middle" /> see <a href="docs/LIVE_PREVIEW.md">docs/LIVE_PREVIEW.md</a></sub>
+</p>
+
+> **Hardware photos / demo GIF** — real panel shots and an *editor → export → screen* clip are planned. If you have a clean setup photo, [open a PR](CONTRIBUTING.md).
+
+### Project status
+
+| | |
+| --- | --- |
+| **Stage** | **Experimental / alpha** (`v0.1.0`) — API, export format, and Studio behaviour may change between minor releases. |
+| **Firmware** | Tested on real boards (see [compatibility matrix](#compatibility-matrix) below). Report your combo in [Issues](https://github.com/Pupariaa/Lucarne/issues). |
+| **Studio** | Usable online or locally; Live Preview targets **ESP32-S3** with USB CDC. |
+| **Stability** | Suitable for prototypes and personal projects; pin a [release tag](https://github.com/Pupariaa/Lucarne/releases) for anything production-critical. |
+
 ---
 
 ## Table of contents
 
 - [Overview](#overview)
 - [Features](#features)
-- [Supported hardware](#supported-hardware)
+- [Compatibility matrix](#compatibility-matrix)
 - [Installation](#installation)
 - [Quick start](#quick-start)
 - [UI in code](#ui-in-code)
@@ -71,19 +96,50 @@ No Adafruit GFX dependency. No LVGL-style heavyweight renderer on the device: de
 
 ---
 
-## Supported hardware
+## Compatibility matrix
 
-| Display | Common sizes |
-| --- | --- |
-| **ST7789** | 135×240, 240×240, 172×320, 240×280, 240×320 |
-| **ST7735S** | 80×160, 128×128, 128×160 |
+Legend: ✓ supported · ~ constrained · ✗ not supported
 
-| Platform | Notes |
-| --- | --- |
-| **ESP32 / ESP32-S3** | Recommended; PSRAM used when available |
-| **Arduino (AVR, SAMD, …)** | Works with `BufferMode::None` or small panels |
+### MCUs
 
-Pin wiring, SPI modes, and troubleshooting: [`docs/HARDWARE.md`](docs/HARDWARE.md).
+All boards below have been exercised with Lucarne on SPI displays. Capabilities depend on **RAM**, **PSRAM**, and panel size.
+
+| MCU | UI + SPI | `BufferMode::Full` | Animated transitions | USB Live Preview | PSRAM |
+| --- | :---: | :---: | :---: | :---: | :---: |
+| **ESP32** (WROOM-32D) | ✓ | ✓ | ✓ | ~ | ✓ |
+| **ESP32-S3** | ✓ | ✓ | ✓ | ✓ | ✓ |
+| **ESP32-C3** | ✓ | ~ | ~ | ✗ | ~ |
+| **ESP32-C5** | ✓ | ✓ | ✓ | ~ | ✓ |
+| **ESP32-C6** | ✓ | ~ | ~ | ✗ | ~ |
+| **ESP32-P4** | ✓ | ✓ | ✓ | ~ | ✓ |
+| **ESP32-H4** | ✓ | ✓ | ✓ | ~ | ✓ |
+| **ESP8266** | ✓ | ~ | ✗ | ✗ | ✗ |
+| **ATmega328P** | ✓ | ✗ | ✗ | ✗ | ✗ |
+| **ATmega32U4** | ✓ | ~ | ✗ | ✗ | ✗ |
+| **ATmega2560** | ✓ | ~ | ✗ | ✗ | ✗ |
+
+**Notes**
+
+- **`BufferMode::Full`** needs ~2 bytes × width × height (+ transition snapshots). Lucarne falls back to **`BufferMode::None`** automatically if allocation fails.
+- **Animated transitions** require `BufferMode::Full` and enough free RAM for temporary buffers.
+- **USB Live Preview** is validated on **ESP32-S3** (USB CDC On Boot). Other ESP32 variants may work with USB CDC but are not the primary target.
+- **PSRAM** is not mandatory but strongly recommended on ESP32/S3 for 240×240 panels and larger, fonts, and transitions.
+- **AVR** targets: use small panels (e.g. ST7735S 128×160), `BufferMode::None`, and keep UI complexity low.
+
+### Displays
+
+| Panel | Driver | ESP32 family | ESP8266 | AVR |
+| --- | --- | :---: | :---: | :---: |
+| ST7789 135×240 | ST7789 | ✓ | ~ | ~ |
+| ST7789 240×240 | ST7789 | ✓ | ~ | ✗ |
+| ST7789 172×320 | ST7789 | ✓ | ✗ | ✗ |
+| ST7789 240×280 | ST7789 | ✓ | ✗ | ✗ |
+| ST7789 240×320 | ST7789 | ✓ | ✗ | ✗ |
+| ST7735S 80×160 | ST7735S | ✓ | ✓ | ✓ |
+| ST7735S 128×128 | ST7735S | ✓ | ~ | ~ |
+| ST7735S 128×160 | ST7735S | ✓ | ✓ | ✓ |
+
+Pin wiring, SPI modes, offsets: [`docs/HARDWARE.md`](docs/HARDWARE.md).
 
 ---
 
