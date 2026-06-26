@@ -1,4 +1,10 @@
-editor/
-.vscode/
-scripts/
-web/
+editor/
+.vscode/
+scripts/
+web/
+site/
+
+site/assets/brand/
+editor/brand/
+
+images/*-dark.png
