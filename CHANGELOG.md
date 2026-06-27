@@ -4,6 +4,14 @@ All notable changes to this project are documented here.
 Version numbers follow [Semantic Versioning](https://semver.org/) and match `library.properties`.  
 Git tags use the `v` prefix (e.g. `v0.1.0`).
 
+## [0.1.2] — 2026-06-25
+
+### Fixed
+
+- ESP32 compile: include `ImageAsset` in `LucarneWidget.h`
+- ESP32 compile: expose icon/image draw helpers used by `LucarneIconDraw`
+- ESP32 compile: replace AVR-only `dtostrf` with `snprintf` in Gauge widget
+
 ## [0.1.1] — 2026-06-26
 
 ### Changed
@@ -26,5 +34,6 @@ Git tags use the `v` prefix (e.g. `v0.1.0`).
 - Examples: HelloLucarne, LucarneDiag, LucarneUI, LucarneMenu, LucarnePreview
 - Online documentation at [lucarne.techalchemy.fr](https://lucarne.techalchemy.fr/doc/)
 
+[0.1.2]: https://github.com/Pupariaa/Lucarne/releases/tag/v0.1.2
 [0.1.1]: https://github.com/Pupariaa/Lucarne/releases/tag/v0.1.1
 [0.1.0]: https://github.com/Pupariaa/Lucarne/releases/tag/v0.1.0

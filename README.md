@@ -8,7 +8,7 @@
 
 Standalone drivers, a lightweight UI runtime, and a visual web Studio with C++ export.
 
-[![Version](https://img.shields.io/badge/version-0.1.1-blue)](https://github.com/Pupariaa/Lucarne/releases)
+[![Version](https://img.shields.io/badge/version-0.1.2-blue)](https://github.com/Pupariaa/Lucarne/releases)
 [![Status](https://img.shields.io/badge/status-experimental-orange)](https://github.com/Pupariaa/Lucarne/releases)
 [![License: MIT](https://img.shields.io/github/license/Pupariaa/Lucarne)](LICENSE)
 [![Arduino Library Manager](https://www.ardu-badge.com/badge/Lucarne.svg)](https://www.ardu-badge.com/Lucarne)
@@ -42,7 +42,7 @@ Standalone drivers, a lightweight UI runtime, and a visual web Studio with C++ e
 
 | | |
 | --- | --- |
-| **Stage** | **Experimental / alpha** (`v0.1.1`) — API, export format, and Studio behaviour may change between minor releases. |
+| **Stage** | **Experimental / alpha** (`v0.1.2`) — API, export format, and Studio behaviour may change between minor releases. |
 | **Firmware** | Tested on real boards (see [compatibility matrix](#compatibility-matrix) below). Report your combo in [Issues](https://github.com/Pupariaa/Lucarne/issues). |
 | **Studio** | Usable online or locally; Live Preview targets **ESP32-S3** with USB CDC. |
 | **Stability** | Suitable for prototypes and personal projects; pin a [release tag](https://github.com/Pupariaa/Lucarne/releases) for anything production-critical. |

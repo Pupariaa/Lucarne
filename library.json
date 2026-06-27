@@ -1,6 +1,6 @@
 {
   "name": "Lucarne",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "UI toolkit for SPI displays (ST7789, ST7735S) on Arduino and ESP32 — drivers, widgets, menus, transitions, data binding, and Studio C++ export.",
   "keywords": "display, spi, st7789, st7735, st7735s, esp32, esp8266, avr, ui, gui, tft, embedded",
   "repository": {

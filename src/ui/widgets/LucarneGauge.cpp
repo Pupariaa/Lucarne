@@ -1,5 +1,6 @@
 #include "LucarneGauge.h"
 #include <math.h>
+#include <stdio.h>
 
 namespace lucarne {
 
@@ -28,7 +29,7 @@ void Gauge::draw(Gfx &g, const Theme &theme, Store &store) {
         g.drawPixel(px, py, accent);
     }
     char buf[16];
-    dtostrf(v, 0, 1, buf);
+    snprintf(buf, sizeof(buf), "%.1f", (double)v);
     drawText(g, theme, _label ? _label : "", x, (int16_t)(y + 2), w, (int16_t)(h / 3),
              TextAlign::Center, theme.textDim, theme.textSize, theme.background, theme.font);
     drawText(g, theme, buf, x, (int16_t)(cy + r / 2), w, (int16_t)(h / 3), TextAlign::Center,
