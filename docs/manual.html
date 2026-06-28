@@ -665,14 +665,14 @@
               <button type="button" class="card" data-goto="export">
                 <h3 class="fr">Mettre sur la carte</h3>
                 <h3 class="en">Put it on the board</h3>
-                <p class="fr">Intégrer Projet.h dans votre croquis.</p>
-                <p class="en">Integrate Projet.h in your sketch.</p>
+                <p class="fr">Intégrer Projet.h + Projet_setup.h, fichiers SD.</p>
+                <p class="en">Integrate Projet.h + Projet_setup.h, SD files.</p>
               </button>
               <button type="button" class="card" data-goto="hardware">
                 <h3 class="fr">Brancher l'écran</h3>
                 <h3 class="en">Wire the display</h3>
-                <p class="fr">SPI, boutons, encodeur, tactile.</p>
-                <p class="en">SPI, buttons, encoder, touch.</p>
+                <p class="fr">SPI, SD, boutons, encodeur, tactile.</p>
+                <p class="en">SPI, SD, buttons, encoder, touch.</p>
               </button>
               <button type="button" class="card" data-goto="widgets">
                 <h3>Widgets</h3>
@@ -704,8 +704,8 @@
               <li>
                 <strong class="fr">Exporter &amp; flasher</strong>
                 <strong class="en">Export &amp; flash</strong>
-                <span class="fr">Export .h → copier à côté du .ino → compiler.</span>
-                <span class="en">Export .h → copy next to .ino → build.</span>
+                <span class="fr">Export Headers + Files (SD) → copier à côté du .ino → compiler.</span>
+                <span class="en">Export Headers + Files (SD) → copy next to .ino → build.</span>
               </li>
             </ol>
           </article>
@@ -771,8 +771,8 @@ void setup() {
               <li>
                 <strong class="fr">Onglets droits</strong>
                 <strong class="en">Right tabs</strong>
-                <span class="fr"><strong>Theme</strong> couleurs · <strong>Fonts</strong> polices · <strong>Assets</strong> images/icônes · <strong>Data</strong> clés (temp, wifi…)</span>
-                <span class="en"><strong>Theme</strong> colors · <strong>Fonts</strong> · <strong>Assets</strong> images/icons · <strong>Data</strong> keys (temp, wifi…)</span>
+                <span class="fr"><strong>Theme</strong> couleurs · <strong>Fonts</strong> polices · <strong>Hardware</strong> broches SPI/SD/entrées · <strong>Assets</strong> images/icônes · <strong>Data</strong> clés (temp, wifi…)</span>
+                <span class="en"><strong>Theme</strong> colors · <strong>Fonts</strong> · <strong>Hardware</strong> SPI/SD/input pins · <strong>Assets</strong> images/icons · <strong>Data</strong> keys (temp, wifi…)</span>
               </li>
               <li>
                 <strong>Simulate</strong>
@@ -828,24 +828,29 @@ void setup() {
           <article class="page" id="page-export">
             <h1 class="fr">Export Arduino</h1>
             <h1 class="en">Arduino export</h1>
-            <p class="subtitle fr">Studio génère le UI ; vous gardez le câblage SPI dans le .ino.</p>
-            <p class="subtitle en">Studio generates the UI; you keep SPI wiring in the .ino.</p>
+            <p class="subtitle fr">Studio génère le UI et <code>Projet_setup.h</code> (broches, SD). Copiez les binaires SD sur la carte.</p>
+            <p class="subtitle en">Studio generates the UI and <code>Projet_setup.h</code> (pins, SD). Copy SD binaries to the card.</p>
 
             <ol class="steps">
-              <li><strong>Export .h</strong><span class="fr"> dans Studio → copier ou télécharger.</span><span class="en"> in Studio → copy or download.</span></li>
-              <li><span class="fr"><strong>Projet.h</strong> (+ éventuellement Projet_fonts.h, Projet_images.h, Projet_icons.h) à côté du .ino.</span><span class="en"><strong>Projet.h</strong> (+ optional Projet_fonts.h, Projet_images.h, Projet_icons.h) next to .ino.</span></li>
-              <li><span class="fr">Câblez le display dans <a class="sym-link" href="#api/arduino-setup" data-sym="arduino-setup"><code>setup()</code></a> — l'export ne connaît pas vos broches.</span><span class="en">Wire the display in <a class="sym-link" href="#api/arduino-setup" data-sym="arduino-setup"><code>setup()</code></a> — export does not know your pins.</span></li>
+              <li><strong>Export</strong><span class="fr"> dans Studio → onglets <strong>Headers</strong> et <strong>Files (SD)</strong>.</span><span class="en"> in Studio → <strong>Headers</strong> and <strong>Files (SD)</strong> tabs.</span></li>
+              <li><span class="fr"><strong>Headers</strong> : <code>Projet.h</code>, <code>Projet_setup.h</code>, éventuellement <code>Projet_fonts.h</code>, <code>Projet_images.h</code>, <code>Projet_icons.h</code> à côté du .ino.</span><span class="en"><strong>Headers</strong>: <code>Projet.h</code>, <code>Projet_setup.h</code>, optional <code>Projet_fonts.h</code>, <code>Projet_images.h</code>, <code>Projet_icons.h</code> next to .ino.</span></li>
+              <li><span class="fr"><strong>Files (SD)</strong> : copiez <code>assets/*.rgb565</code> sur carte FAT32 (voir <code>SD_MANIFEST.txt</code>).</span><span class="en"><strong>Files (SD)</strong>: copy <code>assets/*.rgb565</code> to FAT32 card (see <code>SD_MANIFEST.txt</code>).</span></li>
+              <li><span class="fr">Broches SPI / SD : onglet Studio <strong>Hardware</strong> → réglages dans <code>Projet_setup.h</code>.</span><span class="en">SPI / SD pins: Studio <strong>Hardware</strong> tab → settings in <code>Projet_setup.h</code>.</span></li>
             </ol>
 
             <pre><code>#include &lt;Lucarne.h&gt;
 #include "Projet.h"
+#include "Projet_setup.h"
 using namespace lucarne;
 ST7789 display;
 UI ui(display);
 
 void setup() {
-  // vos broches SPI ici
-  display.begin(pins, options, buffer);
+  BufferOptions buffer;
+  buffer.mode = BufferMode::Full;
+  projet::initSpiBus();
+  display.begin(projet::displayPins(), projet::displayOptions(), buffer, &amp;SPI);
+  projet::mountSdCard();
   projet::build(ui);
   projet::attachInput(ui);
   ui.begin();
@@ -862,8 +867,8 @@ void loop() {
 
             <h2 class="fr">Entrées (menu sur un écran)</h2>
             <h2 class="en">Input (screen with menu)</h2>
-            <p class="fr">Inspecteur projet : <strong>Buttons</strong> (haut/bas/OK/retour), <strong>Encoder</strong> (A/B/btn), ou <strong>Touch</strong> → vous appelez <a class="sym-link" href="#api/projet-input-feed" data-sym="projet-input-feed"><code>projet::input.feed(x,y,pressed)</code></a> au lieu de <a class="sym-link" href="#api/projet-update" data-sym="projet-update"><code>projet::update()</code></a>.</p>
-            <p class="en">Project inspector: <strong>Buttons</strong> (up/down/OK/back), <strong>Encoder</strong> (A/B/btn), or <strong>Touch</strong> → call <a class="sym-link" href="#api/projet-input-feed" data-sym="projet-input-feed"><code>projet::input.feed(x,y,pressed)</code></a> instead of <a class="sym-link" href="#api/projet-update" data-sym="projet-update"><code>projet::update()</code></a>.</p>
+            <p class="fr">Onglet Studio <strong>Hardware</strong> → <strong>Navigation input</strong> : <strong>Buttons</strong> (haut/bas/OK/retour), <strong>Encoder</strong> (A/B/btn), ou <strong>Touch</strong> → vous appelez <a class="sym-link" href="#api/projet-input-feed" data-sym="projet-input-feed"><code>projet::input.feed(x,y,pressed)</code></a> au lieu de <a class="sym-link" href="#api/projet-update" data-sym="projet-update"><code>projet::update()</code></a>.</p>
+            <p class="en">Studio <strong>Hardware</strong> tab → <strong>Navigation input</strong>: <strong>Buttons</strong> (up/down/OK/back), <strong>Encoder</strong> (A/B/btn), or <strong>Touch</strong> → call <a class="sym-link" href="#api/projet-input-feed" data-sym="projet-input-feed"><code>projet::input.feed(x,y,pressed)</code></a> instead of <a class="sym-link" href="#api/projet-update" data-sym="projet-update"><code>projet::update()</code></a>.</p>
 
             <h2 class="fr">Callbacks menu / bouton</h2>
             <h2 class="en">Menu / button callbacks</h2>
@@ -874,7 +879,7 @@ void loop() {
             <div class="tip en">After each Studio change: regenerate .h files. Your .ino stays the same.</div>
             <figure class="figure--modal">
               <img src="images/screenshot-export-modal.png" width="893" height="732" loading="lazy" alt="Modale d'export Projet.h" />
-              <figcaption><span class="fr">Export .h : aperçu, copie ou téléchargement des headers.</span><span class="en">Export .h: preview, copy or download headers.</span></figcaption>
+              <figcaption><span class="fr">Export : onglets Headers et Files (SD), copie ou téléchargement.</span><span class="en">Export: Headers and Files (SD) tabs, copy or download.</span></figcaption>
             </figure>
           </article>
 
@@ -887,7 +892,7 @@ void loop() {
             <details><summary>Metric</summary><div class="inner"><p class="fr">Étiquette + valeur (float/int/bool/string).</p><p class="en">Label + live value.</p><pre><code>Metric(x,y,w,h, "Temp", "temp", "C");</code></pre></div></details>
             <details><summary>Bar</summary><div class="inner"><pre><code>Bar(x,y,w,h, "level", 0, 100);</code></pre></div></details>
             <details><summary>Icon</summary><div class="inner"><p class="fr">Réf. string : <code>"wifi"</code>, <code>"tabler:settings"</code>, <code>"c:myicon"</code></p><p class="en">String ref: <code>"wifi"</code>, <code>"tabler:settings"</code>, <code>"c:myicon"</code></p><pre><code>Icon(x, y, "chart", 1);</code></pre></div></details>
-            <details><summary>Image</summary><div class="inner"><pre><code>Image(x,y,w,h, &amp;Img_photo);</code></pre></div></details>
+            <details><summary>Image</summary><div class="inner"><p class="fr">Flash (pixels embarqués) ou SD (<code>ImageStorage::Sd</code>, fichier <code>.rgb565</code>).</p><p class="en">Flash (embedded pixels) or SD (<code>ImageStorage::Sd</code>, <code>.rgb565</code> file).</p><pre><code>Image(x,y,w,h, &amp;Img_photo);</code></pre></div></details>
             <details><summary>Menu</summary><div class="inner"><p class="fr">Navigation ou callback. Jusqu'à 16 items.</p><p class="en">Navigate or callback. Up to 16 items.</p><pre><code>menu.addItem("Home", "home", &amp;screen);
 menu.addCallbackItem("Off", "power", ACTION_ID);</code></pre></div></details>
             <details><summary>Button</summary><div class="inner"><p class="fr">Touch : navigation ou callback.</p><p class="en">Touch: navigate or callback.</p><pre><code>Button(x,y,w,h, "Start");
@@ -916,8 +921,11 @@ chart.setKey(1, "hum");</code></pre></div></details>
           <article class="page" id="page-hardware">
             <h1 class="fr">Câblage</h1>
             <h1 class="en">Wiring</h1>
-            <p class="subtitle fr">Écran SPI + entrées optionnelles.</p>
-            <p class="subtitle en">SPI display + optional inputs.</p>
+            <p class="subtitle fr">Écran SPI, carte SD optionnelle, entrées navigation.</p>
+            <p class="subtitle en">SPI display, optional SD card, navigation inputs.</p>
+
+            <div class="tip fr">Configurez broches SPI, SD et entrées dans Studio → onglet <strong>Hardware</strong>. L'export génère <code>Projet_setup.h</code>.</div>
+            <div class="tip en">Set SPI, SD and input pins in Studio → <strong>Hardware</strong> tab. Export generates <code>Projet_setup.h</code>.</div>
 
             <h2 class="fr">Écran SPI</h2>
             <h2 class="en">SPI display</h2>
@@ -927,6 +935,7 @@ chart.setKey(1, "hum");</code></pre></div></details>
                 <tbody>
                   <tr><td>SCLK</td><td><code>pins.sclk</code></td></tr>
                   <tr><td>MOSI</td><td><code>pins.mosi</code></td></tr>
+                  <tr><td>MISO</td><td><code>pins.miso</code> (SD)</td></tr>
                   <tr><td>CS / DC / RST</td><td><code>pins.cs, dc, rst</code></td></tr>
                   <tr><td>Backlight</td><td><code>pins.bl</code> (-1 si fixe)</td></tr>
                 </tbody>
@@ -936,6 +945,14 @@ chart.setKey(1, "hum");</code></pre></div></details>
 options.invert = true;  // couleurs correctes</code></pre>
             <div class="tip fr"><strong>Écran noir ?</strong> Essayez spiMode 3. <strong>Couleurs bizarres ?</strong> invert ou ColorOrder RGB/BGR.</div>
             <div class="tip en"><strong>Black screen?</strong> Try spiMode 3. <strong>Wrong colors?</strong> invert or ColorOrder RGB/BGR.</div>
+
+            <h2 class="fr">Carte SD (images)</h2>
+            <h2 class="en">SD card (images)</h2>
+            <p class="fr">Bus SPI partagé : MOSI, MISO, SCLK communs ; CS séparés pour écran et SD. Montez la SD avant <code>ui.begin()</code>. Copiez les fichiers export <strong>Files (SD)</strong> sur la carte (FAT32).</p>
+            <p class="en">Shared SPI bus: common MOSI, MISO, SCLK; separate CS for display and SD. Mount SD before <code>ui.begin()</code>. Copy <strong>Files (SD)</strong> export onto the card (FAT32).</p>
+            <pre><code>projet::initSpiBus();
+display.begin(projet::displayPins(), projet::displayOptions(), buffer, &amp;SPI);
+projet::mountSdCard();</code></pre>
 
             <h2 class="fr">Boutons</h2>
             <h2 class="en">Buttons</h2>
@@ -1339,8 +1356,8 @@ options.invert = true;  // couleurs correctes</code></pre>
             <div class="faq-group">
               <h3>Studio &amp; export</h3>
               <details class="faq"><summary><span class="fr">Dois-je re-exporter après chaque modification ?</span><span class="en">Must I re-export after every change?</span></summary><div class="inner"><p class="fr">Oui pour le firmware final. Live Preview affiche le design sans reflasher <code>Projet.h</code>. Dès que vous voulez le UI sur la carte dans votre app, régénérez les headers et recompilez.</p><p class="en">Yes for final firmware. Live Preview shows the design without reflashing <code>Projet.h</code>. Once you want the UI in your app on device, regenerate headers and rebuild.</p></div></details>
-              <details class="faq"><summary><span class="fr">Quels fichiers l'export produit-il ?</span><span class="en">What files does export produce?</span></summary><div class="inner"><p class="fr"><code>Projet.h</code> toujours. En plus si nécessaire : <code>Projet_fonts.h</code>, <code>Projet_images.h</code>, <code>Projet_icons.h</code>, et binaires <code>assets/*.rgb565</code> pour images SD.</p><p class="en"><code>Projet.h</code> always. Additionally when needed: <code>Projet_fonts.h</code>, <code>Projet_images.h</code>, <code>Projet_icons.h</code>, and <code>assets/*.rgb565</code> binaries for SD images.</p></div></details>
-              <details class="faq"><summary><span class="fr">Pourquoi l'export ne configure pas mes broches SPI ?</span><span class="en">Why doesn't export set my SPI pins?</span></summary><div class="inner"><p class="fr">Chaque carte a un câblage différent. Vous gardez <code>DisplayPins</code> et <code>display.begin()</code> dans votre <code>.ino</code>. L'export ne connaît que le UI (écrans, widgets, thème, entrées).</p><p class="en">Every board wires differently. You keep <code>DisplayPins</code> and <code>display.begin()</code> in your <code>.ino</code>. Export only knows UI (screens, widgets, theme, input).</p></div></details>
+              <details class="faq"><summary><span class="fr">Quels fichiers l'export produit-il ?</span><span class="en">What files does export produce?</span></summary><div class="inner"><p class="fr"><strong>Headers</strong> : <code>Projet.h</code>, <code>Projet_setup.h</code>, et si besoin <code>Projet_fonts.h</code>, <code>Projet_images.h</code>, <code>Projet_icons.h</code>. <strong>Files (SD)</strong> : <code>assets/*.rgb565</code> + <code>SD_MANIFEST.txt</code>.</p><p class="en"><strong>Headers</strong>: <code>Projet.h</code>, <code>Projet_setup.h</code>, and when needed <code>Projet_fonts.h</code>, <code>Projet_images.h</code>, <code>Projet_icons.h</code>. <strong>Files (SD)</strong>: <code>assets/*.rgb565</code> + <code>SD_MANIFEST.txt</code>.</p></div></details>
+              <details class="faq"><summary><span class="fr">Où configurer les broches SPI et SD ?</span><span class="en">Where do I set SPI and SD pins?</span></summary><div class="inner"><p class="fr">Onglet Studio <strong>Hardware</strong> (bus SPI, écran, SD, entrées). L'export écrit <code>Projet_setup.h</code> avec <code>initSpiBus()</code>, <code>displayPins()</code>, <code>mountSdCard()</code>. Vous pouvez surcharger dans le .ino si besoin.</p><p class="en">Studio <strong>Hardware</strong> tab (SPI bus, display, SD, inputs). Export writes <code>Projet_setup.h</code> with <code>initSpiBus()</code>, <code>displayPins()</code>, <code>mountSdCard()</code>. Override in your .ino if needed.</p></div></details>
               <details class="faq"><summary><span class="fr">Comment fonctionnent les callbacks menu/bouton ?</span><span class="en">How do menu/button callbacks work?</span></summary><div class="inner"><p class="fr">Dans Studio, choisissez l'action <strong>Callback</strong> et un ID (ex. <code>open_settings</code>). L'export crée <code>projet::ACTION_OPEN_SETTINGS</code>. Dans <code>loop()</code>, lisez <code>ui.pollMenuAction()</code> dans un <code>switch</code> — une seule action consommée par appel.</p><p class="en">In Studio, set action <strong>Callback</strong> and an ID (e.g. <code>open_settings</code>). Export creates <code>projet::ACTION_OPEN_SETTINGS</code>. In <code>loop()</code>, read <code>ui.pollMenuAction()</code> in a <code>switch</code> — one action consumed per call.</p></div></details>
             </div>
 
@@ -1358,6 +1375,7 @@ options.invert = true;  // couleurs correctes</code></pre>
               <h3 class="en">Data, widgets, icons</h3>
               <details class="faq"><summary><span class="fr">Ma Metric affiche toujours la même valeur</span><span class="en">My Metric always shows the same value</span></summary><div class="inner"><p class="fr">Vérifiez que la clé dans l'onglet Data correspond au widget, et que vous appelez <code>ui.setFloat("ma_cle", valeur)</code> (ou int/bool/string) puis <code>ui.update()</code> dans <code>loop()</code>.</p><p class="en">Check the Data tab key matches the widget, and call <code>ui.setFloat("my_key", value)</code> (or int/bool/string) then <code>ui.update()</code> in <code>loop()</code>.</p></div></details>
               <details class="faq"><summary><span class="fr">Icône pack absente à l'export</span><span class="en">Pack icon missing in export</span></summary><div class="inner"><p class="fr">Seules les icônes réellement utilisées dans le projet sont exportées. Ouvrez le projet avec les packs chargés (serveur local sur <code>editor/</code>) avant d'exporter.</p><p class="en">Only icons actually used in the project are exported. Open the project with packs loaded (local server on <code>editor/</code>) before exporting.</p></div></details>
+              <details class="faq"><summary><span class="fr">Image SD : écran vide ou carré noir</span><span class="en">SD image: blank or black square</span></summary><div class="inner"><p class="fr">Vérifiez <code>mountSdCard()</code> avant <code>ui.begin()</code>, le chemin <code>source</code> dans <code>Projet_images.h</code>, et que le fichier est bien sur la SD (onglet export <strong>Files (SD)</strong>). <code>pins.miso</code> doit être défini dans Hardware.</p><p class="en">Check <code>mountSdCard()</code> before <code>ui.begin()</code>, the <code>source</code> path in <code>Projet_images.h</code>, and that the file is on the SD (<strong>Files (SD)</strong> export tab). Set <code>pins.miso</code> in Hardware.</p></div></details>
               <details class="faq"><summary><span class="fr">Le Slider ne réagit pas au toucher</span><span class="en">Slider doesn't respond to touch</span></summary><div class="inner"><p class="fr">Normal : le Slider est affichage seul. Mettez à jour la clé depuis votre code ou un autre contrôle. Le drag tactile n'est pas implémenté côté firmware.</p><p class="en">Expected: Slider is display-only. Update the key from your code or another control. Touch drag is not implemented in firmware.</p></div></details>
             </div>
 

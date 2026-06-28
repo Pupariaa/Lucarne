@@ -8,7 +8,7 @@
 
 Standalone drivers, a lightweight UI runtime, and a visual web Studio with C++ export.
 
-[![Version](https://img.shields.io/badge/version-0.1.2-blue)](https://github.com/Pupariaa/Lucarne/releases)
+[![Version](https://img.shields.io/badge/version-0.1.3-blue)](https://github.com/Pupariaa/Lucarne/releases)
 [![Status](https://img.shields.io/badge/status-experimental-orange)](https://github.com/Pupariaa/Lucarne/releases)
 [![License: MIT](https://img.shields.io/github/license/Pupariaa/Lucarne)](LICENSE)
 [![Arduino Library Manager](https://www.ardu-badge.com/badge/Lucarne.svg)](https://www.ardu-badge.com/Lucarne)
@@ -42,7 +42,7 @@ Standalone drivers, a lightweight UI runtime, and a visual web Studio with C++ e
 
 | | |
 | --- | --- |
-| **Stage** | **Experimental / alpha** (`v0.1.2`) — API, export format, and Studio behaviour may change between minor releases. |
+| **Stage** | **Experimental / alpha** (`v0.1.3`) — API, export format, and Studio behaviour may change between minor releases. |
 | **Firmware** | Tested on real boards (see [compatibility matrix](#compatibility-matrix) below). Report your combo in [Issues](https://github.com/Pupariaa/Lucarne/issues). |
 | **Studio** | Usable online or locally; Live Preview targets **ESP32-S3** with USB CDC. |
 | **Stability** | Suitable for prototypes and personal projects; pin a [release tag](https://github.com/Pupariaa/Lucarne/releases) for anything production-critical. |
@@ -88,7 +88,7 @@ No Adafruit GFX dependency. No LVGL-style heavyweight renderer on the device: de
 - **ST7789 & ST7735S** drivers with panel offsets and rotation
 - **Framebuffer modes** — full (transitions + partial flush) or direct draw
 - **PSRAM-aware** allocation with automatic fallback
-- **Widgets** — labels, metrics, bars, icons, menus, buttons, switches, sliders, charts, gauges, lists, images
+- **Widgets** — labels, metrics, bars, icons (static, color, animated), menus, buttons, switches, sliders, charts, gauges, lists, images (flash or SD)
 - **Animated transitions** — slide, fade, push, cover, and more
 - **Data binding** — named keys (`ui.setFloat("temp", …)`) drive widget updates
 - **Physical input** — GPIO buttons, rotary encoder, touch feed
@@ -267,7 +267,7 @@ Design screens in the browser, simulate navigation, export firmware-ready header
 | **Designer** | Place widgets, edit theme and layout |
 | **Fonts** | Google fonts or TTF → exported as C++ |
 | **Simulate** | Keyboard or on-screen D-pad |
-| **Export** | Download `Projet.h` (+ `Projet_fonts.h` if needed) |
+| **Export** | Headers tab + **Files (SD)** tab (`.rgb565` assets) |
 
 - **Online:** [lucarnelib.techalchemy.fr/editor](https://lucarnelib.techalchemy.fr/editor/)
 - **Local:** open `editor/index.html` in a browser (no build step)
@@ -279,11 +279,12 @@ Full editor reference: [`docs/EDITOR.md`](docs/EDITOR.md).
 
 ## Exported projects
 
-Drop `Projet.h` (and optional `Projet_fonts.h`) next to your sketch:
+Drop exported headers next to your sketch. Copy SD binaries from Studio **Files (SD)** onto a FAT32 card (see `SD_MANIFEST.txt`).
 
 ```cpp
 #include <Lucarne.h>
 #include "Projet.h"
+#include "Projet_setup.h"
 
 using namespace lucarne;
 
@@ -291,26 +292,25 @@ ST7789 display;
 UI ui(display);
 
 void setup() {
-    display.begin(/* your pins and panel */);
+    BufferOptions buffer;
+    buffer.mode = BufferMode::Full;
+
+    projet::initSpiBus();
+    display.begin(projet::displayPins(), projet::displayOptions(), buffer, &SPI);
+    projet::mountSdCard();
+
     projet::build(ui);
     projet::attachInput(ui);
     ui.begin();
 }
-
-void loop() {
-    projet::update();
-    ui.update();
-
-    switch (ui.pollMenuAction()) {
-        case projet::ACTION_OPEN_SETTINGS:
-            break;
-    }
-
-    ui.setFloat("temp", readTemperature());
-}
 ```
 
-You keep control of `display.begin()` — the editor does not know your wiring. Re-export after Studio changes; your `.ino` stays stable unless you add new menu callback names.
+| Export tab | Contents |
+| --- | --- |
+| **Headers** | `Projet.h`, `Projet_setup.h`, optional `Projet_fonts.h`, `Projet_images.h`, `Projet_icons.h` |
+| **Files (SD)** | `assets/*.rgb565`, `SD_MANIFEST.txt` |
+
+Pin wiring and SD layout are configured in Studio **Hardware** and emitted in `Projet_setup.h`. Details: [`docs/SD.md`](docs/SD.md).
 
 ---
 
@@ -321,7 +321,7 @@ You keep control of `display.begin()` — the editor does not know your wiring. 
 | `Label` | Static or bound text |
 | `Metric` | Title + large value + unit |
 | `Bar` | Horizontal progress bar |
-| `Icon` | Tabler / mono icon by name |
+| `Icon` | Tabler / mono / color / animated icon by ref |
 | `Menu` | Navigable list with icons and transitions |
 | `Button` | Tappable control with callback id |
 | `Switch` | On/off toggle |
@@ -329,7 +329,7 @@ You keep control of `display.begin()` — the editor does not know your wiring. 
 | `Chart` | Simple series chart |
 | `Gauge` | Arc gauge |
 | `List` | Scrollable text list |
-| `Image` | Embedded bitmap asset |
+| `Image` | Flash or SD RGB565 bitmap (`ImageStorage::Sd`) |
 
 API details: [`docs/RUNTIME.md`](docs/RUNTIME.md) · [online API reference](https://lucarnelib.techalchemy.fr/doc/#api).
 
@@ -366,6 +366,7 @@ API details: [`docs/RUNTIME.md`](docs/RUNTIME.md) · [online API reference](http
 | Changelog | [`CHANGELOG.md`](CHANGELOG.md) |
 | Runtime API | [`docs/RUNTIME.md`](docs/RUNTIME.md) |
 | Studio & export | [`docs/EDITOR.md`](docs/EDITOR.md) |
+| SD card assets | [`docs/SD.md`](docs/SD.md) |
 | Live Preview | [`docs/LIVE_PREVIEW.md`](docs/LIVE_PREVIEW.md) |
 | Wiring & panels | [`docs/HARDWARE.md`](docs/HARDWARE.md) |
 | Custom fonts | [`docs/FONTS.md`](docs/FONTS.md) |

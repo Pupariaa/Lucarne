@@ -41,18 +41,32 @@ Le badge `START` indique l'écran de démarrage (modifiable dans l'inspecteur du
   - **Pixel grid** : superpose une grille d'un pixel écran.
   - **Zoom** : facteur d'agrandissement entier (rendu net, fidèle à l'écran réel).
 
-## Inspecteur, Theme, Fonts, Data
+## Inspecteur, Theme, Fonts, Hardware, Assets, Data
 
-Le panneau de droite a quatre onglets :
+Le panneau de droite a six onglets :
 
 - **Inspector** — contextuel : propriétés du widget sélectionné (Designer), du nœud ou du lien (Blueprint), ou réglages du projet.
 - **Theme** — couleurs, rayon, marge, hauteur de ligne, et choix des polices de corps et de titre.
 - **Fonts** — gestion des polices (voir [FONTS.md](FONTS.md)).
+- **Hardware** — bus SPI partagé, broches écran et SD, entrées navigation, source UI (embedded / URL / SD).
+- **Assets** — bibliothèque d'images et d'icônes ; storage flash / SD / web par image.
 - **Data** — clés de données (nom, type, valeur). Ces clés sont celles que vous alimenterez au runtime via `ui.setFloat(...)`, etc.
+
+## Configuration matérielle (Hardware)
+
+Onglet **Hardware** — configuration globale du projet :
+
+- **SPI bus** — MOSI, MISO, SCLK (partagés entre écran et SD).
+- **Display** — CS, DC, RST, rétroéclairage, vitesse/mode SPI, inversion, ordre des couleurs.
+- **SD card** — CS, vitesse SPI, dossier des assets sur la carte (`/assets`).
+- **Navigation input** — boutons, encodeur ou tactile (broches exportées dans `attachInput()`).
+- **UI source** — projet embarqué, JSON sur URL, ou JSON sur SD (Live Preview).
+
+Device, taille native du panel et rotation restent dans la **barre d'outils**.
 
 ## Configuration de la navigation
 
-Sélectionnez un nœud contenant un menu : l'inspecteur affiche **Navigation input**.
+Onglet **Hardware** → section **Navigation input** (plus dans l'inspecteur d'écran seul) :
 
 - **Buttons** — broches haut / bas / OK / retour.
 - **Encoder** — broches A / B / bouton.
@@ -70,20 +84,37 @@ Teste la navigation réelle :
 
 ## Export
 
-Le bouton **Export .h** génère :
+Le bouton **Export .h** ouvre une modale à deux onglets :
 
-- `Projet.h` — thème, écrans, widgets, liens et transitions, clés de données initiales, et l'adaptateur d'entrées.
-- `Projet_fonts.h` — uniquement si des polices personnalisées sont utilisées (inclus automatiquement par `Projet.h`).
+- **Headers** — `Projet.h`, `Projet_setup.h` (broches + init SD), `Projet_fonts.h`, `Projet_images.h`, `Projet_icons.h`.
+- **Files (SD)** — fichiers `.rgb565` + `SD_MANIFEST.txt` à copier sur la carte FAT32.
 
-Copiez le contenu (bouton `Copy`) ou téléchargez le fichier (`Download`). Fermez la fenêtre via `Close`, un clic sur le fond, ou la touche `Échap`.
+Dans **Assets**, réglez le storage d'une image sur **SD card** pour qu'elle apparaisse dans **Files (SD)**. Le chemin device (`source`) suit le dossier **Hardware → SD card → Assets folder**.
+
+Copiez le texte (bouton `Copy`), téléchargez un fichier (`Download`), ou **Download all SD** pour les binaires. Les fichiers binaires ne se copient pas dans le presse-papiers.
+
+La modale affiche la **taille totale** de l'export (headers + binaires SD).
+
+### Assets — images
+
+- Import **PNG** (transparence conservée) ou **BMP** (24/32 bits).
+- Chaque image affiche sa taille **source** (bibliothèque) et sa taille **export** (résolution max utilisée sur les écrans, flash estimé).
+- Seules les images placées sur un écran sont exportées dans `Projet_images.h` (redimensionnées si nécessaire).
+- Storage **Flash**, **SD card**, ou **Web** par image.
+
+### Assets — icônes
+
+- Packs Tabler, Fluent Emoji (statique ou **APNG animé**).
+- Les animations sont exportées dans `Projet_icons.h` comme séquences de frames RGB565.
 
 ## Intégration dans votre croquis
 
-Déposez les fichiers à côté de votre `.ino`. Le code généré expose l'espace de noms `projet` :
+Déposez les headers à côté de votre `.ino`. Copiez les fichiers SD sur la carte (voir `SD_MANIFEST.txt`). Le code généré expose l'espace de noms `projet` :
 
 ```cpp
 #include <Lucarne.h>
 #include "Projet.h"
+#include "Projet_setup.h"
 
 using namespace lucarne;
 
@@ -91,13 +122,15 @@ ST7789 display;
 UI ui(display);
 
 void setup() {
-    DisplayPins pins; pins.cs = 1; pins.dc = 2; pins.rst = 3; pins.mosi = 4; pins.sclk = 5;
-    DisplayOptions options; options.panelWidth = 240; options.panelHeight = 280; options.spiMode = 3; options.invert = true;
-    BufferOptions buffer; buffer.mode = BufferMode::Full; buffer.memory = BufferMemory::Auto;
-    display.begin(pins, options, buffer);
+    BufferOptions buffer;
+    buffer.mode = BufferMode::Full;
 
-    projet::build(ui);       // thème, écrans, widgets, transitions
-    projet::attachInput(ui); // entrées physiques câblées selon l'éditeur
+    projet::initSpiBus();
+    display.begin(projet::displayPins(), projet::displayOptions(), buffer, &SPI);
+    projet::mountSdCard();
+
+    projet::build(ui);
+    projet::attachInput(ui);
     ui.begin();
 }
 

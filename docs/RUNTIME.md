@@ -167,15 +167,24 @@ Jauge horizontale remplie selon `(valeur - min) / (max - min)`.
 ### Icon
 
 ```cpp
-Icon(int16_t x, int16_t y, IconId id, uint8_t scale = 1);
+Icon(int16_t x, int16_t y, int16_t w = 0, int16_t h = 0);
 
 void setIcon(IconId id);
+void setIconRef(const char *ref);
 void setScale(uint8_t scale);
-void setColor(uint16_t color);      // sinon Theme::text
+void setColor(uint16_t color);
 void clearColor();
 ```
 
-Icônes 16×16 monochromes. On peut obtenir un `IconId` par nom : `iconFromName("thermo")`.
+Icônes 16×16 monochromes via `setIcon(IconId)` ou `setIcon(iconFromName("thermo"))`.
+
+Pour les icônes exportées depuis Studio (Tabler, Fluent, couleur, APNG animé), utilisez `setIconRef("nom")`. Les références animées (`emoji:…`) sont rafraîchies automatiquement par `ui.update()` via un patch partiel de l'écran.
+
+```cpp
+lucarne::setIconAnimSpeedPercent(135);  // 100 = vitesse export ; >100 = plus lent
+```
+
+À appeler dans `projet::build()` ou `setup()` avant `ui.begin()`.
 
 ### Menu
 
@@ -197,6 +206,26 @@ const char *selectedLabel() const;
 ```
 
 Le menu défile automatiquement quand la sélection sort de la zone visible. Jusqu'à 16 entrées. Une entrée sans `target` ne navigue pas : gérez l'action vous-même via `ui.activeMenu()->selectedLabel()` après un `select`.
+
+### Image
+
+```cpp
+Image(int16_t x, int16_t y, int16_t w, int16_t h, const ImageAsset *asset);
+void setAsset(const ImageAsset *asset);
+```
+
+Affiche un bitmap RGB565. Deux modes :
+
+- **Flash** — `ImageAsset::data` pointe vers des pixels PROGMEM (export Studio par défaut).
+- **SD** — `storage == ImageStorage::Sd`, `data == nullptr`, `source` = chemin sur la carte (ex. `"/assets/img_abc.rgb565"`). Nécessite `SD.begin()` / `mountSdCard()` avant le premier rendu. Voir [`SD.md`](SD.md).
+
+Les images SD sont mises en cache RAM (jusqu'à 384 KB) ou lues par rangées si plus grandes.
+
+```cpp
+lucarne::releaseSdImageCache();
+```
+
+À appeler après démontage ou remplacement de fichiers sur la SD.
 
 ---
 

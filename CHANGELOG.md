@@ -4,6 +4,22 @@ All notable changes to this project are documented here.
 Version numbers follow [Semantic Versioning](https://semver.org/) and match `library.properties`.  
 Git tags use the `v` prefix (e.g. `v0.1.0`).
 
+## [0.1.3] — 2026-06-25
+
+### Added
+
+- SD card image loading for `Image` widgets (`ImageStorage::Sd`, RAM cache, row streaming fallback)
+- Animated icon support (APNG emoji frames exported as `IconAnimAsset`, partial screen refresh)
+- `setIconAnimSpeedPercent()` to tune animation playback speed
+- Icon refs by name (`setIconRef`, Tabler / Fluent / custom / animated) on Icon, Menu, and Button widgets
+- `Projet_setup.h` export: shared SPI bus, display pins, SD mount helpers
+- Studio: PNG transparency and BMP import, export total size, images resized to on-screen usage
+
+### Fixed
+
+- ESP32 PROGMEM access for animated icon frames and string lookups (`strcmp_P`, `pgm_read_*`)
+- Animated icons no longer trigger full-screen redraws every frame
+
 ## [0.1.2] — 2026-06-25
 
 ### Fixed
@@ -34,6 +50,7 @@ Git tags use the `v` prefix (e.g. `v0.1.0`).
 - Examples: HelloLucarne, LucarneDiag, LucarneUI, LucarneMenu, LucarnePreview
 - Online documentation at [lucarne.techalchemy.fr](https://lucarne.techalchemy.fr/doc/)
 
+[0.1.3]: https://github.com/Pupariaa/Lucarne/releases/tag/v0.1.3
 [0.1.2]: https://github.com/Pupariaa/Lucarne/releases/tag/v0.1.2
 [0.1.1]: https://github.com/Pupariaa/Lucarne/releases/tag/v0.1.1
 [0.1.0]: https://github.com/Pupariaa/Lucarne/releases/tag/v0.1.0

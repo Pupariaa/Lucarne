@@ -139,6 +139,24 @@ void loop() {
 
 ---
 
+## Carte SD (images)
+
+Les widgets **Image** en storage SD lisent des fichiers **RGB565** sur carte FAT32.
+
+Bus SPI partagé avec l'écran : **MOSI**, **MISO**, **SCLK** communs ; **CS** séparés. Configurez les broches dans Studio (**Hardware**). L'export génère `Projet_setup.h` (`initSpiBus()`, `displayPins()`, `mountSdCard()`). Définissez `pins.miso` dès qu'une SD est utilisée.
+
+```cpp
+#include "Projet_setup.h"
+
+projet::initSpiBus();
+display.begin(projet::displayPins(), projet::displayOptions(), buffer, &SPI);
+projet::mountSdCard();
+```
+
+Copiez les fichiers **Files (SD)** sur la carte (chemins `/assets/…`). Voir [`SD.md`](SD.md).
+
+---
+
 ## Avec une UI générée
 
 Si vous utilisez `Projet.h` exporté depuis l'éditeur, l'adaptateur d'entrée est déjà câblé selon la configuration choisie :
