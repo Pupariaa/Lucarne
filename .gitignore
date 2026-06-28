@@ -3,6 +3,8 @@ editor/
 scripts/
 web/
 site/
+packages/
+tools
 
 site/assets/brand/
 editor/brand/
