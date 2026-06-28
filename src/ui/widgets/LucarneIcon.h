@@ -13,15 +13,22 @@ class Icon : public Widget {
     void setScale(uint8_t scale);
     void setColor(uint16_t color);
     void clearColor();
+    void setTransparent(bool transparent);
 
     void draw(Gfx &g, const Theme &theme, Store &store) override;
+    Icon *asIcon() override { return this; }
+
+    const char *iconRef() const { return _ref; }
+    uint8_t lastAnimFrame() const { return _lastAnimFrame; }
+    void syncAnimFrame(uint8_t fi) { _lastAnimFrame = fi; }
 
   private:
     const char *_ref;
-    uint8_t _scale;
+    uint8_t _scaleTenths;
     uint16_t _color;
     bool _hasColor;
-    void syncBounds();
+    bool _transparent;
+    uint8_t _lastAnimFrame = 0xff;
 };
 
 }

@@ -14,7 +14,8 @@ class Slider : public Widget {
         _min = minV;
         _max = maxV;
     }
-    void setColor(uint16_t c) { _color = c; _hasColor = true; }
+    void setColor(uint16_t c);
+    void clearColor();
 
     void draw(Gfx &g, const Theme &theme, Store &store) override;
 
@@ -24,6 +25,7 @@ class Slider : public Widget {
     float _max;
     uint16_t _color;
     bool _hasColor;
+    bool _transparentColor;
 };
 
 }

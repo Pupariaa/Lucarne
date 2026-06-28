@@ -3,31 +3,37 @@
 
 namespace lucarne {
 
+static inline uint8_t iconScaleTenths(uint8_t raw) {
+    if (raw == 0) return 10;
+    if (raw <= 4) return (uint8_t)(raw * 10);
+    if (raw > 40) return 40;
+    return raw;
+}
+
 Menu::Menu(int16_t x, int16_t y, int16_t w, int16_t h)
     : Widget(x, y, w, h), _count(0), _selected(0), _scroll(0), _iconScale(1), _badgeScale(1) {}
 
 void Menu::setIconScale(uint8_t scale) {
-    if (scale < 1) scale = 1;
     _iconScale = scale;
 }
 
 void Menu::setBadgeScale(uint8_t scale) {
-    if (scale < 1) scale = 1;
     _badgeScale = scale;
 }
 
 uint8_t Menu::resolvedScale(uint8_t scale) const {
     if (scale > 0) return scale;
-    return 1;
+    return _iconScale;
 }
 
 int16_t Menu::targetIconPx(int16_t rh, uint8_t itemScale, uint8_t menuScale) const {
-    uint8_t mul = resolvedScale(itemScale > 0 ? itemScale : menuScale);
+    uint8_t raw = resolvedScale(itemScale > 0 ? itemScale : menuScale);
+    uint8_t mulT = iconScaleTenths(raw);
     int16_t maxFit = (int16_t)(rh - 4);
     if (maxFit < 8) maxFit = 8;
     int16_t baseAt1 = (int16_t)(maxFit * 55 / 100);
     if (baseAt1 > 16) baseAt1 = 16;
-    int16_t target = (int16_t)(baseAt1 * mul);
+    int16_t target = (int16_t)((baseAt1 * mulT + 5) / 10);
     if (target > maxFit) target = maxFit;
     return target;
 }
@@ -45,6 +51,7 @@ void Menu::addItem(const char *label, const char *iconRef, Screen *target, Trans
     _items[_count].transition = transition;
     _items[_count].kind = MenuItemKind::Navigate;
     _items[_count].actionId = 0;
+    _items[_count].textStyle = TextStyle();
     _count++;
 }
 
@@ -61,7 +68,36 @@ void Menu::addCallbackItem(const char *label, const char *iconRef, uint8_t actio
     _items[_count].transition = Transition::Inherit;
     _items[_count].kind = MenuItemKind::Callback;
     _items[_count].actionId = actionId;
+    _items[_count].textStyle = TextStyle();
     _count++;
+}
+
+void Menu::setItemStyle(uint8_t index, const TextStyle &style) {
+    if (index >= _count) return;
+    _items[index].textStyle = style;
+}
+
+void Menu::setTextFont(const AAFont *font) {
+    _textStyle.font = font;
+    _textStyle.hasFont = true;
+}
+
+void Menu::setTextColor(uint16_t color) {
+    _textStyle.color = color;
+    _textStyle.hasColor = true;
+    _textStyle.transparent = false;
+}
+
+void Menu::setTextTransparent(bool transparent) { _textStyle.transparent = transparent; }
+
+void Menu::setTextSize(uint8_t size) {
+    _textStyle.size = size;
+    _textStyle.hasSize = true;
+}
+
+void Menu::setTextSpacing(int8_t spacing) {
+    _textStyle.spacing = spacing;
+    _textStyle.hasSpacing = true;
 }
 
 void Menu::clearItems() {
@@ -152,8 +188,30 @@ void Menu::draw(Gfx &g, const Theme &theme, Store &store) {
         }
 
         int16_t labelW = (int16_t)(x + w - pad - contentX);
-        drawText(g, theme, it.label, contentX, ry, labelW, rh, TextAlign::Left, txt,
-                 theme.textSize, fill, theme.font);
+        TextStyle style = _textStyle;
+        const TextStyle &itemStyle = it.textStyle;
+        if (itemStyle.hasFont) {
+            style.font = itemStyle.font;
+            style.hasFont = true;
+        }
+        if (itemStyle.hasColor) {
+            style.color = itemStyle.color;
+            style.hasColor = true;
+        }
+        if (itemStyle.hasSize) {
+            style.size = itemStyle.size;
+            style.hasSize = true;
+        }
+        if (itemStyle.hasSpacing) {
+            style.spacing = itemStyle.spacing;
+            style.hasSpacing = true;
+        }
+        if (!style.hasColor) {
+            style.color = txt;
+            style.hasColor = true;
+        }
+        drawStyledText(g, theme, it.label, contentX, ry, labelW, rh, TextAlign::Left, fill, &style,
+                       false);
 
         if (!it.noBadge) {
             const char *badgeRef = it.badge;

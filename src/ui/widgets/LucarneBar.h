@@ -14,6 +14,10 @@ class Bar : public Widget {
     void setColor(uint16_t color);
     void clearColor();
     void setShowValue(bool show) { _showValue = show; }
+    void setValueFont(const AAFont *font);
+    void setValueColor(uint16_t color);
+    void setValueSize(uint8_t size);
+    void setValueSpacing(int8_t spacing);
 
     void draw(Gfx &g, const Theme &theme, Store &store) override;
 
@@ -24,6 +28,8 @@ class Bar : public Widget {
     uint16_t _color;
     bool _hasColor;
     bool _showValue;
+    bool _transparentColor;
+    TextStyle _valueStyle;
 };
 
 }

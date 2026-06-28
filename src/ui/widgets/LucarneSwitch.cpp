@@ -5,6 +5,29 @@ namespace lucarne {
 Switch::Switch(int16_t x, int16_t y, int16_t w, int16_t h, const char *label, const char *key)
     : Widget(x, y, w, h), _label(label), _key(key) {}
 
+void Switch::setTextFont(const AAFont *font) {
+    _textStyle.font = font;
+    _textStyle.hasFont = true;
+}
+
+void Switch::setTextColor(uint16_t color) {
+    _textStyle.color = color;
+    _textStyle.hasColor = true;
+    _textStyle.transparent = false;
+}
+
+void Switch::setTextTransparent(bool transparent) { _textStyle.transparent = transparent; }
+
+void Switch::setTextSize(uint8_t size) {
+    _textStyle.size = size;
+    _textStyle.hasSize = true;
+}
+
+void Switch::setTextSpacing(int8_t spacing) {
+    _textStyle.spacing = spacing;
+    _textStyle.hasSpacing = true;
+}
+
 void Switch::toggle(Store &store) {
     if (!_key) return;
     store.setBool(_key, !store.getBool(_key, false));
@@ -27,8 +50,8 @@ void Switch::draw(Gfx &g, const Theme &theme, Store &store) {
                  theme.text);
     int16_t lw = (int16_t)(tx - x - theme.padding);
     if (lw > 0) {
-        drawText(g, theme, _label ? _label : "", x, y, lw, h, TextAlign::Left, theme.text,
-                 theme.textSize, theme.background, theme.font);
+        drawStyledText(g, theme, _label ? _label : "", x, y, lw, h, TextAlign::Left,
+                       theme.background, &_textStyle, false);
     }
 }
 

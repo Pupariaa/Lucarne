@@ -16,6 +16,7 @@ struct DisplayPins {
     int8_t dc = -1;
     int8_t rst = -1;
     int8_t mosi = -1;
+    int8_t miso = -1;
     int8_t sclk = -1;
     int8_t bl = -1;
 };

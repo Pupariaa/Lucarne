@@ -73,7 +73,7 @@ bool Display::begin(const DisplayPins &pins, const DisplayOptions &options,
     backlight(false);
 
 #if defined(ESP32)
-    _spi->begin(_pins.sclk, -1, _pins.mosi, -1);
+    _spi->begin(_pins.sclk, _pins.miso, _pins.mosi, -1);
 #else
     _spi->begin();
 #endif

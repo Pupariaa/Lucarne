@@ -84,6 +84,7 @@ class UI {
     bool _splashProgress;
     bool _splashActive;
     uint32_t _splashStart;
+    uint32_t _animRepaintMs;
 };
 
 }

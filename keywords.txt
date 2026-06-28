@@ -30,6 +30,8 @@ Menu	KEYWORD1
 MenuItemOpts	KEYWORD1
 IconId	KEYWORD1
 ImageAsset	KEYWORD1
+ImageStorage	KEYWORD1
+releaseSdImageCache	KEYWORD2
 TextAlign	KEYWORD1
 ValueType	KEYWORD1
 AAFont	KEYWORD1
@@ -75,7 +77,10 @@ addItem	KEYWORD2
 addCallbackItem	KEYWORD2
 clearItems	KEYWORD2
 setIconLookups	KEYWORD2
+IconAnimAsset	KEYWORD1
+setIconAnimSpeedPercent	KEYWORD2
 setIconRef	KEYWORD2
+iconRefValid	KEYWORD2
 drawIconRef	KEYWORD2
 setBadgeScale	KEYWORD2
 setIconScale	KEYWORD2

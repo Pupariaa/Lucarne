@@ -30,6 +30,12 @@ class Menu : public Widget {
                  Transition transition = Transition::Inherit, const MenuItemOpts &opts = MenuItemOpts());
     void addCallbackItem(const char *label, const char *iconRef, uint8_t actionId,
                          const MenuItemOpts &opts = MenuItemOpts());
+    void setItemStyle(uint8_t index, const TextStyle &style);
+    void setTextFont(const AAFont *font);
+    void setTextColor(uint16_t color);
+    void setTextTransparent(bool transparent);
+    void setTextSize(uint8_t size);
+    void setTextSpacing(int8_t spacing);
     void clearItems();
 
     void moveNext();
@@ -59,6 +65,7 @@ class Menu : public Widget {
         Transition transition;
         MenuItemKind kind;
         uint8_t actionId;
+        TextStyle textStyle;
     };
 
     uint8_t resolvedScale(uint8_t scale) const;
@@ -69,6 +76,7 @@ class Menu : public Widget {
     int _scroll;
     uint8_t _iconScale;
     uint8_t _badgeScale;
+    TextStyle _textStyle;
 };
 
 }

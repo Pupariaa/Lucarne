@@ -17,6 +17,14 @@ class Button : public Widget {
     void setNavigate(Screen *target, Transition t = Transition::Inherit);
     void setCallback(uint8_t actionId);
     void setColor(uint16_t fill, uint16_t text);
+    void setFillTransparent(bool transparent);
+    void setTextColorTransparent(bool transparent);
+    void setTextTransparent(bool transparent);
+    void setTextFont(const AAFont *font);
+    void setTextColor(uint16_t color);
+    void setTextSize(uint8_t size);
+    void setTextSpacing(int8_t spacing);
+    void setTextAlign(TextAlign align) { _textAlign = align; }
 
     Screen *navigateTarget() const { return _target; }
     Transition navigateTransition() const { return _transition; }
@@ -37,6 +45,10 @@ class Button : public Widget {
     uint16_t _fill;
     uint16_t _textColor;
     bool _hasColors;
+    bool _transparentFill;
+    bool _transparentTextColor;
+    TextStyle _textStyle;
+    TextAlign _textAlign;
 };
 
 }

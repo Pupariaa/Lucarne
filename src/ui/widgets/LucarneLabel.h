@@ -12,9 +12,12 @@ class Label : public Widget {
     void setText(const char *text);
     void setColor(uint16_t color);
     void clearColor();
+    void setTextTransparent(bool transparent);
     void setSize(uint8_t size);
     void setAlign(TextAlign align) { _align = align; }
     void setFont(const AAFont *font) { _font = font; }
+    void setSpacing(int8_t spacing);
+    void clearSpacing();
     void setBackground(uint16_t bg) { _bg = bg; _hasBg = true; }
 
     void draw(Gfx &g, const Theme &theme, Store &store) override;
@@ -24,9 +27,12 @@ class Label : public Widget {
     TextAlign _align;
     uint16_t _color;
     bool _hasColor;
+    bool _textTransparent;
     uint8_t _size;
     bool _hasSize;
     const AAFont *_font;
+    int8_t _spacing;
+    bool _hasSpacing;
     uint16_t _bg;
     bool _hasBg;
 };

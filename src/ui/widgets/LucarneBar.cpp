@@ -5,7 +5,7 @@ namespace lucarne {
 
 Bar::Bar(int16_t x, int16_t y, int16_t w, int16_t h, const char *key, float min, float max)
     : Widget(x, y, w, h), _key(key), _min(min), _max(max), _color(0), _hasColor(false),
-      _showValue(false) {}
+      _showValue(false), _transparentColor(false) {}
 
 void Bar::setRange(float min, float max) {
     _min = min;
@@ -15,9 +15,30 @@ void Bar::setRange(float min, float max) {
 void Bar::setColor(uint16_t color) {
     _color = color;
     _hasColor = true;
+    _transparentColor = false;
 }
 
-void Bar::clearColor() { _hasColor = false; }
+void Bar::clearColor() { _transparentColor = true; _hasColor = false; }
+
+void Bar::setValueFont(const AAFont *font) {
+    _valueStyle.font = font;
+    _valueStyle.hasFont = true;
+}
+
+void Bar::setValueColor(uint16_t color) {
+    _valueStyle.color = color;
+    _valueStyle.hasColor = true;
+}
+
+void Bar::setValueSize(uint8_t size) {
+    _valueStyle.size = size;
+    _valueStyle.hasSize = true;
+}
+
+void Bar::setValueSpacing(int8_t spacing) {
+    _valueStyle.spacing = spacing;
+    _valueStyle.hasSpacing = true;
+}
 
 void Bar::draw(Gfx &g, const Theme &theme, Store &store) {
     int16_t r = h / 2;
@@ -36,7 +57,7 @@ void Bar::draw(Gfx &g, const Theme &theme, Store &store) {
     int16_t fillW = (int16_t)(trackW * ratio);
     uint16_t color = _hasColor ? _color : theme.primary;
 
-    if (fillW > 0) {
+    if (!_transparentColor && fillW > 0) {
         int16_t fr = (int16_t)(r - inset);
         if (fr < 0) fr = 0;
         g.fillRoundRect((int16_t)(x + inset), (int16_t)(y + inset), fillW, (int16_t)(h - inset * 2),
@@ -47,8 +68,7 @@ void Bar::draw(Gfx &g, const Theme &theme, Store &store) {
         char buf[12];
         snprintf(buf, sizeof(buf), "%d%%", (int)(ratio * 100.0f + 0.5f));
         uint16_t txtBg = fillW > w / 2 ? color : theme.surface;
-        drawText(g, theme, buf, x, y, w, h, TextAlign::Center, theme.text, theme.textSize, txtBg,
-                 theme.font);
+        drawStyledText(g, theme, buf, x, y, w, h, TextAlign::Center, txtBg, &_valueStyle, false);
     }
 }
 

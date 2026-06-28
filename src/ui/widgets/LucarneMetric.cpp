@@ -16,6 +16,52 @@ void Metric::setAccent(uint16_t color) {
 
 void Metric::clearAccent() { _hasAccent = false; }
 
+void Metric::setLabelFont(const AAFont *font) {
+    _labelStyle.font = font;
+    _labelStyle.hasFont = true;
+}
+
+void Metric::setLabelColor(uint16_t color) {
+    _labelStyle.color = color;
+    _labelStyle.hasColor = true;
+    _labelStyle.transparent = false;
+}
+
+void Metric::setLabelTransparent(bool transparent) { _labelStyle.transparent = transparent; }
+
+void Metric::setLabelSize(uint8_t size) {
+    _labelStyle.size = size;
+    _labelStyle.hasSize = true;
+}
+
+void Metric::setLabelSpacing(int8_t spacing) {
+    _labelStyle.spacing = spacing;
+    _labelStyle.hasSpacing = true;
+}
+
+void Metric::setValueFont(const AAFont *font) {
+    _valueStyle.font = font;
+    _valueStyle.hasFont = true;
+}
+
+void Metric::setValueColor(uint16_t color) {
+    _valueStyle.color = color;
+    _valueStyle.hasColor = true;
+    _valueStyle.transparent = false;
+}
+
+void Metric::setValueTransparent(bool transparent) { _valueStyle.transparent = transparent; }
+
+void Metric::setValueSize(uint8_t size) {
+    _valueStyle.size = size;
+    _valueStyle.hasSize = true;
+}
+
+void Metric::setValueSpacing(int8_t spacing) {
+    _valueStyle.spacing = spacing;
+    _valueStyle.hasSpacing = true;
+}
+
 void Metric::formatValue(const Store &store, char *out, uint8_t outLen) const {
     ValueType t = store.typeOf(_key);
     if (t == ValueType::String) {
@@ -46,7 +92,7 @@ void Metric::draw(Gfx &g, const Theme &theme, Store &store) {
     int16_t barW = 4;
     int16_t barH = (int16_t)(h - theme.padding);
     int16_t barY = (int16_t)(y + (h - barH) / 2);
-    g.fillRoundRect((int16_t)(x + 3), barY, barW, barH, 2, accent);
+    if (_hasAccent) g.fillRoundRect((int16_t)(x + 3), barY, barW, barH, 2, accent);
 
     int16_t pad = theme.padding;
     int16_t contentX = (int16_t)(x + 3 + barW + pad);
@@ -55,13 +101,13 @@ void Metric::draw(Gfx &g, const Theme &theme, Store &store) {
     int16_t labelW = (int16_t)(contentW * 6 / 10);
     int16_t valueW = (int16_t)(contentW - labelW);
 
-    drawText(g, theme, _label, contentX, y, labelW, h, TextAlign::Left, theme.textDim,
-             theme.textSize, theme.surface, theme.font);
+    drawStyledText(g, theme, _label, contentX, y, labelW, h, TextAlign::Left, theme.surface,
+                   &_labelStyle, true);
 
     char buf[40];
     formatValue(store, buf, sizeof(buf));
-    drawText(g, theme, buf, (int16_t)(contentX + labelW), y, valueW, h, TextAlign::Right, theme.text,
-             theme.textSize, theme.surface, theme.font);
+    drawStyledText(g, theme, buf, (int16_t)(contentX + labelW), y, valueW, h, TextAlign::Right,
+                   theme.surface, &_valueStyle, false);
 }
 
 }

@@ -3,7 +3,7 @@
 namespace lucarne {
 
 Chart::Chart(int16_t x, int16_t y, int16_t w, int16_t h)
-    : Widget(x, y, w, h), _keyCount(0), _min(0.0f), _max(1.0f), _color(0) {
+    : Widget(x, y, w, h), _keyCount(0), _min(0.0f), _max(1.0f), _color(0), _hideLine(false) {
     for (uint8_t i = 0; i < MAX_KEYS; i++) _keys[i] = nullptr;
 }
 
@@ -13,10 +13,18 @@ void Chart::setKey(uint8_t index, const char *key) {
     if (index >= _keyCount) _keyCount = (uint8_t)(index + 1);
 }
 
+void Chart::setColor(uint16_t c) {
+    _color = c;
+    _hideLine = false;
+}
+
+void Chart::clearColor() { _hideLine = true; }
+
 void Chart::draw(Gfx &g, const Theme &theme, Store &store) {
     if (_keyCount < 2) return;
-    uint16_t line = _color ? _color : theme.primary;
     g.drawRoundRect(x, y, w, h, theme.radius, theme.surfaceEdge);
+    if (_hideLine) return;
+    uint16_t line = _color ? _color : theme.primary;
     int16_t pad = theme.padding;
     int16_t gx = (int16_t)(x + pad);
     int16_t gy = (int16_t)(y + pad);

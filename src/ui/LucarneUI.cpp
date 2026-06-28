@@ -1,4 +1,5 @@
 #include "LucarneUI.h"
+#include "LucarneIconDraw.h"
 #include "widgets/LucarneButton.h"
 #include "widgets/LucarneSwitch.h"
 #include "../core/LucarneColor.h"
@@ -11,7 +12,7 @@ UI::UI(Display &display)
     : _display(display), _current(nullptr), _activeMenu(nullptr), _stackTop(0),
       _defaultTransition(Transition::None), _transitionMs(220), _dirty(true), _menuHandler(nullptr),
       _pendingMenuAction(0), _splashNext(nullptr), _splashDuration(0), _splashProgress(false),
-      _splashActive(false), _splashStart(0) {}
+      _splashActive(false), _splashStart(0), _animRepaintMs(0) {}
 
 void UI::setTheme(const Theme &theme) {
     _theme = theme;
@@ -39,6 +40,7 @@ void UI::show(Screen *screen) {
     if (_current == screen) return;
     _current = screen;
     scanActiveMenu();
+    iconAnimResetScreen(_current);
     _dirty = true;
 }
 
@@ -235,8 +237,9 @@ void UI::runTransition(Screen *toScreen, Transition t) {
     if (!canAnimate) {
         _current = toScreen;
         scanActiveMenu();
+        iconAnimResetScreen(_current);
         _current->draw(_display, _theme, _store);
-        _display.display();
+        _display.presentFull();
         _store.clearDirty();
         _dirty = false;
         return;
@@ -249,6 +252,7 @@ void UI::runTransition(Screen *toScreen, Transition t) {
 
     _current = toScreen;
     scanActiveMenu();
+    iconAnimResetScreen(_current);
     _current->draw(_display, _theme, _store);
     _display.snapshotFrame(b);
 
@@ -285,7 +289,7 @@ void UI::render() {
     if (_splashActive && _splashProgress) {
         drawSplashProgress((uint32_t)(millis() - _splashStart));
     }
-    _display.display();
+    _display.presentFull();
     _store.clearDirty();
     _dirty = false;
 }
@@ -309,14 +313,21 @@ void UI::drawSplashProgress(uint32_t elapsedMs) {
 }
 
 void UI::update() {
+    uint32_t now = millis();
     if (_splashActive) {
-        uint32_t elapsed = (uint32_t)(millis() - _splashStart);
+        uint32_t elapsed = (uint32_t)(now - _splashStart);
         if (elapsed >= _splashDuration) {
             _splashActive = false;
             if (_splashNext) navigate(_splashNext, Transition::Fade);
             return;
         }
         if (_splashProgress) _dirty = true;
+    }
+    if (_current) {
+        if ((uint32_t)(now - _animRepaintMs) >= 42) {
+            _animRepaintMs = now;
+            iconAnimPatchScreen(_display, _current, _theme, _store);
+        }
     }
     if (_dirty || _store.dirty()) {
         render();

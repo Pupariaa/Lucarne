@@ -13,6 +13,16 @@ class Metric : public Widget {
     void setDecimals(uint8_t decimals) { _decimals = decimals; }
     void setAccent(uint16_t color);
     void clearAccent();
+    void setLabelFont(const AAFont *font);
+    void setLabelColor(uint16_t color);
+    void setLabelTransparent(bool transparent);
+    void setLabelSize(uint8_t size);
+    void setLabelSpacing(int8_t spacing);
+    void setValueFont(const AAFont *font);
+    void setValueColor(uint16_t color);
+    void setValueTransparent(bool transparent);
+    void setValueSize(uint8_t size);
+    void setValueSpacing(int8_t spacing);
 
     void draw(Gfx &g, const Theme &theme, Store &store) override;
 
@@ -25,6 +35,8 @@ class Metric : public Widget {
     uint8_t _decimals;
     uint16_t _accent;
     bool _hasAccent;
+    TextStyle _labelStyle;
+    TextStyle _valueStyle;
 };
 
 }

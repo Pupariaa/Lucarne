@@ -11,6 +11,11 @@ class Switch : public Widget {
 
     void setLabel(const char *label) { _label = label; }
     void setKey(const char *key) { _key = key; }
+    void setTextFont(const AAFont *font);
+    void setTextColor(uint16_t color);
+    void setTextTransparent(bool transparent);
+    void setTextSize(uint8_t size);
+    void setTextSpacing(int8_t spacing);
     void toggle(Store &store);
 
     Switch *asSwitch() override { return this; }
@@ -19,6 +24,7 @@ class Switch : public Widget {
   private:
     const char *_label;
     const char *_key;
+    TextStyle _textStyle;
 };
 
 }

@@ -4,10 +4,11 @@ scripts/
 web/
 site/
 packages/
+package/
 tools
 
 site/assets/brand/
 editor/brand/
 
 images/*-dark.png
-apng-js-1.1.5.tgz
+apng-js-*.tgz

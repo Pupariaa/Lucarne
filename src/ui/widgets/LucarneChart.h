@@ -16,7 +16,8 @@ class Chart : public Widget {
         _min = minV;
         _max = maxV;
     }
-    void setColor(uint16_t c) { _color = c; }
+    void setColor(uint16_t c);
+    void clearColor();
 
     void draw(Gfx &g, const Theme &theme, Store &store) override;
 
@@ -26,6 +27,7 @@ class Chart : public Widget {
     float _min;
     float _max;
     uint16_t _color;
+    bool _hideLine;
 };
 
 }

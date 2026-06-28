@@ -1,4 +1,5 @@
 #include "LucarneGfx.h"
+#include "LucarneUtf8.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -640,15 +641,26 @@ void Gfx::drawTextAA(const AAFont *font, int16_t penX, int16_t baselineY, const 
     if (!font || !s) return;
     int16_t pen = penX;
     while (*s) {
-        uint8_t c = (uint8_t)*s++;
-        if (c == '\n') {
+        if (*s == '\n') {
             baselineY = (int16_t)(baselineY + font->yAdvance);
             pen = penX;
+            s++;
             continue;
         }
-        if (c < font->first || c > font->last) continue;
-        const AAGlyph *gl = &font->glyph[c - font->first];
-        drawCharAA(font, pen, baselineY, c, fg, bg);
+        if (*s == '\r') {
+            s++;
+            continue;
+        }
+        uint16_t cp = 0;
+        const char *next = s;
+        if (!utf8NextCodepoint(next, cp)) {
+            s = next;
+            continue;
+        }
+        s = next;
+        if (cp < font->first || cp > font->last) continue;
+        const AAGlyph *gl = &font->glyph[cp - font->first];
+        drawCharAA(font, pen, baselineY, cp, fg, bg);
         pen = (int16_t)(pen + gl->xAdvance);
     }
 }
@@ -662,9 +674,15 @@ void Gfx::getAATextBounds(const AAFont *font, const char *s, int16_t *minx, int1
     int16_t pen = 0;
     int16_t loX = 32767, loY = 32767, hiX = -32768, hiY = -32768;
     while (*s) {
-        uint8_t c = (uint8_t)*s++;
-        if (c < font->first || c > font->last) continue;
-        const AAGlyph *gl = &font->glyph[c - font->first];
+        uint16_t cp = 0;
+        const char *next = s;
+        if (!utf8NextCodepoint(next, cp)) {
+            s = next;
+            continue;
+        }
+        s = next;
+        if (cp < font->first || cp > font->last) continue;
+        const AAGlyph *gl = &font->glyph[cp - font->first];
         if (gl->width > 0 && gl->height > 0) {
             int16_t gx = (int16_t)(pen + gl->xOffset);
             int16_t gy = gl->yOffset;
