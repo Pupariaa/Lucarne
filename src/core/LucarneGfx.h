@@ -63,6 +63,9 @@ class Gfx {
     void drawTextAA(const AAFont *font, int16_t penX, int16_t baselineY, const char *s, uint16_t fg, uint16_t bg);
     void getAATextBounds(const AAFont *font, const char *s, int16_t *minx, int16_t *miny, int16_t *w, int16_t *h);
 
+    virtual bool canPeekPixel() const { return false; }
+    virtual uint16_t peekPixel(int16_t x, int16_t y) const;
+
     int16_t width() const { return _width; }
     int16_t height() const { return _height; }
     int16_t getCursorX() const { return cursor_x; }
