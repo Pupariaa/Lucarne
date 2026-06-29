@@ -218,14 +218,15 @@ Affiche un bitmap RGB565. Deux modes :
 
 - **Flash** — `ImageAsset::data` pointe vers des pixels PROGMEM (export Studio par défaut).
 - **SD** — `storage == ImageStorage::Sd`, `data == nullptr`, `source` = chemin sur la carte (ex. `"/assets/img_abc.rgb565"`). Nécessite `SD.begin()` / `mountSdCard()` avant le premier rendu. Voir [`SD.md`](SD.md).
+- **Volume** — `storage == ImageStorage::Volume`, fichiers binaires sur une partition flash interne (FFat, LittleFS ou SPIFFS). `mountVolume()` / `initStorage()` avant le premier rendu. Voir [`VOLUME.md`](VOLUME.md).
 
-Les images SD sont mises en cache RAM (jusqu'à 384 KB) ou lues par rangées si plus grandes.
+Les images SD et Volume sont mises en cache RAM (jusqu'à **2 MB** par défaut sur modules 8 MB PSRAM, moins sur 2 MB PSRAM) ou lues par rangées si plus grandes. `setSdCacheMaxBytes()` pour ajuster.
 
 ```cpp
 lucarne::releaseSdImageCache();
 ```
 
-À appeler après démontage ou remplacement de fichiers sur la SD.
+À appeler après démontage ou remplacement de fichiers sur la SD ou la partition volume.
 
 ---
 
