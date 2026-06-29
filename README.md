@@ -366,7 +366,9 @@ API details: [`docs/RUNTIME.md`](docs/RUNTIME.md) · [online API reference](http
 | Changelog | [`CHANGELOG.md`](CHANGELOG.md) |
 | Runtime API | [`docs/RUNTIME.md`](docs/RUNTIME.md) |
 | Studio & export | [`docs/EDITOR.md`](docs/EDITOR.md) |
+| Images, icons, opaque bake | [`docs/ASSETS.md`](docs/ASSETS.md) |
 | SD card assets | [`docs/SD.md`](docs/SD.md) |
+| Internal partition assets | [`docs/VOLUME.md`](docs/VOLUME.md) |
 | Live Preview | [`docs/LIVE_PREVIEW.md`](docs/LIVE_PREVIEW.md) |
 | Wiring & panels | [`docs/HARDWARE.md`](docs/HARDWARE.md) |
 | Custom fonts | [`docs/FONTS.md`](docs/FONTS.md) |
