@@ -617,6 +617,12 @@ void Gfx::getTextBounds(const char *str, int16_t x, int16_t y, int16_t *x1, int1
     }
 }
 
+uint16_t Gfx::peekPixel(int16_t x, int16_t y) const {
+    (void)x;
+    (void)y;
+    return 0;
+}
+
 void Gfx::drawCharAA(const AAFont *font, int16_t penX, int16_t baselineY, uint16_t c, uint16_t fg, uint16_t bg) {
     if (!font) return;
     if (c < font->first || c > font->last) return;
@@ -625,13 +631,17 @@ void Gfx::drawCharAA(const AAFont *font, int16_t penX, int16_t baselineY, uint16
     const uint8_t *cov = font->coverage + gl->coverageOffset;
     int16_t gx = (int16_t)(penX + gl->xOffset);
     int16_t gy = (int16_t)(baselineY + gl->yOffset);
+    const bool dest = canPeekPixel();
     startWrite();
     for (uint8_t yy = 0; yy < gl->height; yy++) {
         for (uint8_t xx = 0; xx < gl->width; xx++) {
             uint8_t a = cov[yy * gl->width + xx];
             if (a == 0) continue;
-            uint16_t out = (a >= 250) ? fg : colorBlend(bg, fg, a);
-            writePixel((int16_t)(gx + xx), (int16_t)(gy + yy), out);
+            int16_t px = (int16_t)(gx + xx);
+            int16_t py = (int16_t)(gy + yy);
+            uint16_t under = dest ? peekPixel(px, py) : bg;
+            uint16_t out = (a >= 250) ? fg : colorBlend(under, fg, a);
+            writePixel(px, py, out);
         }
     }
     endWrite();
