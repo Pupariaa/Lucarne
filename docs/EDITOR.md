@@ -1,115 +1,86 @@
 # Lucarne Studio — guide de l'éditeur
 
-Lucarne Studio est une application web statique qui permet de concevoir une interface visuellement, de simuler la navigation, puis d'exporter un header C++ prêt à intégrer.
+Lucarne Studio est une application web statique : concevoir l'UI, simuler la navigation, exporter du C++ (`Projet.h`, binaires assets).
 
-## Ouvrir l'éditeur
-
-Ouvrez `editor/index.html` dans un navigateur récent (Chrome, Edge, Firefox). Aucune installation ni build n'est nécessaire. Une connexion est utile uniquement pour charger des polices Google Fonts (sinon une police système de repli est utilisée).
-
-Le projet courant est sauvegardé automatiquement dans le navigateur (stockage local). Les boutons `Save` / `Load` exportent et réimportent un fichier JSON.
+Ouvrez `web/editor/` (ou `editor/` en local) → choisissez la version alignée sur votre lib firmware (ex. **0.1.3**).
 
 ## Barre d'outils
 
-- **Nom du projet** — utilisé pour le nom du fichier exporté.
-- **Écran (device)** — modèle d'écran cible (ST7789 1.69", 1.3" ; ST7735S 1.8", 1.44"). Détermine la résolution et la densité physique.
-- **Rotation** — 0 / 90 / 180 / 270.
-- **Blueprint / Simulate** — bascule entre la vue graphe et le simulateur.
-- **Export .h** — ouvre la fenêtre d'export.
-- **Save / Load / New** — gestion du projet JSON.
+| Élément | Rôle |
+|---------|------|
+| Nom du projet | Fichier export / JSON |
+| Device | Modèle d'écran (ST7789, ST7735S) et résolution |
+| Rotation | 0 / 90 / 180 / 270 |
+| Blueprint / Simulate | Graphe de navigation vs test interactif |
+| Export .h | Headers + fichiers binaires |
+| Save / Load / New | Projet `.lucarne.json` (le navigateur garde aussi un auto-save) |
 
-## Vue Blueprint
+## Vues
 
-Chaque écran est un **nœud** avec une miniature en direct.
+### Blueprint
 
-- **Déplacer** un nœud : glissez son en-tête. **Pan** : glissez le fond. **Zoom** : molette.
-- **+ Screen** : ajoute un écran. **Fit** : recadre la vue.
-- Chaque entrée de menu expose une **broche de sortie** (à droite du nœud). Tirez un lien depuis cette broche vers un autre nœud pour définir la cible de navigation de cette entrée.
-- Cliquez un lien pour le sélectionner : l'inspecteur permet d'en changer la cible et la transition, ou de le supprimer.
-- **Double-clic** sur un nœud : ouvre le Designer plein écran.
+Écrans = nœuds. Liens depuis les entrées de menu. Double-clic = Designer. Badge **START** = écran de démarrage.
 
-Le badge `START` indique l'écran de démarrage (modifiable dans l'inspecteur du nœud).
+### Designer
 
-## Vue Designer
+Palette widgets, canvas, calques. **Realistic 1:1** = taille physique réelle. **Pixel grid** = grille 1 px.
 
-Édition plein écran d'un seul écran.
+### Inspecteur (onglets droits)
 
-- **Palette** (à gauche) : ajoutez Label, Metric, Bar, Icon, Menu.
-- **Canvas** : glissez pour déplacer, tirez la poignée en bas à droite pour redimensionner.
-- **Calques** (en haut à droite) : sélection et suppression rapides.
-- **Contrôles d'aperçu** (en bas) :
-  - **Realistic 1:1** : affiche l'écran à sa densité physique réelle (selon la diagonale du modèle).
-  - **Pixel grid** : superpose une grille d'un pixel écran.
-  - **Zoom** : facteur d'agrandissement entier (rendu net, fidèle à l'écran réel).
+| Onglet | Contenu |
+|--------|---------|
+| Inspector | Widget, nœud, lien, ou projet |
+| Theme | Couleurs, radius, polices body/title |
+| Fonts | Polices Google / TTF → `Projet_fonts.h` |
+| Hardware | SPI, écran, SD, **partition interne**, entrées, Live Preview |
+| Assets | Images, icônes, **Icon export** (flash / SD / volume) |
+| Data | Clés `ui.setFloat` / `setInt` / … |
 
-## Inspecteur, Theme, Fonts, Hardware, Assets, Data
+## Assets — images, icônes animées, opaque bake
 
-Le panneau de droite a six onglets :
+Guide détaillé : **[`ASSETS.md`](ASSETS.md)**.
 
-- **Inspector** — contextuel : propriétés du widget sélectionné (Designer), du nœud ou du lien (Blueprint), ou réglages du projet.
-- **Theme** — couleurs, rayon, marge, hauteur de ligne, et choix des polices de corps et de titre.
-- **Fonts** — gestion des polices (voir [FONTS.md](FONTS.md)).
-- **Hardware** — bus SPI partagé, broches écran et SD, entrées navigation, source UI (embedded / URL / SD).
-- **Assets** — bibliothèque d'images et d'icônes ; storage flash / SD / web par image.
-- **Data** — clés de données (nom, type, valeur). Ces clés sont celles que vous alimenterez au runtime via `ui.setFloat(...)`, etc.
+### Images
 
-## Configuration matérielle (Hardware)
+- Import PNG (alpha) ou BMP 24/32 bits.
+- **Storage** par image : Flash, SD, Internal partition, Web.
+- Seules les images **placées sur un écran** sont exportées, à la résolution max utilisée.
 
-Onglet **Hardware** — configuration globale du projet :
+### Icônes
 
-- **SPI bus** — MOSI, MISO, SCLK (partagés entre écran et SD).
-- **Display** — CS, DC, RST, rétroéclairage, vitesse/mode SPI, inversion, ordre des couleurs.
-- **SD card** — CS, vitesse SPI, dossier des assets sur la carte (`/assets`).
-- **Navigation input** — boutons, encodeur ou tactile (broches exportées dans `attachInput()`).
-- **UI source** — projet embarqué, JSON sur URL, ou JSON sur SD (Live Preview).
+- Packs : Tabler, Streamline/Glyphs, **Fluent Emoji** (statique ou APNG).
+- **Icon export** (Assets) : destination globale flash / SD / volume pour toutes les icônes du projet.
+- Widget **Icon** : échelle = résolution d'export des emojis animés.
 
-Device, taille native du panel et rotation restent dans la **barre d'outils**.
+### Opaque bake (pré-traitement)
 
-## Configuration de la navigation
+Sur un widget **Icon** emoji (inspecteur) : option **Opaque bake**.
 
-Onglet **Hardware** → section **Navigation input** (plus dans l'inspecteur d'écran seul) :
+- Fusionne la transparence de chaque frame sur le fond **statique** sous l'icône.
+- Export : RGB565 opaque, pas de `.alpha` → moins de fichiers, draw plus rapide.
+- Nécessite une image de fond fixe ; pas deux emojis animés qui se chevauchent sur le même écran.
 
-- **Buttons** — broches haut / bas / OK / retour.
-- **Encoder** — broches A / B / bouton.
-- **Touch** — pas de broche ; au runtime vous appellerez `projet::input.feed(x, y, pressed)` depuis votre pilote tactile.
-- **Active low** — entrées actives à l'état bas (pull-ups internes), cas le plus courant.
+## Hardware
 
-Cette configuration est globale au projet (un seul jeu d'entrées physiques par appareil) et est traduite dans l'adaptateur d'entrées exporté.
-
-## Vue Simulate
-
-Teste la navigation réelle :
-
-- Pad à l'écran ou flèches du clavier (`Entrée` = sélectionner, `Retour arrière` / `Échap` = revenir).
-- Les transitions configurées (par lien ou par défaut) sont jouées comme sur l'appareil.
+- **SPI** — MOSI, MISO, SCLK (partagé écran + SD).
+- **Display** — CS, DC, RST, BL, SPI Hz/mode, invert, RGB/BGR.
+- **SD card** — activer seulement si vous utilisez des assets SD ; CS, dossier `/assets`.
+- **Internal partition** — activer pour assets volume ; filesystem **FAT (FFat)**, label **`ffat`** si schéma Arduino `16M Flash (3MB APP/9.9MB FATFS)`.
+- **Navigation** — boutons, encodeur, ou tactile (`projet::input.feed`).
+- **UI source** — embedded, URL JSON, ou SD (Live Preview).
 
 ## Export
 
-Le bouton **Export .h** ouvre une modale à deux onglets :
+Modale **Export .h** :
 
-- **Headers** — `Projet.h`, `Projet_setup.h` (broches + init SD), `Projet_fonts.h`, `Projet_images.h`, `Projet_icons.h`.
-- **Files (SD)** — fichiers `.rgb565` + `SD_MANIFEST.txt` à copier sur la carte FAT32.
+| Onglet | Contenu |
+|--------|---------|
+| **Headers** | `Projet.h`, `Projet_setup.h`, `LucarneUserConfig.h`, `Projet_fonts.h`, `Projet_images.h`, `Projet_icons.h` |
+| **Files** | `assets/**/*.rgb565`, `.alpha`, `SD_MANIFEST.txt`, `VOLUME_MANIFEST.txt` |
 
-Dans **Assets**, réglez le storage d'une image sur **SD card** pour qu'elle apparaisse dans **Files (SD)**. Le chemin device (`source`) suit le dossier **Hardware → SD card → Assets folder**.
+Téléchargement : copier un header, **Download all** zip pour les binaires.
 
-Copiez le texte (bouton `Copy`), téléchargez un fichier (`Download`), ou **Download all SD** pour les binaires. Les fichiers binaires ne se copient pas dans le presse-papiers.
-
-La modale affiche la **taille totale** de l'export (headers + binaires SD).
-
-### Assets — images
-
-- Import **PNG** (transparence conservée) ou **BMP** (24/32 bits).
-- Chaque image affiche sa taille **source** (bibliothèque) et sa taille **export** (résolution max utilisée sur les écrans, flash estimé).
-- Seules les images placées sur un écran sont exportées dans `Projet_images.h` (redimensionnées si nécessaire).
-- Storage **Flash**, **SD card**, ou **Web** par image.
-
-### Assets — icônes
-
-- Packs Tabler, Fluent Emoji (statique ou **APNG animé**).
-- Les animations sont exportées dans `Projet_icons.h` comme séquences de frames RGB565.
-
-## Intégration dans votre croquis
-
-Déposez les headers à côté de votre `.ino`. Copiez les fichiers SD sur la carte (voir `SD_MANIFEST.txt`). Le code généré expose l'espace de noms `projet` :
+### Intégration sketch
 
 ```cpp
 #include <Lucarne.h>
@@ -122,12 +93,13 @@ ST7789 display;
 UI ui(display);
 
 void setup() {
+    Serial.begin(115200);
     BufferOptions buffer;
     buffer.mode = BufferMode::Full;
 
     projet::initSpiBus();
+    projet::initStorage();
     display.begin(projet::displayPins(), projet::displayOptions(), buffer, &SPI);
-    projet::mountSdCard();
 
     projet::build(ui);
     projet::attachInput(ui);
@@ -135,12 +107,26 @@ void setup() {
 }
 
 void loop() {
-    projet::update();                  // lit les boutons / l'encodeur
-    ui.setFloat("temp", readTemp());   // alimente les clés de données
+    projet::update();
     ui.update();
 }
 ```
 
-En **tactile**, remplacez `projet::update()` par vos lectures et appelez `projet::input.feed(x, y, pressed)` quand un point est disponible.
+### Partition interne (FFat)
 
-Après chaque modification dans l'éditeur, régénérez `Projet.h` : votre `.ino` reste inchangé.
+1. Export **Files** → dézipper `assets/` dans `sketch/data/`.
+2. Arduino **Partition Scheme** → entrée avec **FATFS** dans le nom.
+3. Plugin [arduino-ffat-upload](https://github.com/r-iki/arduino-ffat-upload).
+4. Ordre : **Upload sketch** → **Upload FFAT** (pas d'erase all flash sans refaire FFAT).
+
+Détails : [`VOLUME.md`](VOLUME.md).
+
+### Carte SD
+
+Copier `assets/` à la racine FAT32. Détails : [`SD.md`](SD.md).
+
+## Simulate
+
+Pad ou flèches clavier. Teste navigation et transitions comme sur l'appareil.
+
+Après chaque modification Studio : régénérer les headers ; le `.ino` reste stable si vous n'y touchez pas.
