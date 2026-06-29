@@ -11,6 +11,8 @@ class Screen {
 
     void add(Widget *widget);
     void draw(Gfx &g, const Theme &theme, Store &store);
+    void redrawRegion(int16_t rx, int16_t ry, int16_t rw, int16_t rh, Gfx &g, const Theme &theme,
+                      Store &store);
     const char *name() const { return _name; }
     Widget *first() const { return _head; }
 
