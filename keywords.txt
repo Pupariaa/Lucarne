@@ -79,6 +79,11 @@ clearItems	KEYWORD2
 setIconLookups	KEYWORD2
 IconAnimAsset	KEYWORD1
 setIconAnimSpeedPercent	KEYWORD2
+setAnimReadyBudget	KEYWORD2
+setSdCacheMaxBytes	KEYWORD2
+mountVolume	KEYWORD2
+VolumeFsKind	KEYWORD1
+Volume	KEYWORD1
 setIconRef	KEYWORD2
 iconRefValid	KEYWORD2
 drawIconRef	KEYWORD2
