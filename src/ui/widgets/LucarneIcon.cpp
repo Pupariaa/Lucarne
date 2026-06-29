@@ -52,10 +52,13 @@ void Icon::draw(Gfx &g, const Theme &theme, Store &store) {
     int16_t bh = h > 0 ? h : side;
     int16_t dx = (int16_t)(x + (bw - side) / 2);
     int16_t dy = (int16_t)(y + (bh - side) / 2);
-    drawIconRef(g, _ref, dx, dy, side, side, tint, bg);
     if (iconRefIsAnim(_ref)) {
-        syncAnimFrame(iconRefAnimFrame(_ref, millis()));
+        syncAnimFrame(0);
+        markAnimShown(iconAnimClockMs());
+        iconAnimDrawInitial(g, this, dx, dy, side, side, bg);
+        return;
     }
+    drawIconRef(g, _ref, dx, dy, side, side, tint, bg);
 }
 
 }
