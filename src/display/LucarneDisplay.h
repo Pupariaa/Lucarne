@@ -24,6 +24,17 @@ class Display : public Gfx {
     void display();
     void display(int16_t x, int16_t y, int16_t w, int16_t h);
 
+    void writeBufferRect(int16_t x, int16_t y, int16_t w, int16_t h, const uint16_t *src);
+    void blitBufferRect(int16_t x, int16_t y, int16_t w, int16_t h, const uint16_t *srcBe16);
+    void readBufferRectNative(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t *dst);
+
+    void writePixelsFitOver(int16_t boxX, int16_t boxY, int16_t boxW, int16_t boxH, const uint16_t *pix,
+                            int16_t sw, int16_t sh, const uint8_t *alpha, bool hasAlpha,
+                            const uint16_t *under, int16_t underW, int16_t underH);
+
+    bool canPeekPixel() const override;
+    uint16_t peekPixel(int16_t x, int16_t y) const override;
+
     void writePixel(int16_t x, int16_t y, uint16_t color) override;
     void writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) override;
     void writeFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color) override;
