@@ -1,8 +1,15 @@
 #include "LucarneWidget.h"
 #include "LucarneImageLoader.h"
+#include "LucarneImageRle.h"
 #include "../core/LucarneUtf8.h"
 
 namespace lucarne {
+
+static uint16_t blendOverPixel(Gfx &g, int16_t x, int16_t y, uint16_t fg, uint8_t a, uint16_t bg) {
+    if (a < 8) return bg;
+    uint16_t under = g.canPeekPixel() ? g.peekPixel(x, y) : bg;
+    return a >= 250 ? fg : colorBlend(under, fg, a);
+}
 
 Widget::Widget(int16_t x, int16_t y, int16_t w, int16_t h)
     : x(x), y(y), w(w), h(h), visible(true), _next(nullptr) {}
@@ -193,7 +200,12 @@ void Widget::drawImageAsset(Gfx &g, const ImageAsset *asset, int16_t x, int16_t 
                             int16_t dh, uint16_t bg) {
     if (!asset || dw < 1 || dh < 1) return;
 
-    if (imageAssetStorage(asset) == ImageStorage::Sd && !imageAssetData(asset)) {
+    if (imageAssetStorage(asset) == ImageStorage::FlashRle) {
+        drawImageRleFit(g, asset, x, y, dw, dh, bg);
+        return;
+    }
+
+    if (isFileBackedStorage(imageAssetStorage(asset)) && !imageAssetData(asset)) {
         drawImageAssetSd(g, asset, x, y, dw, dh, bg);
         return;
     }
@@ -213,7 +225,7 @@ void Widget::drawImageAsset(Gfx &g, const ImageAsset *asset, int16_t x, int16_t 
             uint8_t a = imageAssetAlphaAt(alpha, si);
             if (a < 8) continue;
             uint16_t fg = imageAssetPixel565(pix, si);
-            uint16_t out = a >= 250 ? fg : colorBlend(bg, fg, a);
+            uint16_t out = blendOverPixel(g, (int16_t)(x + px), (int16_t)(y + py), fg, a, bg);
             g.drawPixel((int16_t)(x + px), (int16_t)(y + py), out);
         }
     }
@@ -223,7 +235,12 @@ void Widget::drawImageAssetFit(Gfx &g, const ImageAsset *asset, int16_t x, int16
                                int16_t dh, uint16_t bg) {
     if (!asset || dw < 1 || dh < 1) return;
 
-    if (imageAssetStorage(asset) == ImageStorage::Sd && !imageAssetData(asset)) {
+    if (imageAssetStorage(asset) == ImageStorage::FlashRle) {
+        drawImageRleFit(g, asset, x, y, dw, dh, bg);
+        return;
+    }
+
+    if (isFileBackedStorage(imageAssetStorage(asset)) && !imageAssetData(asset)) {
         drawImageAssetSd(g, asset, x, y, dw, dh, bg);
         return;
     }
@@ -254,8 +271,10 @@ void Widget::drawImageAssetFit(Gfx &g, const ImageAsset *asset, int16_t x, int16
             uint8_t a = imageAssetAlphaAt(alpha, si);
             if (a < 8) continue;
             uint16_t fg = imageAssetPixel565(pix, si);
-            uint16_t out = a >= 250 ? fg : colorBlend(bg, fg, a);
-            g.drawPixel((int16_t)(ox + px), (int16_t)(oy + py), out);
+            int16_t dx = (int16_t)(ox + px);
+            int16_t dy = (int16_t)(oy + py);
+            uint16_t out = blendOverPixel(g, dx, dy, fg, a, bg);
+            g.drawPixel(dx, dy, out);
         }
     }
 }
@@ -283,8 +302,10 @@ void Widget::drawRamImageFit(Gfx &g, const uint16_t *pix, const uint8_t *alpha, 
             uint8_t a = alpha ? alpha[si] : 255;
             if (a < 8) continue;
             uint16_t fg = pix[si];
-            uint16_t out = a >= 250 ? fg : colorBlend(bg, fg, a);
-            g.drawPixel((int16_t)(ox + px), (int16_t)(oy + py), out);
+            int16_t dx = (int16_t)(ox + px);
+            int16_t dy = (int16_t)(oy + py);
+            uint16_t out = blendOverPixel(g, dx, dy, fg, a, bg);
+            g.drawPixel(dx, dy, out);
         }
     }
 }
