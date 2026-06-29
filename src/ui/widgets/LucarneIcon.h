@@ -19,8 +19,15 @@ class Icon : public Widget {
     Icon *asIcon() override { return this; }
 
     const char *iconRef() const { return _ref; }
+    uint8_t scaleTenths() const { return _scaleTenths; }
     uint8_t lastAnimFrame() const { return _lastAnimFrame; }
     void syncAnimFrame(uint8_t fi) { _lastAnimFrame = fi; }
+    uint32_t animShowMs() const { return _animShowMs; }
+    void markAnimShown(uint32_t ms) { _animShowMs = ms; }
+    void resetAnimPlayback() {
+        _lastAnimFrame = 0xff;
+        _animShowMs = 0;
+    }
 
   private:
     const char *_ref;
@@ -29,6 +36,7 @@ class Icon : public Widget {
     bool _hasColor;
     bool _transparent;
     uint8_t _lastAnimFrame = 0xff;
+    uint32_t _animShowMs = 0;
 };
 
 }
