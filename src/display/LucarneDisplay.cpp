@@ -215,6 +215,125 @@ void Display::backlight(bool on) {
     digitalWrite(_pins.bl, level ? HIGH : LOW);
 }
 
+bool Display::canPeekPixel() const {
+    return _bufMode == BufferMode::Full && _buffer != nullptr;
+}
+
+uint16_t Display::peekPixel(int16_t x, int16_t y) const {
+    if (!canPeekPixel() || x < 0 || y < 0 || x >= _width || y >= _height) return 0;
+    return be16(_buffer[(int32_t)y * _width + x]);
+}
+
+void Display::writeBufferRect(int16_t x, int16_t y, int16_t w, int16_t h, const uint16_t *src) {
+    if (!canPeekPixel() || !src || w < 1 || h < 1) return;
+    if (x < 0) {
+        w += x;
+        src += -x;
+        x = 0;
+    }
+    if (y < 0) {
+        h += y;
+        src += (size_t)(-y) * (size_t)w;
+        y = 0;
+    }
+    if (x + w > _width) w = (int16_t)(_width - x);
+    if (y + h > _height) h = (int16_t)(_height - y);
+    if (w <= 0 || h <= 0) return;
+    for (int16_t row = 0; row < h; row++) {
+        uint16_t *dst = &_buffer[(int32_t)(y + row) * _width + x];
+        const uint16_t *srcRow = src + (size_t)row * (size_t)w;
+        for (int16_t col = 0; col < w; col++) {
+            dst[col] = be16(srcRow[col]);
+        }
+    }
+    markDirty(x, y, w, h);
+}
+
+void Display::blitBufferRect(int16_t x, int16_t y, int16_t w, int16_t h, const uint16_t *srcBe16) {
+    if (!canPeekPixel() || !srcBe16 || w < 1 || h < 1) return;
+    if (x < 0) {
+        w += x;
+        srcBe16 += -x;
+        x = 0;
+    }
+    if (y < 0) {
+        h += y;
+        srcBe16 += (size_t)(-y) * (size_t)w;
+        y = 0;
+    }
+    if (x + w > _width) w = (int16_t)(_width - x);
+    if (y + h > _height) h = (int16_t)(_height - y);
+    if (w <= 0 || h <= 0) return;
+    for (int16_t row = 0; row < h; row++) {
+        uint16_t *dst = &_buffer[(int32_t)(y + row) * _width + x];
+        memcpy(dst, srcBe16 + (size_t)row * (size_t)w, (size_t)w * 2);
+    }
+    markDirty(x, y, w, h);
+}
+
+void Display::readBufferRectNative(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t *dst) {
+    if (!canPeekPixel() || !dst || w < 1 || h < 1) return;
+    if (x < 0) x = 0;
+    if (y < 0) y = 0;
+    if (x + w > _width) w = (int16_t)(_width - x);
+    if (y + h > _height) h = (int16_t)(_height - y);
+    if (w <= 0 || h <= 0) return;
+    for (int16_t row = 0; row < h; row++) {
+        const uint16_t *src = &_buffer[(int32_t)(y + row) * _width + x];
+        uint16_t *out = dst + (size_t)row * (size_t)w;
+        for (int16_t col = 0; col < w; col++) {
+            out[col] = be16(src[col]);
+        }
+    }
+}
+
+void Display::writePixelsFitOver(int16_t boxX, int16_t boxY, int16_t boxW, int16_t boxH,
+                                 const uint16_t *pix, int16_t sw, int16_t sh, const uint8_t *alpha,
+                                 bool hasAlpha, const uint16_t *under, int16_t underW, int16_t underH) {
+    if (!canPeekPixel() || !pix || !under || sw < 1 || sh < 1 || boxW < 1 || boxH < 1 || underW < 1 ||
+        underH < 1) {
+        return;
+    }
+    int16_t rw = boxW;
+    int16_t rh = boxH;
+    if (sw * boxH < sh * boxW) {
+        rw = (int16_t)((sw * boxH) / sh);
+        if (rw < 1) rw = 1;
+    } else if (sh * boxW < sw * boxH) {
+        rh = (int16_t)((sh * boxW) / sw);
+        if (rh < 1) rh = 1;
+    }
+    int16_t ox = (int16_t)(boxX + (boxW - rw) / 2);
+    int16_t oy = (int16_t)(boxY + (boxH - rh) / 2);
+    int16_t dirtyX = ox;
+    int16_t dirtyY = oy;
+    int16_t dirtyW = rw;
+    int16_t dirtyH = rh;
+    for (int16_t py = 0; py < rh; py++) {
+        int16_t sy = (int16_t)((py * sh) / rh);
+        for (int16_t px = 0; px < rw; px++) {
+            int16_t sx = (int16_t)((px * sw) / rw);
+            size_t si = (size_t)sy * (size_t)sw + (size_t)sx;
+            int16_t dx = (int16_t)(ox + px);
+            int16_t dy = (int16_t)(oy + py);
+            if (dx < 0 || dy < 0 || dx >= _width || dy >= _height) continue;
+            int16_t lx = (int16_t)(dx - boxX);
+            int16_t ly = (int16_t)(dy - boxY);
+            if (lx < 0 || ly < 0 || lx >= underW || ly >= underH) continue;
+            uint16_t bg = under[(size_t)ly * (size_t)underW + (size_t)lx];
+            if (hasAlpha && alpha) {
+                uint8_t a = alpha[si];
+                if (a < 8) continue;
+                uint16_t fg = pix[si];
+                _buffer[(int32_t)dy * _width + dx] = be16(a >= 250 ? fg : colorBlend(bg, fg, a));
+            } else {
+                _buffer[(int32_t)dy * _width + dx] = be16(pix[si]);
+            }
+        }
+    }
+    markDirty(dirtyX, dirtyY, dirtyW, dirtyH);
+}
+
 void Display::startWrite() {
     if (_bufMode == BufferMode::Full) return;
     if (_txDepth++ == 0) {
