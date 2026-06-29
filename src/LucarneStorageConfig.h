@@ -1,0 +1,38 @@
+#ifndef LUCARNE_STORAGE_CONFIG_H
+#define LUCARNE_STORAGE_CONFIG_H
+
+#if defined(__has_include)
+#if __has_include("LucarneUserConfig.h")
+#include "LucarneUserConfig.h"
+#endif
+#endif
+
+#ifndef LUCARNE_ENABLE_SD
+#define LUCARNE_ENABLE_SD 1
+#endif
+
+#ifndef LUCARNE_ENABLE_VOLUME_FAT
+#define LUCARNE_ENABLE_VOLUME_FAT 1
+#endif
+
+#ifndef LUCARNE_ENABLE_VOLUME_LITTLEFS
+#define LUCARNE_ENABLE_VOLUME_LITTLEFS 1
+#endif
+
+#ifndef LUCARNE_ENABLE_VOLUME_SPIFFS
+#define LUCARNE_ENABLE_VOLUME_SPIFFS 1
+#endif
+
+#if LUCARNE_ENABLE_VOLUME_FAT || LUCARNE_ENABLE_VOLUME_LITTLEFS || LUCARNE_ENABLE_VOLUME_SPIFFS
+#define LUCARNE_ENABLE_VOLUME 1
+#else
+#define LUCARNE_ENABLE_VOLUME 0
+#endif
+
+#if defined(ESP32) && (LUCARNE_ENABLE_SD || LUCARNE_ENABLE_VOLUME)
+#define LUCARNE_FILE_FS 1
+#else
+#define LUCARNE_FILE_FS 0
+#endif
+
+#endif
