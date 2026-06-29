@@ -1,4 +1,5 @@
 #include "LucarneScreen.h"
+#include "LucarneIconDraw.h"
 
 namespace lucarne {
 
@@ -56,12 +57,34 @@ void Screen::draw(Gfx &g, const Theme &theme, Store &store) {
         g.fillRoundRect(0, 0, w, h, _cornerRadius, theme.background);
     }
     for (Widget *wgt = _head; wgt; wgt = wgt->_next) {
-        if (wgt->visible) {
-            wgt->draw(g, theme, store);
-        }
+        if (!wgt->visible) continue;
+        Icon *ic = wgt->asIcon();
+        if (ic && iconWidgetIsAnim(ic)) iconAnimSnapCapture(g, ic);
+        wgt->draw(g, theme, store);
     }
     if (_cornerRadius > 0) {
         maskScreenCorners(g, bezel, _cornerRadius);
+    }
+}
+
+static bool rectsIntersect(int16_t ax, int16_t ay, int16_t aw, int16_t ah, int16_t bx, int16_t by,
+                           int16_t bw, int16_t bh) {
+    return ax < (int16_t)(bx + bw) && (int16_t)(ax + aw) > bx && ay < (int16_t)(by + bh) &&
+           (int16_t)(ay + ah) > by;
+}
+
+void Screen::redrawRegion(int16_t rx, int16_t ry, int16_t rw, int16_t rh, Gfx &g, const Theme &theme,
+                          Store &store) {
+    if (rw < 1 || rh < 1) return;
+    g.fillRect(rx, ry, rw, rh, theme.background);
+    for (Widget *w = _head; w; w = w->_next) {
+        if (!w->visible) continue;
+        int16_t ww = w->w;
+        int16_t wh = w->h;
+        if (ww < 1) ww = 1;
+        if (wh < 1) wh = 1;
+        if (!rectsIntersect(w->x, w->y, ww, wh, rx, ry, rw, rh)) continue;
+        w->draw(g, theme, store);
     }
 }
 
