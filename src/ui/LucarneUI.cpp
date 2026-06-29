@@ -323,13 +323,11 @@ void UI::update() {
         }
         if (_splashProgress) _dirty = true;
     }
-    if (_current) {
-        if ((uint32_t)(now - _animRepaintMs) >= 42) {
-            _animRepaintMs = now;
-            iconAnimPatchScreen(_display, _current, _theme, _store);
-        }
+    bool patched = false;
+    if (_current && !_splashActive) {
+        patched = iconAnimPatchScreen(_display, _current, _theme, _store);
     }
-    if (_dirty || _store.dirty()) {
+    if (!patched && (_dirty || _store.dirty())) {
         render();
     }
 }
