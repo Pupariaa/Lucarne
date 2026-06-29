@@ -69,7 +69,8 @@ void loop() {
 
 ## Runtime behaviour
 
-- On first draw, Lucarne loads the file into an **RAM cache** (up to 384 KB). Further redraws reuse the cache.
+- On first draw, Lucarne loads the file into an **RAM cache** (default up to **2 MB** on 8 MB PSRAM modules; auto-scaled down on 2 MB PSRAM). Further redraws reuse the cache.
+- Override with `lucarne::setSdCacheMaxBytes(bytes)`.
 - Images larger than the cache limit are read **row by row** from the SD card (slower, but works for full-screen backgrounds on tight RAM).
 - Call `lucarne::releaseSdImageCache()` if you unmount or replace SD files at runtime.
 
@@ -88,4 +89,4 @@ void loop() {
 | Slow full-screen refresh | Image exceeds cache → row streaming; reduce size or use a smaller asset |
 | Display OK, SD mount fail | MISO wired? CS pin? 3.3 V? FAT32? |
 
-See also [`HARDWARE.md`](HARDWARE.md) for SPI wiring details.
+See also [`HARDWARE.md`](HARDWARE.md) for SPI wiring details and [`VOLUME.md`](VOLUME.md) for internal partition assets (same binary format, no SD card).
