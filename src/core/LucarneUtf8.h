@@ -14,11 +14,12 @@ inline bool utf8NextCodepoint(const char *&p, uint16_t &cp) {
     if ((b0 & 0xE0) == 0xC0 && p[1]) {
         cp = (uint16_t)(((b0 & 0x1F) << 6) | (p[1] & 0x3F));
         p += 2;
-        return cp >= 0x80 && cp <= 0xFF;
+        return cp >= 0x80;
     }
     if ((b0 & 0xF0) == 0xE0 && p[1] && p[2]) {
+        cp = (uint16_t)(((b0 & 0x0F) << 12) | ((p[1] & 0x3F) << 6) | (p[2] & 0x3F));
         p += 3;
-        return false;
+        return cp >= 0x800 && cp <= 0xFFFF;
     }
     if ((b0 & 0xF8) == 0xF0 && p[1] && p[2] && p[3]) {
         p += 4;
