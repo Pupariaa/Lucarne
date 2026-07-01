@@ -29,11 +29,22 @@ uint8_t iconRefAnimFrame(const char *ref, uint32_t ms);
 bool iconAnimPlaybackActive();
 bool iconAnimScreenDirty(Screen *screen);
 bool iconWidgetIsAnim(Icon *ic);
+
+struct IconAnimDrawRect {
+    int16_t x;
+    int16_t y;
+    int16_t w;
+    int16_t h;
+};
+
+IconAnimDrawRect iconAnimDrawRect(const Icon *ic);
+
 void iconAnimSnapCapture(Gfx &g, Icon *ic);
 bool iconAnimBlitReady(Display &disp, Icon *ic, uint8_t frameIndex);
-void iconAnimDrawInitial(Gfx &g, Icon *ic, int16_t x, int16_t y, int16_t bw, int16_t bh, uint16_t bg);
+bool iconAnimDrawInitial(Gfx &g, Icon *ic, int16_t x, int16_t y, int16_t bw, int16_t bh, uint16_t bg);
 bool iconAnimPatchScreen(Display &disp, Screen *screen, const Theme &theme, Store &store);
 void iconAnimResetScreen(Screen *screen);
+void screenPrefetchAssets(Screen *screen, uint8_t animMaxFramesPerIcon = 0);
 int16_t iconRefBaseSize(const char *ref);
 void drawIconAnimFrame(Gfx &g, const char *ref, uint8_t frameIndex, int16_t x, int16_t y, int16_t dw,
                        int16_t dh, uint16_t bg);

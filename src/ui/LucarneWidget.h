@@ -10,6 +10,7 @@
 namespace lucarne {
 
 class Icon;
+class Image;
 
 enum class TextAlign : uint8_t { Left, Center, Right };
 
@@ -37,6 +38,7 @@ class Widget {
     virtual class Button *asButton() { return nullptr; }
     virtual class Switch *asSwitch() { return nullptr; }
     virtual Icon *asIcon() { return nullptr; }
+    virtual Image *asImage() { return nullptr; }
 
     bool contains(int16_t px, int16_t py) const {
         return px >= x && py >= y && px < x + w && py < y + h;

@@ -32,7 +32,21 @@ void maskScreenCorners(Gfx &g, uint16_t bezel, int16_t r) {
 
 }
 
-Screen::Screen(const char *name) : _name(name), _head(nullptr), _tail(nullptr), _cornerRadius(0) {}
+Screen::Screen(const char *name)
+    : _name(name), _head(nullptr), _tail(nullptr), _cornerRadius(0), _hasCustomTheme(false) {}
+
+void Screen::setTheme(const Theme &theme) {
+    _customTheme = theme;
+    _hasCustomTheme = true;
+}
+
+void Screen::clearTheme() {
+    _hasCustomTheme = false;
+}
+
+const Theme *Screen::customTheme() const {
+    return _hasCustomTheme ? &_customTheme : nullptr;
+}
 
 void Screen::add(Widget *widget) {
     if (!widget) return;

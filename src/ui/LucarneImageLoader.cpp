@@ -328,9 +328,7 @@ static SdFrameSlot *sdCacheLoadSlot(const ImageAsset *asset, bool *hasAlphaOut) 
         char alphaBuf[96];
         sdCopyPath(alphaBuf, sizeof(alphaBuf), alphaPath);
         File af = openFileStorage(alphaBuf, st);
-        if (!af) {
-            sdSetFail(SdImageFail::AlphaOpen, alphaPath);
-        } else {
+        if (af) {
             size_t aBytes = (size_t)aw * (size_t)ah;
             if ((size_t)af.size() < aBytes) {
                 sdSetFail(SdImageFail::AlphaSize, alphaPath);
@@ -369,6 +367,10 @@ static SdFrameSlot *sdCacheLoadSlot(const ImageAsset *asset, bool *hasAlphaOut) 
 #endif
 }
 
+static inline bool rgb565Opaque(uint16_t px) {
+    return px != 0;
+}
+
 bool sdCacheEnsure(const ImageAsset *asset) {
     return sdCacheLoadSlot(asset, nullptr) != nullptr;
 }
@@ -398,6 +400,17 @@ static void fitBoxDims(int16_t boxW, int16_t boxH, int16_t sw, int16_t sh, int16
     }
     *ox = (int16_t)((boxW - *rw) / 2);
     *oy = (int16_t)((boxH - *rh) / 2);
+}
+
+bool imageAssetDrawReady(const ImageAsset *asset) {
+    if (!asset) return false;
+    if (imageAssetData(asset)) return true;
+    ImageStorage st = imageAssetStorage(asset);
+    if (!isFileBackedStorage(st)) return false;
+    bool hasAlpha = false;
+    SdFrameSlot *slot = sdCacheLoadSlot(asset, &hasAlpha);
+    (void)hasAlpha;
+    return slot && slot->pixels;
 }
 
 bool sdBuildDisplayFrame(const ImageAsset *asset, int16_t boxW, int16_t boxH, const uint16_t *underNative,
@@ -435,6 +448,7 @@ bool sdBuildDisplayFrame(const ImageAsset *asset, int16_t boxW, int16_t boxH, co
                 uint16_t out = a >= 250 ? fg : colorBlend(bg, fg, a);
                 outBe16[di] = pxBe16(out);
             } else {
+                if (!rgb565Opaque(slot->pixels[si])) continue;
                 outBe16[di] = pxBe16(slot->pixels[si]);
             }
         }
@@ -470,6 +484,7 @@ static void drawPixelsFit(Gfx &g, const uint16_t *pix, const uint8_t *alpha, boo
                 uint16_t under = g.canPeekPixel() ? g.peekPixel(dx, dy) : bg;
                 g.writePixel(dx, dy, a >= 250 ? fg : colorBlend(under, fg, a));
             } else {
+                if (!rgb565Opaque(fg)) continue;
                 g.drawPixel(dx, dy, fg);
             }
         }
@@ -531,7 +546,6 @@ static bool drawSdStreamFit(Gfx &g, const ImageAsset *asset, int16_t x, int16_t 
         sdCopyPath(alphaBuf, sizeof(alphaBuf), alphaPath);
         af = openFileStorage(alphaBuf, st);
         if (af) arow = (uint8_t *)malloc((size_t)sw);
-        else sdSetFail(SdImageFail::AlphaOpen, alphaPath);
     }
 
     for (int16_t py = 0; py < rh; py++) {
@@ -543,6 +557,7 @@ static bool drawSdStreamFit(Gfx &g, const ImageAsset *asset, int16_t x, int16_t 
             if (!af.seek(aoff) || af.read(arow, (size_t)sw) != (size_t)sw) {
                 for (int16_t px = 0; px < rw; px++) {
                     int16_t sx = (int16_t)((px * sw) / rw);
+                    if (!rgb565Opaque(row[sx])) continue;
                     g.drawPixel((int16_t)(ox + px), (int16_t)(oy + py), row[sx]);
                 }
                 continue;
@@ -558,6 +573,7 @@ static bool drawSdStreamFit(Gfx &g, const ImageAsset *asset, int16_t x, int16_t 
                 uint16_t under = g.canPeekPixel() ? g.peekPixel(dx, dy) : bg;
                 g.writePixel(dx, dy, a >= 250 ? row[sx] : colorBlend(under, row[sx], a));
             } else {
+                if (!rgb565Opaque(row[sx])) continue;
                 g.drawPixel(dx, dy, row[sx]);
             }
         }
@@ -577,16 +593,15 @@ bool drawImageAssetSd(Gfx &g, const ImageAsset *asset, int16_t x, int16_t y, int
 
     bool hasAlpha = false;
     SdFrameSlot *slot = sdCacheLoadSlot(asset, &hasAlpha);
+    if (!slot || !slot->pixels) {
+        sdCacheEnsure(asset);
+        slot = sdCacheLoadSlot(asset, &hasAlpha);
+    }
     if (slot && slot->pixels) {
         drawPixelsFit(g, slot->pixels, slot->alpha, hasAlpha, slot->width, slot->height, x, y, dw, dh, bg);
         return true;
     }
-
-#if LUCARNE_FILE_FS
-    return drawSdStreamFit(g, asset, x, y, dw, dh, bg);
-#else
     return false;
-#endif
 }
 
 bool drawImageAssetSdFitOver(Display &disp, const ImageAsset *asset, int16_t x, int16_t y, int16_t dw,

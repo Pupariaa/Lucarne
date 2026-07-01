@@ -1,5 +1,6 @@
 #include "LucarneUI.h"
 #include "LucarneIconDraw.h"
+#include "LucarneImageLoader.h"
 #include "widgets/LucarneButton.h"
 #include "widgets/LucarneSwitch.h"
 #include "../core/LucarneColor.h"
@@ -7,6 +8,8 @@
 #include <string.h>
 
 namespace lucarne {
+
+static inline uint16_t frameBe16(uint16_t c) { return (uint16_t)((c << 8) | (c >> 8)); }
 
 UI::UI(Display &display)
     : _display(display), _current(nullptr), _activeMenu(nullptr), _stackTop(0),
@@ -17,6 +20,14 @@ UI::UI(Display &display)
 void UI::setTheme(const Theme &theme) {
     _theme = theme;
     _dirty = true;
+}
+
+const Theme &UI::activeTheme() const {
+    if (_current) {
+        const Theme *custom = _current->customTheme();
+        if (custom) return *custom;
+    }
+    return _theme;
 }
 
 void UI::setTransition(Transition def, uint16_t durationMs) {
@@ -41,6 +52,8 @@ void UI::show(Screen *screen) {
     _current = screen;
     scanActiveMenu();
     iconAnimResetScreen(_current);
+    releaseSdImageCache();
+    screenPrefetchAssets(_current, 1);
     _dirty = true;
 }
 
@@ -151,7 +164,11 @@ void UI::composeFrame(uint16_t *fb, const uint16_t *a, const uint16_t *b, int16_
     if (t == Transition::Fade) {
         uint8_t mix = (uint8_t)(p * 255.0f);
         size_t n = (size_t)w * h;
-        for (size_t i = 0; i < n; i++) fb[i] = colorBlend(a[i], b[i], mix);
+        for (size_t i = 0; i < n; i++) {
+            uint16_t ca = frameBe16(a[i]);
+            uint16_t cb = frameBe16(b[i]);
+            fb[i] = frameBe16(colorBlend(ca, cb, mix));
+        }
         return;
     }
 
@@ -238,7 +255,9 @@ void UI::runTransition(Screen *toScreen, Transition t) {
         _current = toScreen;
         scanActiveMenu();
         iconAnimResetScreen(_current);
-        _current->draw(_display, _theme, _store);
+        releaseSdImageCache();
+        screenPrefetchAssets(_current, 0);
+        _current->draw(_display, activeTheme(), _store);
         _display.presentFull();
         _store.clearDirty();
         _dirty = false;
@@ -247,13 +266,19 @@ void UI::runTransition(Screen *toScreen, Transition t) {
 
     int16_t w = _display.width();
     int16_t h = _display.height();
+    Screen *leaving = _current;
 
+    iconAnimResetScreen(leaving);
+    screenPrefetchAssets(leaving, 0);
+    leaving->draw(_display, activeTheme(), _store);
     _display.snapshotFrame(a);
 
     _current = toScreen;
     scanActiveMenu();
     iconAnimResetScreen(_current);
-    _current->draw(_display, _theme, _store);
+    releaseSdImageCache();
+    screenPrefetchAssets(_current, 0);
+    _current->draw(_display, activeTheme(), _store);
     _display.snapshotFrame(b);
 
     uint16_t *fb = _display.buffer();
@@ -279,13 +304,16 @@ void UI::runTransition(Screen *toScreen, Transition t) {
 }
 
 void UI::begin() {
+    if (_current) {
+        screenPrefetchAssets(_current, 1);
+    }
     _dirty = true;
     render();
 }
 
 void UI::render() {
     if (!_current) return;
-    _current->draw(_display, _theme, _store);
+    _current->draw(_display, activeTheme(), _store);
     if (_splashActive && _splashProgress) {
         drawSplashProgress((uint32_t)(millis() - _splashStart));
     }
@@ -302,13 +330,13 @@ void UI::drawSplashProgress(uint32_t elapsedMs) {
     int16_t sw = _display.width();
     int16_t sh = _display.height();
     int16_t barH = 6;
-    int16_t margin = _theme.padding;
+    int16_t margin = activeTheme().padding;
     int16_t trackW = (int16_t)(sw - margin * 2);
     int16_t fillW = (int16_t)(trackW * ratio);
     int16_t y = (int16_t)(sh - margin - barH);
-    _display.fillRoundRect(margin, y, trackW, barH, 3, _theme.surface);
+    _display.fillRoundRect(margin, y, trackW, barH, 3, activeTheme().surface);
     if (fillW > 0) {
-        _display.fillRoundRect(margin, y, fillW, barH, 3, _theme.primary);
+        _display.fillRoundRect(margin, y, fillW, barH, 3, activeTheme().primary);
     }
 }
 
@@ -323,11 +351,12 @@ void UI::update() {
         }
         if (_splashProgress) _dirty = true;
     }
+    bool animDirty = _current && !_splashActive && iconAnimScreenDirty(_current);
     bool patched = false;
     if (_current && !_splashActive) {
-        patched = iconAnimPatchScreen(_display, _current, _theme, _store);
+        patched = iconAnimPatchScreen(_display, _current, activeTheme(), _store);
     }
-    if (!patched && (_dirty || _store.dirty())) {
+    if (!patched && (_dirty || _store.dirty() || animDirty)) {
         render();
     }
 }

@@ -36,6 +36,16 @@ class Menu : public Widget {
     void setTextTransparent(bool transparent);
     void setTextSize(uint8_t size);
     void setTextSpacing(int8_t spacing);
+    void setActiveFill(uint16_t color);
+    void setActiveText(uint16_t color);
+    void setInactiveFill(uint16_t color);
+    void setInactiveText(uint16_t color);
+    void setInactiveEdge(uint16_t color);
+    void clearActiveFill();
+    void clearActiveText();
+    void clearInactiveFill();
+    void clearInactiveText();
+    void clearInactiveEdge();
     void clearItems();
 
     void moveNext();
@@ -47,6 +57,8 @@ class Menu : public Widget {
     int selectedIndex() const { return _selected; }
     void setSelected(int index);
     int itemCount() const { return _count; }
+    const char *itemIcon(uint8_t index) const;
+    const char *itemBadge(uint8_t index) const;
     int scrollOffset() const { return _scroll; }
     const char *selectedLabel() const;
 
@@ -77,6 +89,16 @@ class Menu : public Widget {
     uint8_t _iconScale;
     uint8_t _badgeScale;
     TextStyle _textStyle;
+    uint16_t _activeFill;
+    uint16_t _activeText;
+    uint16_t _inactiveFill;
+    uint16_t _inactiveText;
+    uint16_t _inactiveEdge;
+    bool _hasActiveFill;
+    bool _hasActiveText;
+    bool _hasInactiveFill;
+    bool _hasInactiveText;
+    bool _hasInactiveEdge;
 };
 
 }

@@ -4,6 +4,35 @@ All notable changes to this project are documented here.
 Version numbers follow [Semantic Versioning](https://semver.org/) and match `library.properties`.  
 Git tags use the `v` prefix (e.g. `v0.1.0`).
 
+## [0.2.0] — 2026-06-25
+
+### Added
+
+- **Menu** per-state colors: `setActiveFill`, `setActiveText`, `setInactiveFill`, `setInactiveText`, `setInactiveEdge` (+ clear helpers)
+- **Screen** optional custom theme (`setTheme`, `clearTheme`) — `UI::activeTheme()` resolves screen override
+- **Asset prefetch** on navigation: `screenPrefetchAssets()` warms SD/volume icons and first anim frame before draw
+- `imageAssetDrawReady()` — check whether a file-backed asset is cached and drawable
+- `iconAnimDrawRect()` — consistent icon/anim hit box from widget bounds
+- `Image::asImage()` widget cast for prefetch and tooling
+- `Menu::itemIcon()` / `itemBadge()` accessors
+- Live Preview docs: USB vs Bluetooth port selection, expanded troubleshooting
+
+### Changed
+
+- Animated icon patch path: first-frame bootstrap (`lastAnimFrame == 0xff`), SD warm before blit, up to 16 anim snap slots
+- Emoji icon default draw size **32px** when widget has no explicit bounds
+- `iconAnimDrawInitial()` returns `bool` (frame ready)
+- Transition **fade** fixes RGB565 endianness in framebuffer snapshots
+- Transitions prefetch leaving + entering screen assets; release SD cache on screen change
+- Volume/SD draw: skip **RGB565 zero** pixels when no alpha file (transparent holes in opaque assets)
+- Optional alpha file open failures no longer log as hard errors
+- `LucarneDisplay.cpp` formatting and buffer blit helpers aligned with full-buffer mode
+
+### Fixed
+
+- Animated icons on volume/SD could stall on first frame until cache warm
+- Fade transitions could show wrong colors on ESP32 full framebuffer (byte order)
+
 ## [0.1.4] — 2026-06-25
 
 ### Added
@@ -68,6 +97,7 @@ Git tags use the `v` prefix (e.g. `v0.1.0`).
 - Examples: HelloLucarne, LucarneDiag, LucarneUI, LucarneMenu, LucarnePreview
 - Online documentation at [lucarne.techalchemy.fr](https://lucarne.techalchemy.fr/doc/)
 
+[0.2.0]: https://github.com/Pupariaa/Lucarne/releases/tag/v0.2.0
 [0.1.4]: https://github.com/Pupariaa/Lucarne/releases/tag/v0.1.4
 [0.1.3]: https://github.com/Pupariaa/Lucarne/releases/tag/v0.1.3
 [0.1.2]: https://github.com/Pupariaa/Lucarne/releases/tag/v0.1.2

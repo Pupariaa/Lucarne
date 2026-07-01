@@ -47,18 +47,15 @@ void Icon::draw(Gfx &g, const Theme &theme, Store &store) {
     if (_transparent) return;
     uint16_t tint = _hasColor ? _color : theme.text;
     uint16_t bg = theme.background;
-    int16_t side = iconDrawSize(_ref, _scaleTenths);
-    int16_t bw = w > 0 ? w : side;
-    int16_t bh = h > 0 ? h : side;
-    int16_t dx = (int16_t)(x + (bw - side) / 2);
-    int16_t dy = (int16_t)(y + (bh - side) / 2);
+    IconAnimDrawRect dr = iconAnimDrawRect(this);
     if (iconRefIsAnim(_ref)) {
-        syncAnimFrame(0);
-        markAnimShown(iconAnimClockMs());
-        iconAnimDrawInitial(g, this, dx, dy, side, side, bg);
+        if (iconAnimDrawInitial(g, this, dr.x, dr.y, dr.w, dr.h, bg)) {
+            syncAnimFrame(0);
+            markAnimShown(iconAnimClockMs());
+        }
         return;
     }
-    drawIconRef(g, _ref, dx, dy, side, side, tint, bg);
+    drawIconRef(g, _ref, dr.x, dr.y, dr.w, dr.h, tint, bg);
 }
 
 }

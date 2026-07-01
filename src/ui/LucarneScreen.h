@@ -2,6 +2,7 @@
 #define LUCARNE_SCREEN_H
 
 #include "LucarneWidget.h"
+#include "LucarneTheme.h"
 
 namespace lucarne {
 
@@ -19,11 +20,17 @@ class Screen {
     void setCornerRadius(uint8_t r) { _cornerRadius = r; }
     uint8_t cornerRadius() const { return _cornerRadius; }
 
+    void setTheme(const Theme &theme);
+    void clearTheme();
+    const Theme *customTheme() const;
+
   private:
     const char *_name;
     Widget *_head;
     Widget *_tail;
     uint8_t _cornerRadius;
+    Theme _customTheme;
+    bool _hasCustomTheme;
 };
 
 }

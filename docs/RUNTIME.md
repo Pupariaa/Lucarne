@@ -25,6 +25,7 @@ UI ui(display);
 
 void setTheme(const Theme &theme);
 const Theme &theme() const;
+const Theme &activeTheme() const;
 
 void setTransition(Transition def, uint16_t durationMs = 220);
 
@@ -53,6 +54,8 @@ Display &display();
 ```
 
 `navigate()` empile l'écran courant (pile de 8) ; `back()` revient en arrière en jouant la transition inverse. Le menu « actif » est le premier `Menu` trouvé sur l'écran courant.
+
+`activeTheme()` renvoie le thème de l'écran courant s'il a un override (`Screen::setTheme`), sinon le thème global de l'UI.
 
 ---
 
@@ -111,9 +114,13 @@ bool      has(const char *key) const;
 Screen screen("Nom");   // le nom est optionnel
 void add(Widget *widget);     // ajoute en fin (ordre = z-order)
 const char *name() const;
+
+void setTheme(const Theme &theme);  // override du thème global pour cet écran
+void clearTheme();                  // revient au thème UI
+const Theme *customTheme() const;
 ```
 
-Un widget ajouté en dernier est dessiné par-dessus les précédents.
+Un widget ajouté en dernier est dessiné par-dessus les précédents. Lors d'un `navigate()`, l'UI utilise `activeTheme()` : thème custom de l'écran s'il est défini, sinon `ui.theme()`.
 
 ---
 
@@ -191,19 +198,34 @@ lucarne::setIconAnimSpeedPercent(135);  // 100 = vitesse export ; >100 = plus le
 ```cpp
 Menu(int16_t x, int16_t y, int16_t w, int16_t h);
 
-void addItem(const char *label, IconId icon = IconId::None,
+void addItem(const char *label, const char *iconRef = nullptr,
              Screen *target = nullptr, Transition transition = Transition::Inherit);
 void clearItems();
+
+void setActiveFill(uint16_t color);
+void setActiveText(uint16_t color);
+void setInactiveFill(uint16_t color);
+void setInactiveText(uint16_t color);
+void setInactiveEdge(uint16_t color);
+void clearActiveFill();
+void clearActiveText();
+void clearInactiveFill();
+void clearInactiveText();
+void clearInactiveEdge();
 
 void moveNext();
 void movePrev();
 void setSelected(int index);
 int  selectedIndex() const;
 int  itemCount() const;
+const char *itemIcon(uint8_t index) const;
+const char *itemBadge(uint8_t index) const;
 Screen     *selectedTarget() const;
 Transition  selectedTransition() const;
 const char *selectedLabel() const;
 ```
+
+Couleurs par ligne : si non définies (`clear*`), le menu utilise `Theme::primary`, `Theme::text`, `Theme::surface`, etc.
 
 Le menu défile automatiquement quand la sélection sort de la zone visible. Jusqu'à 16 entrées. Une entrée sans `target` ne navigue pas : gérez l'action vous-même via `ui.activeMenu()->selectedLabel()` après un `select`.
 
@@ -227,6 +249,13 @@ lucarne::releaseSdImageCache();
 ```
 
 À appeler après démontage ou remplacement de fichiers sur la SD ou la partition volume.
+
+```cpp
+bool imageAssetDrawReady(const ImageAsset *asset);
+void screenPrefetchAssets(Screen *screen, uint8_t animMaxFramesPerIcon = 0);
+```
+
+`screenPrefetchAssets` charge en avance les icônes et images fichier (SD / volume) avant l'affichage d'un écran ; appelé automatiquement par `UI::show` / `navigate`. `animMaxFramesPerIcon` limite le préchargement des frames animées (0 = toutes).
 
 ---
 

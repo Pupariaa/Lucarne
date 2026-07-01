@@ -88,6 +88,16 @@ setIconRef	KEYWORD2
 iconRefValid	KEYWORD2
 drawIconRef	KEYWORD2
 setBadgeScale	KEYWORD2
+setActiveFill	KEYWORD2
+setActiveText	KEYWORD2
+setInactiveFill	KEYWORD2
+setInactiveText	KEYWORD2
+setInactiveEdge	KEYWORD2
+clearActiveFill	KEYWORD2
+clearActiveText	KEYWORD2
+clearInactiveFill	KEYWORD2
+clearInactiveText	KEYWORD2
+clearInactiveEdge	KEYWORD2
 setIconScale	KEYWORD2
 hitTest	KEYWORD2
 contains	KEYWORD2

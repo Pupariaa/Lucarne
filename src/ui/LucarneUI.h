@@ -65,6 +65,7 @@ class UI {
     static void composeFrame(uint16_t *fb, const uint16_t *a, const uint16_t *b, int16_t w,
                              int16_t h, Transition t, float p);
     static Transition reverseTransition(Transition t);
+    const Theme &activeTheme() const;
 
     Display &_display;
     Theme _theme;

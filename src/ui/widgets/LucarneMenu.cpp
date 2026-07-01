@@ -11,7 +11,10 @@ static inline uint8_t iconScaleTenths(uint8_t raw) {
 }
 
 Menu::Menu(int16_t x, int16_t y, int16_t w, int16_t h)
-    : Widget(x, y, w, h), _count(0), _selected(0), _scroll(0), _iconScale(1), _badgeScale(1) {}
+    : Widget(x, y, w, h), _count(0), _selected(0), _scroll(0), _iconScale(1), _badgeScale(1),
+      _activeFill(0), _activeText(0), _inactiveFill(0), _inactiveText(0), _inactiveEdge(0),
+      _hasActiveFill(false), _hasActiveText(false), _hasInactiveFill(false), _hasInactiveText(false),
+      _hasInactiveEdge(false) {}
 
 void Menu::setIconScale(uint8_t scale) {
     _iconScale = scale;
@@ -100,10 +103,53 @@ void Menu::setTextSpacing(int8_t spacing) {
     _textStyle.hasSpacing = true;
 }
 
+void Menu::setActiveFill(uint16_t color) {
+    _activeFill = color;
+    _hasActiveFill = true;
+}
+
+void Menu::setActiveText(uint16_t color) {
+    _activeText = color;
+    _hasActiveText = true;
+}
+
+void Menu::setInactiveFill(uint16_t color) {
+    _inactiveFill = color;
+    _hasInactiveFill = true;
+}
+
+void Menu::setInactiveText(uint16_t color) {
+    _inactiveText = color;
+    _hasInactiveText = true;
+}
+
+void Menu::setInactiveEdge(uint16_t color) {
+    _inactiveEdge = color;
+    _hasInactiveEdge = true;
+}
+
+void Menu::clearActiveFill() { _hasActiveFill = false; }
+
+void Menu::clearActiveText() { _hasActiveText = false; }
+
+void Menu::clearInactiveFill() { _hasInactiveFill = false; }
+
+void Menu::clearInactiveText() { _hasInactiveText = false; }
+
+void Menu::clearInactiveEdge() { _hasInactiveEdge = false; }
+
 void Menu::clearItems() {
     _count = 0;
     _selected = 0;
     _scroll = 0;
+}
+
+const char *Menu::itemIcon(uint8_t index) const {
+    return index < _count ? _items[index].icon : nullptr;
+}
+
+const char *Menu::itemBadge(uint8_t index) const {
+    return index < _count ? _items[index].badge : nullptr;
 }
 
 void Menu::moveNext() {
@@ -171,10 +217,13 @@ void Menu::draw(Gfx &g, const Theme &theme, Store &store) {
         int16_t rh = (int16_t)(rowH - gap);
         bool sel = (idx == _selected);
 
-        uint16_t fill = sel ? theme.primary : theme.surface;
-        uint16_t txt = sel ? theme.background : theme.text;
+        uint16_t fill = sel ? (_hasActiveFill ? _activeFill : theme.primary)
+                            : (_hasInactiveFill ? _inactiveFill : theme.surface);
+        uint16_t txt = sel ? (_hasActiveText ? _activeText : theme.background)
+                           : (_hasInactiveText ? _inactiveText : theme.text);
+        uint16_t edge = _hasInactiveEdge ? _inactiveEdge : theme.surfaceEdge;
         g.fillRoundRect(x, ry, w, rh, theme.radius, fill);
-        if (!sel) g.drawRoundRect(x, ry, w, rh, theme.radius, theme.surfaceEdge);
+        if (!sel) g.drawRoundRect(x, ry, w, rh, theme.radius, edge);
 
         int16_t pad = theme.padding;
         int16_t contentX = (int16_t)(x + pad);

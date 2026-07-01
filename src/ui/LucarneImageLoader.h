@@ -32,6 +32,7 @@ bool sdCacheEnsure(const ImageAsset *asset);
 void sdCacheWarmAnim(const IconAnimAsset *anim, uint8_t maxFrames = 0);
 bool sdBuildDisplayFrame(const ImageAsset *asset, int16_t boxW, int16_t boxH,
                          const uint16_t *underNative, uint16_t *outBe16);
+bool imageAssetDrawReady(const ImageAsset *asset);
 bool drawImageAssetSd(Gfx &g, const ImageAsset *asset, int16_t x, int16_t y, int16_t dw, int16_t dh,
                       uint16_t bg);
 bool drawImageAssetSdFitOver(Display &disp, const ImageAsset *asset, int16_t x, int16_t y, int16_t dw,

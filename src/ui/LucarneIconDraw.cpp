@@ -4,6 +4,9 @@
 #include "LucarneImageLoader.h"
 #include "LucarneScreen.h"
 #include "LucarneWidget.h"
+#include "widgets/LucarneButton.h"
+#include "widgets/LucarneImage.h"
+#include "widgets/LucarneMenu.h"
 #include "widgets/LucarneIcon.h"
 #include "../core/LucarneColor.h"
 #include "../display/LucarneDisplay.h"
@@ -37,7 +40,7 @@ struct AnimSnapSlot {
     uint8_t readyFc;
 };
 
-static const uint8_t kMaxAnimSnaps = 6;
+static const uint8_t kMaxAnimSnaps = 16;
 static AnimSnapSlot _animSnaps[kMaxAnimSnaps];
 
 static uint16_t *snapAllocBuf(size_t pixels) {
@@ -217,11 +220,32 @@ static void drawAnimFrameFit(Gfx &g, const ImageAsset *frame, int16_t x, int16_t
 }
 
 static int16_t iconDrawSizeFor(Icon *ic) {
-    int16_t base = iconRefBaseSize(ic->iconRef());
+    if (!ic) return 16;
+    if (ic->w > 0 && ic->h > 0) {
+        return ic->w < ic->h ? ic->w : ic->h;
+    }
+    int16_t base = 16;
+    const char *ref = ic->iconRef();
+    if (ref && strncmp(ref, "emoji:", 6) == 0) {
+        base = 32;
+    } else {
+        base = iconRefBaseSize(ref);
+    }
     if (base < 1) base = 16;
     uint8_t st = ic->scaleTenths();
     if (st == 0) st = 10;
     return (int16_t)((base * st + 5) / 10);
+}
+
+IconAnimDrawRect iconAnimDrawRect(const Icon *ic) {
+    IconAnimDrawRect out = {0, 0, 16, 16};
+    if (!ic) return out;
+    int16_t side = iconDrawSizeFor(const_cast<Icon *>(ic));
+    out.x = ic->x;
+    out.y = ic->y;
+    out.w = ic->w > 0 ? ic->w : side;
+    out.h = ic->h > 0 ? ic->h : side;
+    return out;
 }
 
 bool iconAnimScreenDirty(Screen *screen) {
@@ -256,15 +280,27 @@ bool iconAnimBlitReady(Display &disp, Icon *ic, uint8_t frameIndex) {
     return true;
 }
 
-void iconAnimDrawInitial(Gfx &g, Icon *ic, int16_t x, int16_t y, int16_t bw, int16_t bh, uint16_t bg) {
+static bool frameDrawReady(const ImageAsset *frame) { return imageAssetDrawReady(frame); }
+
+bool iconAnimDrawInitial(Gfx &g, Icon *ic, int16_t x, int16_t y, int16_t bw, int16_t bh, uint16_t bg) {
+    const IconAnimAsset *anim = lookupAnimRef(ic ? ic->iconRef() : nullptr);
+    const ImageAsset *frame = anim ? iconAnimFramePtr(anim, 0) : nullptr;
+    if (!frame) return false;
+    sdCacheEnsure(frame);
+    if (!frameDrawReady(frame)) {
+        if (anim) sdCacheWarmAnim(anim, 1);
+        if (!frameDrawReady(frame)) return false;
+    }
     if (g.canPeekPixel()) {
         Display &disp = static_cast<Display &>(g);
-        if (iconAnimBlitReady(disp, ic, 0)) return;
+        if (iconAnimBlitReady(disp, ic, 0)) return true;
     }
     drawIconAnimFrame(g, ic->iconRef(), 0, x, y, bw, bh, bg);
+    return frameDrawReady(frame);
 }
 
 bool iconAnimPatchScreen(Display &disp, Screen *screen, const Theme &theme, Store &store) {
+    (void)theme;
     (void)store;
     if (!screen || !_animLookup || !disp.canPeekPixel() || !disp.hasBuffer()) return false;
     if (disp.bufferMode() != BufferMode::Full) return false;
@@ -282,27 +318,31 @@ bool iconAnimPatchScreen(Display &disp, Screen *screen, const Theme &theme, Stor
         if (!iconRefIsAnim(ref)) continue;
         const IconAnimAsset *anim = lookupAnimRef(ref);
         if (!anim) continue;
-        uint8_t cur = ic->lastAnimFrame();
-        if (cur == 0xff) continue;
         uint8_t fc = iconAnimFrameCount(anim);
         if (fc < 1) continue;
-        if ((uint32_t)(ms - ic->animShowMs()) < (uint32_t)iconAnimDelayMs(anim, cur)) continue;
-        uint8_t fi = (uint8_t)((cur + 1) % fc);
+        uint8_t cur = ic->lastAnimFrame();
+        uint8_t fi;
+        if (cur == 0xff) {
+            fi = 0;
+        } else {
+            if ((uint32_t)(ms - ic->animShowMs()) < (uint32_t)iconAnimDelayMs(anim, cur)) continue;
+            fi = (uint8_t)((cur + 1) % fc);
+        }
         AnimSnapSlot *slot = snapFind(ic);
         if (!slot || !slot->buf || slot->w < 1 || slot->h < 1) continue;
-        int16_t side = iconDrawSizeFor(ic);
-        int16_t boxW = ic->w > 0 ? ic->w : side;
-        int16_t boxH = ic->h > 0 ? ic->h : side;
+        IconAnimDrawRect dr = iconAnimDrawRect(ic);
         const ImageAsset *frame = iconAnimFramePtr(anim, fi);
+        if (!frame) continue;
+        sdCacheEnsure(frame);
+        if (!frameDrawReady(frame)) {
+            sdCacheWarmAnim(anim, (uint8_t)(fi + 1));
+            continue;
+        }
         if (buildAnimReady(slot, anim, fi)) {
             disp.blitBufferRect(slot->x, slot->y, slot->w, slot->h, slot->ready[fi]);
         } else {
             disp.writeBufferRect(slot->x, slot->y, slot->w, slot->h, slot->buf);
-            if (frame) {
-                drawAnimFrameFit(disp, frame, ic->x, ic->y, boxW, boxH, theme.background);
-            } else {
-                continue;
-            }
+            drawAnimFrameFit(disp, frame, dr.x, dr.y, dr.w, dr.h, theme.background);
         }
         ic->syncAnimFrame(fi);
         ic->markAnimShown(ms);
@@ -332,10 +372,11 @@ bool iconAnimPatchScreen(Display &disp, Screen *screen, const Theme &theme, Stor
 
 void iconAnimSnapCapture(Gfx &g, Icon *ic) {
     if (!ic || !g.canPeekPixel()) return;
-    int16_t bx = ic->x;
-    int16_t by = ic->y;
-    int16_t bw = ic->w;
-    int16_t bh = ic->h;
+    IconAnimDrawRect dr = iconAnimDrawRect(ic);
+    int16_t bx = dr.x;
+    int16_t by = dr.y;
+    int16_t bw = dr.w;
+    int16_t bh = dr.h;
     if (bw < 1 || bh < 1) return;
     size_t n = (size_t)bw * (size_t)bh;
     AnimSnapSlot *slot = snapAlloc(ic);
@@ -355,8 +396,10 @@ void iconAnimSnapCapture(Gfx &g, Icon *ic) {
     disp.readBufferRectNative(bx, by, bw, bh, slot->buf);
     const IconAnimAsset *anim = lookupAnimRef(ic->iconRef());
     if (anim) {
+        const ImageAsset *f0 = iconAnimFramePtr(anim, 0);
+        if (f0) sdCacheEnsure(f0);
         uint8_t fc = iconAnimFrameCount(anim);
-        sdCacheWarmAnim(anim, 0);
+        sdCacheWarmAnim(anim, 1);
         if (snapEnsureReadyMeta(slot, fc)) {
             buildAnimReady(slot, anim, 0);
         }
@@ -372,6 +415,56 @@ void iconAnimResetScreen(Screen *screen) {
     }
 }
 
+static void prefetchIconRef(const char *ref, uint8_t animMaxFrames) {
+    if (refEmpty(ref)) return;
+    if (iconRefIsAnim(ref)) {
+        const IconAnimAsset *anim = lookupAnimRef(ref);
+        if (!anim) return;
+        if (animMaxFrames == 0) {
+            sdCacheWarmAnim(anim, 0);
+            return;
+        }
+        const ImageAsset *f0 = iconAnimFramePtr(anim, 0);
+        if (f0) sdCacheEnsure(f0);
+        if (animMaxFrames > 1) sdCacheWarmAnim(anim, animMaxFrames);
+        return;
+    }
+    if (_imageLookup) {
+        const ImageAsset *img = _imageLookup(ref);
+        if (img && isFileBackedStorage(imageAssetStorage(img)) && !imageAssetData(img)) {
+            sdCacheEnsure(img);
+        }
+    }
+}
+
+void screenPrefetchAssets(Screen *screen, uint8_t animMaxFramesPerIcon) {
+    if (!screen) return;
+    for (Widget *w = screen->first(); w; w = w->_next) {
+        if (!w->visible) continue;
+        if (Icon *ic = w->asIcon()) {
+            prefetchIconRef(ic->iconRef(), animMaxFramesPerIcon);
+            continue;
+        }
+        if (Image *imgw = w->asImage()) {
+            const ImageAsset *asset = imgw->asset();
+            if (asset && isFileBackedStorage(imageAssetStorage(asset)) && !imageAssetData(asset)) {
+                sdCacheEnsure(asset);
+            }
+            continue;
+        }
+        if (Button *btn = w->asButton()) {
+            prefetchIconRef(btn->iconRef(), animMaxFramesPerIcon);
+            continue;
+        }
+        if (Menu *menu = w->asMenu()) {
+            for (int i = 0; i < menu->itemCount(); i++) {
+                prefetchIconRef(menu->itemIcon((uint8_t)i), animMaxFramesPerIcon);
+                prefetchIconRef(menu->itemBadge((uint8_t)i), animMaxFramesPerIcon);
+            }
+        }
+    }
+}
+
 bool iconRefValid(const char *ref) {
     if (refEmpty(ref)) return false;
     if (iconFromName(ref) != IconId::None) return true;
@@ -383,18 +476,7 @@ bool iconRefValid(const char *ref) {
 
 int16_t iconRefBaseSize(const char *ref) {
     if (refEmpty(ref)) return 0;
-    if (_animLookup) {
-        const IconAnimAsset *anim = lookupAnimRef(ref);
-        if (anim && iconAnimFrameCount(anim)) {
-#if defined(ESP32)
-            int16_t aw = (int16_t)pgm_read_word(&anim->width);
-#else
-            int16_t aw = anim->width;
-#endif
-            if (aw > 0) return aw;
-            return 16;
-        }
-    }
+    if (_animLookup && iconRefIsAnim(ref)) return 32;
     if (_imageLookup) {
         const ImageAsset *img = _imageLookup(ref);
         if (img) {

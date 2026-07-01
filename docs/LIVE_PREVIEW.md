@@ -20,11 +20,15 @@ Important : ne faites aucun `Serial.print` dans ce sketch. Le port transporte le
 
 ## 2. Se connecter depuis l'éditeur
 
-1. Ouvrez `editor/index.html` dans **Chrome** ou **Edge** (l'API Web Serial est requise ; elle n'existe pas sur Firefox/Safari).
+1. Ouvrez `editor/index.html` dans **Chrome** ou **Edge** sur PC (l'API Web Serial est requise ; elle n'existe pas sur Firefox/Safari).
 2. Fermez tout moniteur série qui occuperait le port (l'IDE Arduino, par exemple).
-3. Cliquez sur **Live** dans la barre du haut, puis sélectionnez le port de la carte.
+3. Branchez la carte en **USB** (pas Bluetooth).
+4. Cliquez sur **Live**, puis choisissez le port **USB** de la carte :
+   - ESP32-S3 : souvent « USB Serial », « USB JTAG/serial », ou un COM avec fabricant Espressif.
+   - **Ne sélectionnez pas** un port « Bluetooth » — il ne parle pas le protocole Live.
+5. Si la liste filtrée est vide, le navigateur propose ensuite tous les ports : prenez le COM qui apparaît quand vous branchez/débranchez le câble USB.
 
-Le bouton devient vert quand la connexion est établie.
+Le bouton devient vert quand la carte a répondu au handshake (firmware `LucarnePreview` détecté).
 
 ## 3. Utiliser
 
@@ -59,7 +63,13 @@ Encodages de trame : `enc = 0` brut RGB565 LE ; `enc = 1` RLE, suite de paires `
 
 ## Dépannage
 
-- **Bouton Live sans effet / erreur** : navigateur sans Web Serial. Utilisez Chrome ou Edge.
-- **Port introuvable** : un moniteur série l'occupe. Fermez-le.
+Lucarne Live utilise **USB** (câble), pas le Bluetooth. Sur Windows, ignorez les ports nommés « Bluetooth » ou « Standard Serial over Bluetooth ».
+
+- **Bouton Live sans effet / erreur** : navigateur sans Web Serial. Utilisez Chrome ou Edge sur PC (pas Firefox/Safari). Le site doit être en `https://` ou `localhost`.
+- **Liste de ports vide** : câble USB branché, pilote installé, carte alimentée. Débranchez/rebranchez. Essayez un autre câble (data, pas charge seule).
+- **Port introuvable / annulé** : un moniteur série l'occupe déjà le port — fermez le moniteur série Arduino avant Live.
+- **Connexion puis déconnexion immédiate** : mauvais port (souvent Bluetooth au lieu de USB), ou firmware absent. Flashez `LucarnePreview.ino` avec **USB CDC On Boot: Enabled**.
+- **« Device did not answer »** : le port ouvert n'est pas Lucarne Preview (autre sketch, autre carte) ou le moniteur série envoie encore des données.
+- **Vitesse série** : la valeur du menu (Turbo = 2 000 000 par défaut) doit correspondre à `Serial.begin(...)` dans `LucarnePreview.ino`.
 - **Écran noir après connexion** : vérifiez que le firmware de preview est bien flashé et que `USB CDC On Boot` est activé.
 - **Couleurs étranges** : alignez `colorOrder` / `invert` du sketch sur votre écran (mêmes réglages que les autres exemples).

@@ -2,7 +2,7 @@
 
 Lucarne Studio est une application web statique : concevoir l'UI, simuler la navigation, exporter du C++ (`Projet.h`, binaires assets).
 
-Ouvrez `web/editor/` (ou `editor/` en local) → choisissez la version alignée sur votre lib firmware (ex. **0.1.4**).
+Ouvrez `web/editor/` (ou `editor/` en local) → choisissez la version alignée sur votre lib firmware (ex. **0.2.0**).
 
 ## Barre d'outils
 

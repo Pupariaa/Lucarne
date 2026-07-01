@@ -14,6 +14,7 @@ class Button : public Widget {
 
     void setLabel(const char *label) { _label = label; }
     void setIconRef(const char *ref) { _icon = ref; }
+    const char *iconRef() const { return _icon; }
     void setNavigate(Screen *target, Transition t = Transition::Inherit);
     void setCallback(uint8_t actionId);
     void setColor(uint16_t fill, uint16_t text);
