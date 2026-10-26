@@ -13,12 +13,13 @@ class Bar : public Widget {
     void setRange(float min, float max);
     void setColor(uint16_t color);
     void clearColor();
-    void setShowValue(bool show) { _showValue = show; }
+    void setShowValue(bool show) { markDirty(); _showValue = show; }
     void setValueFont(const AAFont *font);
     void setValueColor(uint16_t color);
     void setValueSize(uint8_t size);
     void setValueSpacing(int8_t spacing);
 
+    uint8_t storeKeys(const char **out, uint8_t max) const override { return appendKey(out, 0, max, _key); }
     void draw(Gfx &g, const Theme &theme, Store &store) override;
 
   private:

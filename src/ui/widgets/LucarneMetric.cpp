@@ -10,54 +10,63 @@ Metric::Metric(int16_t x, int16_t y, int16_t w, int16_t h, const char *label, co
       _accent(0), _hasAccent(false) {}
 
 void Metric::setAccent(uint16_t color) {
+    markDirty();
     _accent = color;
     _hasAccent = true;
 }
 
-void Metric::clearAccent() { _hasAccent = false; }
+void Metric::clearAccent() { markDirty(); _hasAccent = false; }
 
 void Metric::setLabelFont(const AAFont *font) {
+    markDirty();
     _labelStyle.font = font;
     _labelStyle.hasFont = true;
 }
 
 void Metric::setLabelColor(uint16_t color) {
+    markDirty();
     _labelStyle.color = color;
     _labelStyle.hasColor = true;
     _labelStyle.transparent = false;
 }
 
-void Metric::setLabelTransparent(bool transparent) { _labelStyle.transparent = transparent; }
+void Metric::setLabelTransparent(bool transparent) { markDirty(); _labelStyle.transparent = transparent; }
 
 void Metric::setLabelSize(uint8_t size) {
+    markDirty();
     _labelStyle.size = size;
     _labelStyle.hasSize = true;
 }
 
 void Metric::setLabelSpacing(int8_t spacing) {
+    markDirty();
     _labelStyle.spacing = spacing;
     _labelStyle.hasSpacing = true;
 }
 
 void Metric::setValueFont(const AAFont *font) {
+    markDirty();
     _valueStyle.font = font;
     _valueStyle.hasFont = true;
 }
 
 void Metric::setValueColor(uint16_t color) {
+    markDirty();
     _valueStyle.color = color;
     _valueStyle.hasColor = true;
     _valueStyle.transparent = false;
 }
 
-void Metric::setValueTransparent(bool transparent) { _valueStyle.transparent = transparent; }
+void Metric::setValueTransparent(bool transparent) { markDirty(); _valueStyle.transparent = transparent; }
 
 void Metric::setValueSize(uint8_t size) {
+    markDirty();
     _valueStyle.size = size;
     _valueStyle.hasSize = true;
 }
 
 void Metric::setValueSpacing(int8_t spacing) {
+    markDirty();
     _valueStyle.spacing = spacing;
     _valueStyle.hasSpacing = true;
 }
@@ -84,6 +93,18 @@ void Metric::formatValue(const Store &store, char *out, uint8_t outLen) const {
 }
 
 void Metric::draw(Gfx &g, const Theme &theme, Store &store) {
+    if (g.isCharacterGrid()) {
+        char value[40];
+        formatValue(store, value, sizeof(value));
+        char line[48];
+        if (_label && _label[0]) {
+            snprintf(line, sizeof(line), "%s %s", _label, value);
+        } else {
+            snprintf(line, sizeof(line), "%s", value);
+        }
+        g.drawGridText(x, y, w, h, line, (uint8_t)TextAlign::Left, false);
+        return;
+    }
     int16_t r = theme.radius;
     g.fillRoundRect(x, y, w, h, r, theme.surface);
     g.drawRoundRect(x, y, w, h, r, theme.surfaceEdge);

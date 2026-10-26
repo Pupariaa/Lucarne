@@ -8,17 +8,19 @@ Chart::Chart(int16_t x, int16_t y, int16_t w, int16_t h)
 }
 
 void Chart::setKey(uint8_t index, const char *key) {
+    markDirty();
     if (index >= MAX_KEYS) return;
     _keys[index] = key;
     if (index >= _keyCount) _keyCount = (uint8_t)(index + 1);
 }
 
 void Chart::setColor(uint16_t c) {
+    markDirty();
     _color = c;
     _hideLine = false;
 }
 
-void Chart::clearColor() { _hideLine = true; }
+void Chart::clearColor() { markDirty(); _hideLine = true; }
 
 void Chart::draw(Gfx &g, const Theme &theme, Store &store) {
     if (_keyCount < 2) return;

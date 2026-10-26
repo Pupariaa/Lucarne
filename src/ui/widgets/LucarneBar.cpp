@@ -8,39 +8,53 @@ Bar::Bar(int16_t x, int16_t y, int16_t w, int16_t h, const char *key, float min,
       _showValue(false), _transparentColor(false) {}
 
 void Bar::setRange(float min, float max) {
+    markDirty();
     _min = min;
     _max = max;
 }
 
 void Bar::setColor(uint16_t color) {
+    markDirty();
     _color = color;
     _hasColor = true;
     _transparentColor = false;
 }
 
-void Bar::clearColor() { _transparentColor = true; _hasColor = false; }
+void Bar::clearColor() { markDirty(); _transparentColor = true; _hasColor = false; }
 
 void Bar::setValueFont(const AAFont *font) {
+    markDirty();
     _valueStyle.font = font;
     _valueStyle.hasFont = true;
 }
 
 void Bar::setValueColor(uint16_t color) {
+    markDirty();
     _valueStyle.color = color;
     _valueStyle.hasColor = true;
 }
 
 void Bar::setValueSize(uint8_t size) {
+    markDirty();
     _valueStyle.size = size;
     _valueStyle.hasSize = true;
 }
 
 void Bar::setValueSpacing(int8_t spacing) {
+    markDirty();
     _valueStyle.spacing = spacing;
     _valueStyle.hasSpacing = true;
 }
 
 void Bar::draw(Gfx &g, const Theme &theme, Store &store) {
+    if (g.isCharacterGrid()) {
+        float gspan = _max - _min;
+        float gratio = gspan != 0.0f ? (store.getFloat(_key, _min) - _min) / gspan : 0.0f;
+        if (gratio < 0.0f) gratio = 0.0f;
+        if (gratio > 1.0f) gratio = 1.0f;
+        g.drawGridBar(x, y, w, h, gratio);
+        return;
+    }
     int16_t r = h / 2;
     if (r > theme.radius) r = theme.radius;
 

@@ -1,0 +1,438 @@
+{
+  "version": 2,
+  "note": "Live receivers: run editor/firmware-bin/build-receivers.ps1 to rebuild ESP32-family bins. Web Flash (Studio) uses prebuilt+files entries. MIPI / RP2040 / AVR: compile sketch from manifest until a flasher is added. INFO protocol v6.",
+  "sharedFiles": {
+    "bootApp0": "boot_app0.bin"
+  },
+  "presets": [
+    {
+      "id": "esp32s3-st7789",
+      "label": "ST7789 SPI TFT",
+      "chip": "esp32s3",
+      "chipDisplay": "ESP32-S3",
+      "displayKind": "spi_rgb",
+      "liveDriverId": 1,
+      "driver": "ST7789",
+      "interface": "SPI",
+      "sketch": "examples/LucarnePreview",
+      "buildFqbn": "esp32:esp32:esp32s3:CDCOnBoot=cdc,PSRAM=disabled,UploadSpeed=921600",
+      "buildDefines": {
+        "LUCARNE_PREVIEW_DRIVER": "1"
+      },
+      "panelWidth": 240,
+      "panelHeight": 280,
+      "baud": 2000000,
+      "liveProfile": "esp32s3",
+      "maxFrameBytes": 49152,
+      "prebuilt": true,
+      "cdcOnBoot": true,
+      "psram": "disabled",
+      "pins": {
+        "cs": 16,
+        "dc": 15,
+        "rst": 8,
+        "mosi": 18,
+        "sclk": 17,
+        "bl": -1
+      },
+      "offsets": {
+        "bootloader": "0x0",
+        "partitions": "0x8000",
+        "bootApp0": "0xe000",
+        "app": "0x10000"
+      },
+      "files": {
+        "bootloader": "esp32s3-st7789/bootloader.bin",
+        "partitions": "esp32s3-st7789/partitions.bin",
+        "app": "esp32s3-st7789/app.bin"
+      }
+    },
+    {
+      "id": "esp32s3-st7796",
+      "label": "ST7796 SPI TFT (large)",
+      "chip": "esp32s3",
+      "chipDisplay": "ESP32-S3 (OPI PSRAM)",
+      "displayKind": "spi_rgb",
+      "liveDriverId": 2,
+      "driver": "ST7796",
+      "interface": "SPI",
+      "sketch": "examples/LucarnePreview",
+      "buildFqbn": "esp32:esp32:esp32s3:CDCOnBoot=cdc,PSRAM=opi,FlashSize=16M,UploadSpeed=921600",
+      "buildDefines": {
+        "LUCARNE_PREVIEW_DRIVER": "2",
+        "LUCARNE_PREVIEW_PANEL_W": "320",
+        "LUCARNE_PREVIEW_PANEL_H": "480",
+        "LUCARNE_LIVE_BAUD": "3000000",
+        "LUCARNE_LIVE_MAX_FRAME": "65536"
+      },
+      "panelWidth": 320,
+      "panelHeight": 480,
+      "baud": 3000000,
+      "liveProfile": "esp32s3",
+      "maxFrameBytes": 65536,
+      "prebuilt": true,
+      "cdcOnBoot": true,
+      "psram": "opi",
+      "pins": {
+        "cs": 2,
+        "dc": 5,
+        "rst": 4,
+        "mosi": 21,
+        "miso": 3,
+        "sclk": 20,
+        "bl": -1
+      },
+      "offsets": {
+        "bootloader": "0x0",
+        "partitions": "0x8000",
+        "bootApp0": "0xe000",
+        "app": "0x10000"
+      },
+      "files": {
+        "bootloader": "esp32s3-st7796/bootloader.bin",
+        "partitions": "esp32s3-st7796/partitions.bin",
+        "app": "esp32s3-st7796/app.bin"
+      }
+    },
+    {
+      "id": "esp32s3-st7735",
+      "label": "ST7735 SPI TFT",
+      "chip": "esp32s3",
+      "chipDisplay": "ESP32-S3",
+      "displayKind": "spi_rgb",
+      "liveDriverId": 3,
+      "driver": "ST7735",
+      "interface": "SPI",
+      "sketch": "examples/LucarnePreview",
+      "buildFqbn": "esp32:esp32:esp32s3:CDCOnBoot=cdc,PSRAM=disabled,UploadSpeed=921600",
+      "buildDefines": {
+        "LUCARNE_PREVIEW_DRIVER": "3",
+        "LUCARNE_PREVIEW_PANEL_W": "128",
+        "LUCARNE_PREVIEW_PANEL_H": "160"
+      },
+      "panelWidth": 128,
+      "panelHeight": 160,
+      "baud": 2000000,
+      "prebuilt": true,
+      "cdcOnBoot": true,
+      "psram": "disabled",
+      "pins": {
+        "cs": 16,
+        "dc": 15,
+        "rst": 8,
+        "mosi": 18,
+        "sclk": 17,
+        "bl": -1
+      },
+      "offsets": {
+        "bootloader": "0x0",
+        "partitions": "0x8000",
+        "bootApp0": "0xe000",
+        "app": "0x10000"
+      },
+      "files": {
+        "bootloader": "esp32s3-st7735/bootloader.bin",
+        "partitions": "esp32s3-st7735/partitions.bin",
+        "app": "esp32s3-st7735/app.bin"
+      }
+    },
+    {
+      "id": "esp32s3-ili9342",
+      "label": "ILI9342 SPI TFT",
+      "chip": "esp32s3",
+      "chipDisplay": "ESP32-S3",
+      "displayKind": "spi_rgb",
+      "liveDriverId": 4,
+      "driver": "ILI9342",
+      "interface": "SPI",
+      "sketch": "examples/LucarnePreview",
+      "buildFqbn": "esp32:esp32:esp32s3:CDCOnBoot=cdc,PSRAM=disabled,UploadSpeed=921600",
+      "buildDefines": {
+        "LUCARNE_PREVIEW_DRIVER": "4",
+        "LUCARNE_PREVIEW_PANEL_W": "320",
+        "LUCARNE_PREVIEW_PANEL_H": "240"
+      },
+      "panelWidth": 320,
+      "panelHeight": 240,
+      "baud": 2000000,
+      "prebuilt": true,
+      "cdcOnBoot": true,
+      "psram": "disabled",
+      "pins": {
+        "cs": 16,
+        "dc": 15,
+        "rst": 8,
+        "mosi": 18,
+        "sclk": 17,
+        "bl": -1
+      },
+      "offsets": {
+        "bootloader": "0x0",
+        "partitions": "0x8000",
+        "bootApp0": "0xe000",
+        "app": "0x10000"
+      },
+      "files": {
+        "bootloader": "esp32s3-ili9342/bootloader.bin",
+        "partitions": "esp32s3-ili9342/partitions.bin",
+        "app": "esp32s3-ili9342/app.bin"
+      }
+    },
+    {
+      "id": "esp32s3-oled-i2c",
+      "label": "SSD1306 / SH1106 I2C",
+      "chip": "esp32s3",
+      "chipDisplay": "ESP32-S3",
+      "displayKind": "oled_mono",
+      "liveDriverId": 5,
+      "driver": "OLED",
+      "oledDrivers": [
+        "SSD1306",
+        "SH1106"
+      ],
+      "interface": "I2C",
+      "sketch": "examples/LucarnePreviewOled",
+      "buildFqbn": "esp32:esp32:esp32s3:CDCOnBoot=cdc,PSRAM=disabled,UploadSpeed=921600",
+      "buildDefines": {
+        "LUCARNE_PREVIEW_OLED_DRIVER": "1",
+        "LUCARNE_LIVE_MAX_FRAME": "16384"
+      },
+      "panelWidth": 128,
+      "panelHeight": 64,
+      "baud": 921600,
+      "prebuilt": true,
+      "cdcOnBoot": true,
+      "pins": {
+        "sda": 21,
+        "scl": 22,
+        "rst": -1
+      },
+      "offsets": {
+        "bootloader": "0x0",
+        "partitions": "0x8000",
+        "bootApp0": "0xe000",
+        "app": "0x10000"
+      },
+      "files": {
+        "bootloader": "esp32s3-oled-i2c/bootloader.bin",
+        "partitions": "esp32s3-oled-i2c/partitions.bin",
+        "app": "esp32s3-oled-i2c/app.bin"
+      }
+    },
+    {
+      "id": "esp32s3-ssd1315-i2c",
+      "label": "SSD1315 128×64 I2C",
+      "chip": "esp32s3",
+      "chipDisplay": "ESP32-S3",
+      "displayKind": "oled_mono",
+      "liveDriverId": 5,
+      "driver": "OLED",
+      "oledDrivers": [
+        "SSD1315"
+      ],
+      "interface": "I2C",
+      "sketch": "examples/LucarnePreviewOled",
+      "buildFqbn": "esp32:esp32:esp32s3:CDCOnBoot=cdc,PSRAM=disabled,UploadSpeed=921600",
+      "buildDefines": {
+        "LUCARNE_PREVIEW_OLED_DRIVER": "3",
+        "LUCARNE_LIVE_MAX_FRAME": "16384"
+      },
+      "panelWidth": 128,
+      "panelHeight": 64,
+      "baud": 921600,
+      "prebuilt": true,
+      "cdcOnBoot": true,
+      "pins": {
+        "sda": 21,
+        "scl": 22,
+        "rst": -1
+      },
+      "offsets": {
+        "bootloader": "0x0",
+        "partitions": "0x8000",
+        "bootApp0": "0xe000",
+        "app": "0x10000"
+      },
+      "files": {
+        "bootloader": "esp32s3-ssd1315-i2c/bootloader.bin",
+        "partitions": "esp32s3-ssd1315-i2c/partitions.bin",
+        "app": "esp32s3-ssd1315-i2c/app.bin"
+      }
+    },
+    {
+      "id": "esp32s3-hd44780",
+      "label": "HD44780 parallel",
+      "chip": "esp32s3",
+      "chipDisplay": "ESP32-S3",
+      "displayKind": "matrix_lcd",
+      "liveDriverId": 6,
+      "driver": "HD44780",
+      "interface": "Parallel",
+      "sketch": "examples/LucarnePreviewMatrix",
+      "buildFqbn": "esp32:esp32:esp32s3:CDCOnBoot=cdc,PSRAM=disabled,UploadSpeed=921600",
+      "panelWidth": 128,
+      "panelHeight": 32,
+      "baud": 460800,
+      "prebuilt": true,
+      "cdcOnBoot": true,
+      "offsets": {
+        "bootloader": "0x0",
+        "partitions": "0x8000",
+        "bootApp0": "0xe000",
+        "app": "0x10000"
+      },
+      "files": {
+        "bootloader": "esp32s3-hd44780/bootloader.bin",
+        "partitions": "esp32s3-hd44780/partitions.bin",
+        "app": "esp32s3-hd44780/app.bin"
+      }
+    },
+    {
+      "id": "esp32c3-st7789",
+      "label": "ST7789 SPI TFT",
+      "chip": "esp32c3",
+      "chipDisplay": "ESP32-C3",
+      "displayKind": "spi_rgb",
+      "liveDriverId": 1,
+      "driver": "ST7789",
+      "interface": "SPI",
+      "sketch": "examples/LucarnePreview",
+      "buildFqbn": "esp32:esp32:esp32c3:CDCOnBoot=cdc,UploadSpeed=921600",
+      "buildDefines": {
+        "LUCARNE_PREVIEW_DRIVER": "1"
+      },
+      "panelWidth": 240,
+      "panelHeight": 280,
+      "baud": 921600,
+      "prebuilt": true,
+      "cdcOnBoot": true,
+      "offsets": {
+        "bootloader": "0x0",
+        "partitions": "0x8000",
+        "bootApp0": "0xe000",
+        "app": "0x10000"
+      },
+      "files": {
+        "bootloader": "esp32c3-st7789/bootloader.bin",
+        "partitions": "esp32c3-st7789/partitions.bin",
+        "app": "esp32c3-st7789/app.bin"
+      }
+    },
+    {
+      "id": "esp32-st7789",
+      "label": "ST7789 SPI TFT",
+      "chip": "esp32",
+      "chipDisplay": "ESP32",
+      "displayKind": "spi_rgb",
+      "liveDriverId": 1,
+      "driver": "ST7789",
+      "interface": "SPI",
+      "sketch": "examples/LucarnePreview",
+      "buildFqbn": "esp32:esp32:esp32:UploadSpeed=921600",
+      "buildDefines": {
+        "LUCARNE_PREVIEW_DRIVER": "1"
+      },
+      "panelWidth": 240,
+      "panelHeight": 280,
+      "baud": 921600,
+      "prebuilt": true,
+      "cdcOnBoot": true,
+      "offsets": {
+        "bootloader": "0x0",
+        "partitions": "0x8000",
+        "bootApp0": "0xe000",
+        "app": "0x10000"
+      },
+      "files": {
+        "bootloader": "esp32-st7789/bootloader.bin",
+        "partitions": "esp32-st7789/partitions.bin",
+        "app": "esp32-st7789/app.bin"
+      }
+    },
+    {
+      "id": "esp32p4-st7789",
+      "label": "ST7789 SPI (P4 dev board)",
+      "chip": "esp32p4",
+      "chipDisplay": "ESP32-P4",
+      "displayKind": "spi_rgb",
+      "liveDriverId": 1,
+      "driver": "ST7789",
+      "interface": "SPI",
+      "sketch": "examples/LucarnePreview",
+      "buildFqbn": "esp32:esp32:esp32p4:CDCOnBoot=cdc,UploadSpeed=921600",
+      "buildDefines": {
+        "LUCARNE_PREVIEW_DRIVER": "1"
+      },
+      "panelWidth": 240,
+      "panelHeight": 280,
+      "baud": 2000000,
+      "prebuilt": true,
+      "cdcOnBoot": true,
+      "offsets": {
+        "bootloader": "0x0",
+        "partitions": "0x8000",
+        "bootApp0": "0xe000",
+        "app": "0x10000"
+      },
+      "files": {
+        "bootloader": "esp32p4-st7789/bootloader.bin",
+        "partitions": "esp32p4-st7789/partitions.bin",
+        "app": "esp32p4-st7789/app.bin"
+      }
+    },
+    {
+      "id": "esp32p4-mipi",
+      "label": "MIPI DSI panel",
+      "chip": "esp32p4",
+      "chipDisplay": "ESP32-P4",
+      "displayKind": "mipi_dsi",
+      "liveDriverId": 7,
+      "driver": "MIPI",
+      "interface": "MIPI",
+      "sketch": "examples/LucarnePreview",
+      "buildFqbn": "esp32:esp32:esp32p4:CDCOnBoot=cdc,UploadSpeed=921600",
+      "panelWidth": 800,
+      "panelHeight": 480,
+      "baud": 2000000,
+      "prebuilt": false,
+      "cdcOnBoot": true
+    },
+    {
+      "id": "rp2040-st7789",
+      "label": "ST7789 SPI TFT",
+      "chip": "rp2040",
+      "chipDisplay": "RP2040 / Pico",
+      "displayKind": "spi_rgb",
+      "liveDriverId": 1,
+      "driver": "ST7789",
+      "interface": "SPI",
+      "sketch": "examples/LucarnePreview",
+      "buildFqbn": "rp2040:rp2040:rpipico",
+      "buildDefines": {
+        "LUCARNE_PREVIEW_DRIVER": "1",
+        "LUCARNE_LIVE_BAUD": "921600",
+        "LUCARNE_LIVE_MAX_FRAME": "8192"
+      },
+      "panelWidth": 240,
+      "panelHeight": 240,
+      "baud": 921600,
+      "prebuilt": false
+    },
+    {
+      "id": "avr-oled-i2c",
+      "label": "SSD1306 I2C (small)",
+      "chip": "avr",
+      "chipDisplay": "ATmega32U4 / Leonardo",
+      "displayKind": "oled_mono",
+      "liveDriverId": 5,
+      "driver": "OLED",
+      "interface": "I2C",
+      "sketch": "examples/LucarnePreviewOled",
+      "buildFqbn": "arduino:avr:leonardo",
+      "panelWidth": 128,
+      "panelHeight": 64,
+      "baud": 115200,
+      "prebuilt": false
+    }
+  ]
+}

@@ -10,7 +10,7 @@ class Metric : public Widget {
     Metric(int16_t x, int16_t y, int16_t w, int16_t h, const char *label, const char *key,
            const char *unit = "");
 
-    void setDecimals(uint8_t decimals) { _decimals = decimals; }
+    void setDecimals(uint8_t decimals) { markDirty(); _decimals = decimals; }
     void setAccent(uint16_t color);
     void clearAccent();
     void setLabelFont(const AAFont *font);
@@ -24,6 +24,7 @@ class Metric : public Widget {
     void setValueSize(uint8_t size);
     void setValueSpacing(int8_t spacing);
 
+    uint8_t storeKeys(const char **out, uint8_t max) const override { return appendKey(out, 0, max, _key); }
     void draw(Gfx &g, const Theme &theme, Store &store) override;
 
   private:

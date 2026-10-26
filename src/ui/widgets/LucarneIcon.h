@@ -16,6 +16,7 @@ class Icon : public Widget {
     void setTransparent(bool transparent);
 
     void draw(Gfx &g, const Theme &theme, Store &store) override;
+    Rect boundsLogical(Gfx &g, const Theme &theme) const override;
     Icon *asIcon() override { return this; }
 
     const char *iconRef() const { return _ref; }

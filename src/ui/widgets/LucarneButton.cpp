@@ -6,9 +6,11 @@ namespace lucarne {
 Button::Button(int16_t x, int16_t y, int16_t w, int16_t h, const char *label)
     : Widget(x, y, w, h), _label(label), _icon(nullptr), _target(nullptr),
       _transition(Transition::Inherit), _actionId(0), _isCallback(false), _fill(0), _textColor(0),
-      _hasColors(false), _transparentFill(false), _transparentTextColor(false), _textAlign(TextAlign::Center) {}
+      _hasColors(false), _transparentFill(false), _transparentTextColor(false), _textAlign(TextAlign::Center),
+      _focused(false), _editing(false) {}
 
 void Button::setNavigate(Screen *target, Transition t) {
+    markDirty();
     _target = target;
     _transition = t;
     _isCallback = false;
@@ -16,12 +18,14 @@ void Button::setNavigate(Screen *target, Transition t) {
 }
 
 void Button::setCallback(uint8_t actionId) {
+    markDirty();
     _actionId = actionId;
     _isCallback = true;
     _target = nullptr;
 }
 
 void Button::setColor(uint16_t fill, uint16_t text) {
+    markDirty();
     _fill = fill;
     _textColor = text;
     _hasColors = true;
@@ -29,28 +33,32 @@ void Button::setColor(uint16_t fill, uint16_t text) {
     _transparentTextColor = false;
 }
 
-void Button::setFillTransparent(bool transparent) { _transparentFill = transparent; }
+void Button::setFillTransparent(bool transparent) { markDirty(); _transparentFill = transparent; }
 
-void Button::setTextColorTransparent(bool transparent) { _transparentTextColor = transparent; }
+void Button::setTextColorTransparent(bool transparent) { markDirty(); _transparentTextColor = transparent; }
 
-void Button::setTextTransparent(bool transparent) { _textStyle.transparent = transparent; }
+void Button::setTextTransparent(bool transparent) { markDirty(); _textStyle.transparent = transparent; }
 
 void Button::setTextFont(const AAFont *font) {
+    markDirty();
     _textStyle.font = font;
     _textStyle.hasFont = true;
 }
 
 void Button::setTextColor(uint16_t color) {
+    markDirty();
     _textStyle.color = color;
     _textStyle.hasColor = true;
 }
 
 void Button::setTextSize(uint8_t size) {
+    markDirty();
     _textStyle.size = size;
     _textStyle.hasSize = true;
 }
 
 void Button::setTextSpacing(int8_t spacing) {
+    markDirty();
     _textStyle.spacing = spacing;
     _textStyle.hasSpacing = true;
 }
@@ -61,14 +69,27 @@ bool Button::hitTest(int16_t px, int16_t py) const {
 
 void Button::draw(Gfx &g, const Theme &theme, Store &store) {
     (void)store;
-    uint16_t fill = _hasColors ? _fill : theme.primary;
+    if (g.isCharacterGrid()) {
+        g.drawGridText(x, y, w, h, _label ? _label : "", (uint8_t)_textAlign, _focused || _editing);
+        return;
+    }
+    bool transparentFill = _transparentFill && !_editing;
+    uint16_t fill = _editing ? theme.primary : (_hasColors ? _fill : theme.primary);
     TextStyle style = _textStyle;
-    if (_hasColors && !style.hasColor && !_transparentTextColor) {
+    if (_editing) {
+        style.color = theme.background;
+        style.hasColor = true;
+    } else if (_hasColors && !style.hasColor && !_transparentTextColor) {
         style.color = _textColor;
         style.hasColor = true;
     }
-    if (!_transparentFill) g.fillRoundRect(x, y, w, h, theme.radius, fill);
-    g.drawRoundRect(x, y, w, h, theme.radius, theme.surfaceEdge);
+    if (!transparentFill) g.fillRoundRect(x, y, w, h, theme.radius, fill);
+    uint16_t edge = (_focused || _editing) ? theme.primary : theme.surfaceEdge;
+    g.drawRoundRect(x, y, w, h, theme.radius, edge);
+    if (_focused && !_editing) {
+        g.drawRoundRect((int16_t)(x + 1), (int16_t)(y + 1), (int16_t)(w - 2), (int16_t)(h - 2),
+                        theme.radius, edge);
+    }
     int16_t pad = theme.padding;
     int16_t contentX = (int16_t)(x + pad);
     uint16_t iconColor = style.hasColor ? style.color : (_hasColors ? _textColor : theme.background);
@@ -77,13 +98,13 @@ void Button::draw(Gfx &g, const Theme &theme, Store &store) {
         if (side > 20) side = 20;
         if (side < 8) side = 8;
         int16_t iy = (int16_t)(y + (h - side) / 2);
-        uint16_t iconBg = _transparentFill ? theme.background : fill;
+        uint16_t iconBg = transparentFill ? theme.background : fill;
         drawIconRef(g, _icon, contentX, iy, side, side, iconColor, iconBg);
         contentX += (int16_t)(side + pad);
     }
     int16_t lw = (int16_t)(x + w - pad - contentX);
     if (!style.transparent && !_transparentTextColor) {
-        uint16_t textBg = _transparentFill ? theme.background : fill;
+        uint16_t textBg = transparentFill ? theme.background : fill;
         drawStyledText(g, theme, _label ? _label : "", contentX, y, lw, h, _textAlign, textBg, &style,
                        false);
     }

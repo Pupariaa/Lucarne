@@ -17,10 +17,12 @@ Menu::Menu(int16_t x, int16_t y, int16_t w, int16_t h)
       _hasInactiveEdge(false) {}
 
 void Menu::setIconScale(uint8_t scale) {
+    markDirty();
     _iconScale = scale;
 }
 
 void Menu::setBadgeScale(uint8_t scale) {
+    markDirty();
     _badgeScale = scale;
 }
 
@@ -76,69 +78,80 @@ void Menu::addCallbackItem(const char *label, const char *iconRef, uint8_t actio
 }
 
 void Menu::setItemStyle(uint8_t index, const TextStyle &style) {
+    markDirty();
     if (index >= _count) return;
     _items[index].textStyle = style;
 }
 
 void Menu::setTextFont(const AAFont *font) {
+    markDirty();
     _textStyle.font = font;
     _textStyle.hasFont = true;
 }
 
 void Menu::setTextColor(uint16_t color) {
+    markDirty();
     _textStyle.color = color;
     _textStyle.hasColor = true;
     _textStyle.transparent = false;
 }
 
-void Menu::setTextTransparent(bool transparent) { _textStyle.transparent = transparent; }
+void Menu::setTextTransparent(bool transparent) { markDirty(); _textStyle.transparent = transparent; }
 
 void Menu::setTextSize(uint8_t size) {
+    markDirty();
     _textStyle.size = size;
     _textStyle.hasSize = true;
 }
 
 void Menu::setTextSpacing(int8_t spacing) {
+    markDirty();
     _textStyle.spacing = spacing;
     _textStyle.hasSpacing = true;
 }
 
 void Menu::setActiveFill(uint16_t color) {
+    markDirty();
     _activeFill = color;
     _hasActiveFill = true;
 }
 
 void Menu::setActiveText(uint16_t color) {
+    markDirty();
     _activeText = color;
     _hasActiveText = true;
 }
 
 void Menu::setInactiveFill(uint16_t color) {
+    markDirty();
     _inactiveFill = color;
     _hasInactiveFill = true;
 }
 
 void Menu::setInactiveText(uint16_t color) {
+    markDirty();
     _inactiveText = color;
     _hasInactiveText = true;
 }
 
 void Menu::setInactiveEdge(uint16_t color) {
+    markDirty();
     _inactiveEdge = color;
     _hasInactiveEdge = true;
 }
 
-void Menu::clearActiveFill() { _hasActiveFill = false; }
+void Menu::clearActiveFill() { markDirty(); _hasActiveFill = false; }
 
-void Menu::clearActiveText() { _hasActiveText = false; }
+void Menu::clearActiveText() { markDirty(); _hasActiveText = false; }
 
-void Menu::clearInactiveFill() { _hasInactiveFill = false; }
+void Menu::clearInactiveFill() { markDirty(); _hasInactiveFill = false; }
 
-void Menu::clearInactiveText() { _hasInactiveText = false; }
+void Menu::clearInactiveText() { markDirty(); _hasInactiveText = false; }
 
-void Menu::clearInactiveEdge() { _hasInactiveEdge = false; }
+void Menu::clearInactiveEdge() { markDirty(); _hasInactiveEdge = false; }
 
 void Menu::clearItems() {
+    markDirty();
     _count = 0;
     _selected = 0;
     _scroll = 0;
@@ -153,18 +166,21 @@ const char *Menu::itemBadge(uint8_t index) const {
 }
 
 void Menu::moveNext() {
+    markDirty();
     if (_count == 0) return;
     _selected++;
     if (_selected >= _count) _selected = 0;
 }
 
 void Menu::movePrev() {
+    markDirty();
     if (_count == 0) return;
     _selected--;
     if (_selected < 0) _selected = _count - 1;
 }
 
 void Menu::setSelected(int index) {
+    markDirty();
     if (_count == 0) return;
     if (index < 0) index = 0;
     if (index >= _count) index = _count - 1;
@@ -199,6 +215,22 @@ const char *Menu::selectedLabel() const {
 
 void Menu::draw(Gfx &g, const Theme &theme, Store &store) {
     (void)store;
+    if (g.isCharacterGrid()) {
+        int16_t cellH = g.gridCellHeight();
+        if (cellH < 1) cellH = 1;
+        int16_t lines = h / cellH;
+        if (lines < 1) lines = 1;
+        if (_selected < _scroll) _scroll = _selected;
+        if (_selected >= _scroll + lines) _scroll = _selected - lines + 1;
+        if (_scroll < 0) _scroll = 0;
+        for (int16_t row = 0; row < lines; row++) {
+            int idx = _scroll + row;
+            if (idx >= _count) break;
+            g.drawGridText(x, (int16_t)(y + row * cellH), w, cellH, _items[idx].label ? _items[idx].label : "",
+                           (uint8_t)TextAlign::Left, idx == _selected);
+        }
+        return;
+    }
     int16_t rowH = theme.rowHeight;
     if (rowH < 16) rowH = 16;
     int16_t visible = h / rowH;

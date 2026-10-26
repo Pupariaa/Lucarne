@@ -1,4 +1,3 @@
-editor/
 .vscode/
 scripts/
 web/
@@ -12,3 +11,11 @@ editor/brand/
 
 images/*-dark.png
 apng-js-*.tgz
+
+# Arduino IDE / arduino-cli compile output — examples must ship as bare
+# sketches only, never with build artifacts.
+examples/**/build/
+build/
+editor/firmware-bin/_build/
+
+test/

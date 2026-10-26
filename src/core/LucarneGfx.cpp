@@ -15,15 +15,134 @@ static inline void swapInt16(int16_t &a, int16_t &b) {
 Gfx::Gfx(int16_t w, int16_t h)
     : WIDTH(w), HEIGHT(h), _width(w), _height(h), cursor_x(0), cursor_y(0),
       textcolor(0xFFFF), textbgcolor(0xFFFF), textsize_x(1), textsize_y(1),
-      wrap(true), gfxFont(nullptr) {}
+      wrap(true), gfxFont(nullptr), _clipActive(false), _stripeActive(false) {}
 
 Gfx::~Gfx() {}
+
+void Gfx::presentDirty() { presentFull(); }
+
+void Gfx::setClipRect(int16_t x, int16_t y, int16_t w, int16_t h) {
+    _clip = Rect(x, y, w, h).intersect(Rect(0, 0, _width, _height));
+    _clipActive = true;
+}
+
+void Gfx::resetClipRect() {
+    _clipActive = false;
+    _clip = Rect();
+}
+
+Rect Gfx::clipRect() const {
+    if (_clipActive) return _clip;
+    return Rect(0, 0, _width, _height);
+}
+
+bool Gfx::clipIntersects(int16_t x, int16_t y, int16_t w, int16_t h) const {
+    return clipRect().intersects(Rect(x, y, w, h));
+}
+
+bool Gfx::clipToActive(int16_t &x, int16_t &y, int16_t &w, int16_t &h) const {
+    Rect r = Rect(x, y, w, h).intersect(clipRect());
+    if (r.empty()) return false;
+    x = r.x;
+    y = r.y;
+    w = r.w;
+    h = r.h;
+    return true;
+}
+
+bool Gfx::flushRect(int16_t x, int16_t y, int16_t w, int16_t h) {
+    flushArea(x, y, w, h);
+    return true;
+}
+
+int16_t Gfx::stripeRowsFor(int16_t w) const {
+    (void)w;
+    return _height;
+}
+
+bool Gfx::beginStripe(int16_t x, int16_t y, int16_t w, int16_t h) {
+    Rect r = Rect(x, y, w, h).intersect(Rect(0, 0, _width, _height));
+    if (r.empty()) return false;
+    _stripeWin = r;
+    _stripeActive = true;
+    setClipRect(r);
+    return true;
+}
+
+void Gfx::endStripe() {
+    if (!_stripeActive) return;
+    Rect r = _stripeWin;
+    _stripeActive = false;
+    resetClipRect();
+    flushRect(r.x, r.y, r.w, r.h);
+}
+
+void Gfx::drawGridText(int16_t x, int16_t y, int16_t w, int16_t h, const char *text, uint8_t align,
+                       bool inverted) {
+    (void)x;
+    (void)y;
+    (void)w;
+    (void)h;
+    (void)text;
+    (void)align;
+    (void)inverted;
+}
+
+void Gfx::drawGridBar(int16_t x, int16_t y, int16_t w, int16_t h, float ratio) {
+    (void)x;
+    (void)y;
+    (void)w;
+    (void)h;
+    (void)ratio;
+}
+
+bool Gfx::displayDirtyRegion(int16_t &x, int16_t &y, int16_t &w, int16_t &h) const {
+    (void)x;
+    (void)y;
+    (void)w;
+    (void)h;
+    return false;
+}
 
 void Gfx::startWrite() {}
 
 void Gfx::endWrite() {}
 
+void Gfx::writeBufferRect(int16_t x, int16_t y, int16_t w, int16_t h, const uint16_t *src) {
+    (void)x;
+    (void)y;
+    (void)w;
+    (void)h;
+    (void)src;
+}
+
+void Gfx::writeRowRgb565Le(int16_t x, int16_t y, int16_t w, const uint16_t *srcLe) {
+    if (!srcLe || w < 1) return;
+    if (bufferMode() == BufferMode::Full && hasBuffer()) {
+        writeBufferRect(x, y, w, 1, srcLe);
+        return;
+    }
+    for (int16_t col = 0; col < w; col++) writePixel((int16_t)(x + col), y, srcLe[col]);
+}
+
+void Gfx::blitBufferRect(int16_t x, int16_t y, int16_t w, int16_t h, const uint16_t *srcPacked) {
+    (void)x;
+    (void)y;
+    (void)w;
+    (void)h;
+    (void)srcPacked;
+}
+
+void Gfx::readBufferRectNative(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t *dst) {
+    (void)x;
+    (void)y;
+    (void)w;
+    (void)h;
+    (void)dst;
+}
+
 void Gfx::writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
+    if (!clipToActive(x, y, w, h)) return;
     for (int16_t i = 0; i < h; i++) {
         for (int16_t j = 0; j < w; j++) {
             writePixel((int16_t)(x + j), (int16_t)(y + i), color);
@@ -398,6 +517,7 @@ void Gfx::setTextWrap(bool w) {
 void Gfx::drawChar(int16_t x, int16_t y, uint8_t c, uint16_t color, uint16_t bg, uint8_t sizeX, uint8_t sizeY) {
     if (!gfxFont) {
         if (x >= _width || y >= _height || (x + 6 * sizeX - 1) < 0 || (y + 8 * sizeY - 1) < 0) return;
+        if (!clipIntersects(x, y, (int16_t)(6 * sizeX), (int16_t)(8 * sizeY))) return;
         startWrite();
         for (int8_t i = 0; i < 5; i++) {
             uint8_t line = LucarneClassicFont[c * 5 + i];
@@ -438,6 +558,9 @@ void Gfx::drawChar(int16_t x, int16_t y, uint8_t c, uint16_t color, uint16_t bg,
     int8_t yo = glyph->yOffset;
     uint8_t bits = 0;
     uint8_t bit = 0;
+    if (!clipIntersects((int16_t)(x + xo * sizeX), (int16_t)(y + yo * sizeY), (int16_t)(w * sizeX),
+                        (int16_t)(h * sizeY)))
+        return;
     startWrite();
     for (uint8_t yy = 0; yy < h; yy++) {
         for (uint8_t xx = 0; xx < w; xx++) {
@@ -631,6 +754,7 @@ void Gfx::drawCharAA(const AAFont *font, int16_t penX, int16_t baselineY, uint16
     const uint8_t *cov = font->coverage + gl->coverageOffset;
     int16_t gx = (int16_t)(penX + gl->xOffset);
     int16_t gy = (int16_t)(baselineY + gl->yOffset);
+    if (!clipIntersects(gx, gy, gl->width, gl->height)) return;
     const bool dest = canPeekPixel();
     startWrite();
     for (uint8_t yy = 0; yy < gl->height; yy++) {

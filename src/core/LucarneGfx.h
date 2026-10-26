@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include "LucarneColor.h"
 #include "LucarneFont.h"
+#include "LucarneTypes.h"
+#include "LucarneRect.h"
 
 namespace lucarne {
 
@@ -66,6 +68,50 @@ class Gfx {
     virtual bool canPeekPixel() const { return false; }
     virtual uint16_t peekPixel(int16_t x, int16_t y) const;
 
+    virtual uint16_t pixelFromBuffer(uint16_t stored) const { return stored; }
+    virtual uint16_t pixelToBuffer(uint16_t logical) const { return logical; }
+
+    virtual BufferMode bufferMode() const { return BufferMode::None; }
+    virtual bool hasBuffer() const { return false; }
+    virtual uint16_t *buffer() { return nullptr; }
+    virtual void presentFull() {}
+    virtual void presentDirty();
+    virtual void invalidateRegion(int16_t x, int16_t y, int16_t w, int16_t h) { (void)x; (void)y; (void)w; (void)h; }
+    virtual bool displayDirtyRegion(int16_t &x, int16_t &y, int16_t &w, int16_t &h) const;
+    virtual void flushArea(int16_t x, int16_t y, int16_t w, int16_t h) { (void)x; (void)y; (void)w; (void)h; }
+    virtual void writeBufferRect(int16_t x, int16_t y, int16_t w, int16_t h, const uint16_t *src);
+    virtual void writeRowRgb565Le(int16_t x, int16_t y, int16_t w, const uint16_t *srcLe);
+    virtual void blitBufferRect(int16_t x, int16_t y, int16_t w, int16_t h, const uint16_t *srcPacked);
+    virtual void readBufferRectNative(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t *dst);
+    virtual uint16_t *allocFrame() { return nullptr; }
+    virtual void freeFrame(uint16_t *p) { (void)p; }
+    virtual void snapshotFrame(uint16_t *dst) { (void)dst; }
+
+    void setClipRect(int16_t x, int16_t y, int16_t w, int16_t h);
+    void setClipRect(const Rect &r) { setClipRect(r.x, r.y, r.w, r.h); }
+    void resetClipRect();
+    bool clipActive() const { return _clipActive; }
+    Rect clipRect() const;
+    bool clipIntersects(int16_t x, int16_t y, int16_t w, int16_t h) const;
+
+    virtual bool flushRect(int16_t x, int16_t y, int16_t w, int16_t h);
+    virtual bool supportsPartialPresent() const { return false; }
+    virtual uint16_t partialLines() const { return 0; }
+    virtual int16_t stripeRowsFor(int16_t w) const;
+    virtual bool beginStripe(int16_t x, int16_t y, int16_t w, int16_t h);
+    virtual void endStripe();
+    bool stripeActive() const { return _stripeActive; }
+    Rect stripeRect() const { return _stripeWin; }
+    virtual void discardDirty() {}
+    virtual void flushWait() {}
+
+    virtual bool isCharacterGrid() const { return false; }
+    virtual int16_t gridCellWidth() const { return 1; }
+    virtual int16_t gridCellHeight() const { return 1; }
+    virtual void drawGridText(int16_t x, int16_t y, int16_t w, int16_t h, const char *text, uint8_t align,
+                              bool inverted);
+    virtual void drawGridBar(int16_t x, int16_t y, int16_t w, int16_t h, float ratio);
+
     int16_t width() const { return _width; }
     int16_t height() const { return _height; }
     int16_t getCursorX() const { return cursor_x; }
@@ -73,6 +119,13 @@ class Gfx {
     const Font *getFont() const { return gfxFont; }
 
   protected:
+    bool clipToActive(int16_t &x, int16_t &y, int16_t &w, int16_t &h) const;
+    inline bool pointInClip(int16_t x, int16_t y) const {
+        if (_clipActive)
+            return x >= _clip.x && y >= _clip.y && x < _clip.x + _clip.w && y < _clip.y + _clip.h;
+        return x >= 0 && y >= 0 && x < _width && y < _height;
+    }
+
     void charBounds(uint8_t c, int16_t *x, int16_t *y, int16_t *minx, int16_t *miny, int16_t *maxx, int16_t *maxy);
 
     int16_t WIDTH;
@@ -87,6 +140,10 @@ class Gfx {
     uint8_t textsize_y;
     bool wrap;
     const Font *gfxFont;
+    Rect _clip;
+    bool _clipActive;
+    Rect _stripeWin;
+    bool _stripeActive;
 };
 
 }

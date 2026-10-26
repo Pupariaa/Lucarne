@@ -26,21 +26,31 @@ Icon::Icon(int16_t x, int16_t y, const char *ref, uint8_t scale)
 }
 
 void Icon::setIconRef(const char *ref) {
+    markDirty();
     _ref = ref;
 }
 
 void Icon::setScale(uint8_t scale) {
+    markDirty();
     _scaleTenths = iconScaleTenths(scale);
 }
 
 void Icon::setColor(uint16_t color) {
+    markDirty();
     _color = color;
     _hasColor = true;
 }
 
-void Icon::clearColor() { _hasColor = false; }
+void Icon::clearColor() { markDirty(); _hasColor = false; }
 
-void Icon::setTransparent(bool transparent) { _transparent = transparent; }
+void Icon::setTransparent(bool transparent) { markDirty(); _transparent = transparent; }
+
+Rect Icon::boundsLogical(Gfx &g, const Theme &theme) const {
+    (void)g;
+    (void)theme;
+    IconAnimDrawRect dr = iconAnimDrawRect(this);
+    return Rect(x, y, w, h).unite(Rect(dr.x, dr.y, dr.w, dr.h));
+}
 
 void Icon::draw(Gfx &g, const Theme &theme, Store &store) {
     (void)store;
@@ -49,7 +59,8 @@ void Icon::draw(Gfx &g, const Theme &theme, Store &store) {
     uint16_t bg = theme.background;
     IconAnimDrawRect dr = iconAnimDrawRect(this);
     if (iconRefIsAnim(_ref)) {
-        if (iconAnimDrawInitial(g, this, dr.x, dr.y, dr.w, dr.h, bg)) {
+        uint8_t fi = _lastAnimFrame == 0xff ? 0 : _lastAnimFrame;
+        if (iconAnimDrawInitial(g, this, dr.x, dr.y, dr.w, dr.h, bg, fi) && _lastAnimFrame == 0xff) {
             syncAnimFrame(0);
             markAnimShown(iconAnimClockMs());
         }

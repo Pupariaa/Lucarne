@@ -2,6 +2,7 @@
 #include "../core/LucarneGfx.h"
 #include "../core/LucarneColor.h"
 #include "../display/LucarneDisplay.h"
+#include "../hal/LucarneHal.h"
 #include "LucarneIconAnim.h"
 #include "LucarneVolume.h"
 #include "../LucarneStorageConfig.h"
@@ -158,7 +159,10 @@ static bool sdPathEqSlot(const SdFrameSlot &slot, const char *path) {
 #if LUCARNE_FILE_FS
 static bool fileStorageReady(ImageStorage st) {
 #if LUCARNE_ENABLE_SD
-    if (st == ImageStorage::Sd) return SD.cardType() != CARD_NONE;
+    if (st == ImageStorage::Sd) {
+        halFlushWait();
+        return SD.cardType() != CARD_NONE;
+    }
 #endif
 #if LUCARNE_ENABLE_VOLUME
     if (st == ImageStorage::Volume) return volumeMounted();
@@ -168,7 +172,10 @@ static bool fileStorageReady(ImageStorage st) {
 
 static File openFileStorage(const char *pathBuf, ImageStorage st) {
 #if LUCARNE_ENABLE_SD
-    if (st == ImageStorage::Sd) return SD.open(pathBuf, FILE_READ);
+    if (st == ImageStorage::Sd) {
+        halFlushWait();
+        return SD.open(pathBuf, FILE_READ);
+    }
 #endif
 #if LUCARNE_ENABLE_VOLUME
     if (st == ImageStorage::Volume) {
@@ -456,6 +463,42 @@ bool sdBuildDisplayFrame(const ImageAsset *asset, int16_t boxW, int16_t boxH, co
     return true;
 }
 
+static void drawPixelsNative(Gfx &g, const uint16_t *pix, const uint8_t *alpha, bool hasAlpha,
+                             int16_t sw, int16_t sh, int16_t x, int16_t y, int16_t srcOx,
+                             int16_t srcOy, int16_t viewW, int16_t viewH, uint16_t bg) {
+    if (!pix || sw < 1 || sh < 1) return;
+    if (srcOx < 0) srcOx = 0;
+    if (srcOy < 0) srcOy = 0;
+    int16_t drawW = viewW > 0 ? viewW : (int16_t)(sw - srcOx);
+    int16_t drawH = viewH > 0 ? viewH : (int16_t)(sh - srcOy);
+    if (drawW < 1) drawW = 1;
+    if (drawH < 1) drawH = 1;
+    int16_t gw = g.width();
+    int16_t gh = g.height();
+    for (int16_t py = 0; py < drawH; py++) {
+        int16_t sy = (int16_t)(srcOy + py);
+        if (sy < 0 || sy >= sh) continue;
+        for (int16_t px = 0; px < drawW; px++) {
+            int16_t sx = (int16_t)(srcOx + px);
+            if (sx < 0 || sx >= sw) continue;
+            int16_t dx = (int16_t)(x + px);
+            int16_t dy = (int16_t)(y + py);
+            if (dx < 0 || dy < 0 || dx >= gw || dy >= gh) continue;
+            size_t si = (size_t)sy * (size_t)sw + (size_t)sx;
+            uint16_t fg = pix[si];
+            if (hasAlpha && alpha) {
+                uint8_t a = alpha[si];
+                if (a < 8) continue;
+                uint16_t under = g.canPeekPixel() ? g.peekPixel(dx, dy) : bg;
+                g.writePixel(dx, dy, a >= 250 ? fg : colorBlend(under, fg, a));
+            } else {
+                if (!rgb565Opaque(fg)) continue;
+                g.drawPixel(dx, dy, fg);
+            }
+        }
+    }
+}
+
 static void drawPixelsFit(Gfx &g, const uint16_t *pix, const uint8_t *alpha, bool hasAlpha, int16_t sw,
                           int16_t sh, int16_t x, int16_t y, int16_t dw, int16_t dh, uint16_t bg) {
     if (!pix || sw < 1 || sh < 1 || dw < 1 || dh < 1) return;
@@ -604,6 +647,24 @@ bool drawImageAssetSd(Gfx &g, const ImageAsset *asset, int16_t x, int16_t y, int
     return false;
 }
 
+bool drawImageAssetSdNative(Gfx &g, const ImageAsset *asset, int16_t x, int16_t y, int16_t srcOx,
+                            int16_t srcOy, int16_t viewW, int16_t viewH, uint16_t bg) {
+    if (!asset || !isFileBackedStorage(imageAssetStorage(asset))) return false;
+
+    bool hasAlpha = false;
+    SdFrameSlot *slot = sdCacheLoadSlot(asset, &hasAlpha);
+    if (!slot || !slot->pixels) {
+        sdCacheEnsure(asset);
+        slot = sdCacheLoadSlot(asset, &hasAlpha);
+    }
+    if (slot && slot->pixels) {
+        drawPixelsNative(g, slot->pixels, slot->alpha, hasAlpha, slot->width, slot->height, x, y, srcOx,
+                         srcOy, viewW, viewH, bg);
+        return true;
+    }
+    return false;
+}
+
 bool drawImageAssetSdFitOver(Display &disp, const ImageAsset *asset, int16_t x, int16_t y, int16_t dw,
                              int16_t dh, const uint16_t *under, int16_t uw, int16_t uh) {
     if (!asset || !isFileBackedStorage(imageAssetStorage(asset)) || !under) return false;
@@ -615,6 +676,95 @@ bool drawImageAssetSdFitOver(Display &disp, const ImageAsset *asset, int16_t x, 
     disp.writePixelsFitOver(x, y, dw, dh, slot->pixels, slot->width, slot->height, slot->alpha,
                             hasAlpha, under, uw, uh);
     return true;
+}
+
+#ifndef LUCARNE_PSRAM_IMAGE_CACHE_SLOTS
+#define LUCARNE_PSRAM_IMAGE_CACHE_SLOTS 16
+#endif
+
+namespace {
+
+struct PsramCacheSlot {
+    const ImageAsset *asset;
+    uint16_t *pixels;
+    uint8_t *alpha;
+    bool used;
+};
+
+PsramCacheSlot _psramSlots[LUCARNE_PSRAM_IMAGE_CACHE_SLOTS];
+
+PsramCacheSlot *psramFind(const ImageAsset *asset) {
+    for (uint8_t i = 0; i < LUCARNE_PSRAM_IMAGE_CACHE_SLOTS; i++) {
+        if (_psramSlots[i].used && _psramSlots[i].asset == asset) return &_psramSlots[i];
+    }
+    return nullptr;
+}
+
+void *psramAllocBytes(size_t bytes) {
+#if defined(ESP32)
+    return heap_caps_malloc(bytes, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+#else
+    return malloc(bytes);
+#endif
+}
+
+}
+
+bool psramCacheEnsure(const ImageAsset *asset) {
+    if (!asset || imageAssetStorage(asset) != ImageStorage::Psram) return false;
+    if (psramFind(asset)) return true;
+
+#if defined(ESP32)
+    if (ESP.getPsramSize() == 0) return false;
+#endif
+
+    const uint16_t *src = imageAssetData(asset);
+    if (!src) return false;
+    int16_t w = imageAssetWidth(asset);
+    int16_t h = imageAssetHeight(asset);
+    if (w < 1 || h < 1) return false;
+    size_t n = (size_t)w * (size_t)h;
+
+    uint16_t *pixCopy = (uint16_t *)psramAllocBytes(n * 2);
+    if (!pixCopy) return false;
+    for (size_t i = 0; i < n; i++) pixCopy[i] = imageAssetPixel565(src, i);
+
+    uint8_t *alphaCopy = nullptr;
+    const uint8_t *srcAlpha = imageAssetAlpha(asset);
+    if (srcAlpha) {
+        alphaCopy = (uint8_t *)psramAllocBytes(n);
+        if (alphaCopy) {
+            for (size_t i = 0; i < n; i++) alphaCopy[i] = imageAssetAlphaAt(srcAlpha, i);
+        }
+    }
+
+    PsramCacheSlot *slot = nullptr;
+    for (uint8_t i = 0; i < LUCARNE_PSRAM_IMAGE_CACHE_SLOTS; i++) {
+        if (!_psramSlots[i].used) {
+            slot = &_psramSlots[i];
+            break;
+        }
+    }
+    if (!slot) {
+        slot = &_psramSlots[0];
+        if (slot->pixels) free(slot->pixels);
+        if (slot->alpha) free(slot->alpha);
+    }
+    slot->asset = asset;
+    slot->pixels = pixCopy;
+    slot->alpha = alphaCopy;
+    slot->used = true;
+    return true;
+}
+
+const uint16_t *psramCacheData(const ImageAsset *asset) {
+    PsramCacheSlot *s = psramFind(asset);
+    return s ? s->pixels : nullptr;
+}
+
+const uint8_t *psramCacheAlpha(const ImageAsset *asset) {
+    PsramCacheSlot *s = psramFind(asset);
+    return s ? s->alpha : nullptr;
 }
 
 }

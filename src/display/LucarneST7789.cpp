@@ -45,6 +45,11 @@ void ST7789::setupOffsets() {
     } else if ((w == 240 && h == 280) || (w == 280 && h == 240)) {
         _rowStart = 20;
         _rowStart2 = 20;
+    } else if ((w == 240 && h == 320) || (w == 320 && h == 240)) {
+        _rowStart = 0;
+        _rowStart2 = 0;
+        _colStart = 0;
+        _colStart2 = 0;
     }
 }
 

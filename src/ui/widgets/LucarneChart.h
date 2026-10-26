@@ -13,12 +13,18 @@ class Chart : public Widget {
 
     void setKey(uint8_t index, const char *key);
     void setRange(float minV, float maxV) {
+        markDirty();
         _min = minV;
         _max = maxV;
     }
     void setColor(uint16_t c);
     void clearColor();
 
+    uint8_t storeKeys(const char **out, uint8_t max) const override {
+        uint8_t n = 0;
+        for (uint8_t i = 0; i < _keyCount; i++) n = appendKey(out, n, max, _keys[i]);
+        return n;
+    }
     void draw(Gfx &g, const Theme &theme, Store &store) override;
 
   private:

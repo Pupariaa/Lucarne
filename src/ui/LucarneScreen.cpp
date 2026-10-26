@@ -17,17 +17,28 @@ bool insideRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r) {
     return dx * dx + dy * dy <= rr;
 }
 
-void maskScreenCorners(Gfx &g, uint16_t bezel, int16_t r) {
-    if (r <= 0) return;
+void maskCorner(Gfx &g, uint16_t bezel, int16_t r, const Rect &corner, const Rect &clip) {
+    Rect c = corner.intersect(clip);
+    if (c.empty()) return;
     int16_t w = g.width();
     int16_t h = g.height();
-    for (int16_t y = 0; y < h; y++) {
-        for (int16_t x = 0; x < w; x++) {
+    for (int16_t y = c.y; y < c.bottom(); y++) {
+        for (int16_t x = c.x; x < c.right(); x++) {
             if (!insideRoundRect(x, y, w, h, r)) {
                 g.drawPixel(x, y, bezel);
             }
         }
     }
+}
+
+void maskScreenCorners(Gfx &g, uint16_t bezel, int16_t r, const Rect &clip) {
+    if (r <= 0) return;
+    int16_t w = g.width();
+    int16_t h = g.height();
+    maskCorner(g, bezel, r, Rect(0, 0, r, r), clip);
+    maskCorner(g, bezel, r, Rect((int16_t)(w - r), 0, r, r), clip);
+    maskCorner(g, bezel, r, Rect(0, (int16_t)(h - r), r, r), clip);
+    maskCorner(g, bezel, r, Rect((int16_t)(w - r), (int16_t)(h - r), r, r), clip);
 }
 
 }
@@ -61,44 +72,69 @@ void Screen::add(Widget *widget) {
 }
 
 void Screen::draw(Gfx &g, const Theme &theme, Store &store) {
-    int16_t w = g.width();
-    int16_t h = g.height();
+    Rect full(0, 0, g.width(), g.height());
+    drawClipped(g, theme, store, g.clipActive() ? g.clipRect() : full);
+}
+
+void Screen::drawClipped(Gfx &g, const Theme &theme, Store &store, const Rect &clipIn) {
+    Rect screenRect(0, 0, g.width(), g.height());
+    Rect clip = clipIn.intersect(screenRect);
+    if (clip.empty()) return;
+    bool hadClip = g.clipActive();
+    Rect prevClip = g.clipRect();
+    Rect eff = hadClip ? clip.intersect(prevClip) : clip;
+    if (eff.empty()) return;
+    g.setClipRect(eff);
+
     uint16_t bezel = theme.surfaceEdge;
-    if (_cornerRadius == 0) {
-        g.fillScreen(theme.background);
+    int16_t r = _cornerRadius;
+    if (g.isCharacterGrid()) {
+        g.fillRect(eff.x, eff.y, eff.w, eff.h, theme.background);
+    } else if (r == 0) {
+        g.fillRect(eff.x, eff.y, eff.w, eff.h, theme.background);
     } else {
-        g.fillScreen(bezel);
-        g.fillRoundRect(0, 0, w, h, _cornerRadius, theme.background);
+        int16_t w = g.width();
+        int16_t h = g.height();
+        Rect inner((int16_t)r, (int16_t)r, (int16_t)(w - 2 * r), (int16_t)(h - 2 * r));
+        if (inner.contains(eff)) {
+            g.fillRect(eff.x, eff.y, eff.w, eff.h, theme.background);
+        } else {
+            g.fillRect(eff.x, eff.y, eff.w, eff.h, bezel);
+            g.fillRoundRect(0, 0, w, h, r, theme.background);
+        }
     }
+
     for (Widget *wgt = _head; wgt; wgt = wgt->_next) {
         if (!wgt->visible) continue;
+        Rect b = wgt->boundsLogical(g, theme);
+        if (b.empty()) b = Rect(wgt->x, wgt->y, wgt->w > 0 ? wgt->w : 1, wgt->h > 0 ? wgt->h : 1);
+        if (!b.intersects(eff)) continue;
         Icon *ic = wgt->asIcon();
-        if (ic && iconWidgetIsAnim(ic)) iconAnimSnapCapture(g, ic);
+        if (ic && iconWidgetIsAnim(ic) && g.hasBuffer()) {
+            IconAnimDrawRect dr = iconAnimDrawRect(ic);
+            if (eff.contains(Rect(dr.x, dr.y, dr.w, dr.h))) iconAnimSnapCapture(g, ic);
+        }
         wgt->draw(g, theme, store);
     }
-    if (_cornerRadius > 0) {
-        maskScreenCorners(g, bezel, _cornerRadius);
+    if (r > 0 && !g.isCharacterGrid()) {
+        maskScreenCorners(g, bezel, r, eff);
+    }
+
+    if (hadClip) {
+        g.setClipRect(prevClip);
+    } else {
+        g.resetClipRect();
     }
 }
 
-static bool rectsIntersect(int16_t ax, int16_t ay, int16_t aw, int16_t ah, int16_t bx, int16_t by,
-                           int16_t bw, int16_t bh) {
-    return ax < (int16_t)(bx + bw) && (int16_t)(ax + aw) > bx && ay < (int16_t)(by + bh) &&
-           (int16_t)(ay + ah) > by;
+void Screen::markAllDirty() {
+    for (Widget *w = _head; w; w = w->_next) w->markDirty();
 }
 
-void Screen::redrawRegion(int16_t rx, int16_t ry, int16_t rw, int16_t rh, Gfx &g, const Theme &theme,
-                          Store &store) {
-    if (rw < 1 || rh < 1) return;
-    g.fillRect(rx, ry, rw, rh, theme.background);
+void Screen::clearAllDirty(Gfx &g, const Theme &theme) {
     for (Widget *w = _head; w; w = w->_next) {
-        if (!w->visible) continue;
-        int16_t ww = w->w;
-        int16_t wh = w->h;
-        if (ww < 1) ww = 1;
-        if (wh < 1) wh = 1;
-        if (!rectsIntersect(w->x, w->y, ww, wh, rx, ry, rw, rh)) continue;
-        w->draw(g, theme, store);
+        w->clearDirty();
+        w->setLastBounds(w->visible ? w->boundsLogical(g, theme) : Rect());
     }
 }
 

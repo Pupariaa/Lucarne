@@ -11,8 +11,10 @@ class ButtonInput {
     ButtonInput();
 
     void begin(int up, int down, int ok, int back, bool activeLow = true, bool usePullup = true);
+    void begin(int up, int down, int ok, int back, int left, int right, bool activeLow = true, bool usePullup = true);
     void attach(UI *ui) { _ui = ui; }
     void setRepeat(uint16_t delayMs, uint16_t rateMs);
+    void setDebounce(uint16_t debounceMs) { _debounceMs = debounceMs; }
     void update();
 
   private:
@@ -20,13 +22,16 @@ class ButtonInput {
     void fire(uint8_t idx);
 
     UI *_ui;
-    int _pin[4];
+    int _pin[6];
     bool _activeLow;
-    bool _state[4];
-    uint32_t _tDown[4];
-    uint32_t _tRepeat[4];
+    bool _state[6];
+    bool _rawState[6];
+    uint32_t _tDown[6];
+    uint32_t _tRepeat[6];
+    uint32_t _tChange[6];
     uint16_t _repeatDelay;
     uint16_t _repeatRate;
+    uint16_t _debounceMs;
 };
 
 class EncoderInput {

@@ -40,9 +40,11 @@ struct IconAnimDrawRect {
 IconAnimDrawRect iconAnimDrawRect(const Icon *ic);
 
 void iconAnimSnapCapture(Gfx &g, Icon *ic);
-bool iconAnimBlitReady(Display &disp, Icon *ic, uint8_t frameIndex);
-bool iconAnimDrawInitial(Gfx &g, Icon *ic, int16_t x, int16_t y, int16_t bw, int16_t bh, uint16_t bg);
-bool iconAnimPatchScreen(Display &disp, Screen *screen, const Theme &theme, Store &store);
+bool iconAnimBlitReady(Gfx &disp, Icon *ic, uint8_t frameIndex);
+bool iconAnimDrawInitial(Gfx &g, Icon *ic, int16_t x, int16_t y, int16_t bw, int16_t bh, uint16_t bg,
+                         uint8_t frameIndex = 0);
+bool iconAnimPatchScreen(Gfx &disp, Screen *screen, const Theme &theme, Store &store);
+bool iconAnimAdvanceDirty(Screen *screen);
 void iconAnimResetScreen(Screen *screen);
 void screenPrefetchAssets(Screen *screen, uint8_t animMaxFramesPerIcon = 0);
 int16_t iconRefBaseSize(const char *ref);

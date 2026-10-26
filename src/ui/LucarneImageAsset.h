@@ -15,7 +15,7 @@ enum class ImageStorage : uint8_t {
     Flash = 0,
     Sd,
     Web,
-    Psrav,
+    Psram,
     FlashRle,
     Volume,
 };

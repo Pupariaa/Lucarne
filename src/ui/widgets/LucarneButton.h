@@ -12,8 +12,8 @@ class Button : public Widget {
   public:
     Button(int16_t x, int16_t y, int16_t w, int16_t h, const char *label);
 
-    void setLabel(const char *label) { _label = label; }
-    void setIconRef(const char *ref) { _icon = ref; }
+    void setLabel(const char *label) { markDirty(); _label = label; }
+    void setIconRef(const char *ref) { markDirty(); _icon = ref; }
     const char *iconRef() const { return _icon; }
     void setNavigate(Screen *target, Transition t = Transition::Inherit);
     void setCallback(uint8_t actionId);
@@ -25,7 +25,19 @@ class Button : public Widget {
     void setTextColor(uint16_t color);
     void setTextSize(uint8_t size);
     void setTextSpacing(int8_t spacing);
-    void setTextAlign(TextAlign align) { _textAlign = align; }
+    void setTextAlign(TextAlign align) { markDirty(); _textAlign = align; }
+    void setFocused(bool focused) {
+        if (_focused == focused) return;
+        _focused = focused;
+        markDirty();
+    }
+    bool focused() const { return _focused; }
+    void setEditing(bool editing) {
+        if (_editing == editing) return;
+        _editing = editing;
+        markDirty();
+    }
+    bool editing() const { return _editing; }
 
     Screen *navigateTarget() const { return _target; }
     Transition navigateTransition() const { return _transition; }
@@ -50,6 +62,8 @@ class Button : public Widget {
     bool _transparentTextColor;
     TextStyle _textStyle;
     TextAlign _textAlign;
+    bool _focused;
+    bool _editing;
 };
 
 }

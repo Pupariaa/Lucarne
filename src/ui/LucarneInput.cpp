@@ -4,25 +4,39 @@
 namespace lucarne {
 
 ButtonInput::ButtonInput()
-    : _ui(nullptr), _activeLow(true), _repeatDelay(420), _repeatRate(120) {
-    for (uint8_t i = 0; i < 4; i++) {
+    : _ui(nullptr), _activeLow(true), _repeatDelay(420), _repeatRate(120), _debounceMs(25) {
+    for (uint8_t i = 0; i < 6; i++) {
         _pin[i] = -1;
         _state[i] = false;
+        _rawState[i] = false;
         _tDown[i] = 0;
         _tRepeat[i] = 0;
+        _tChange[i] = 0;
     }
 }
 
 void ButtonInput::begin(int up, int down, int ok, int back, bool activeLow, bool usePullup) {
+    begin(up, down, ok, back, -1, -1, activeLow, usePullup);
+}
+
+void ButtonInput::begin(int up, int down, int ok, int back, int left, int right, bool activeLow, bool usePullup) {
     _pin[0] = up;
     _pin[1] = down;
     _pin[2] = ok;
     _pin[3] = back;
+    _pin[4] = left;
+    _pin[5] = right;
     _activeLow = activeLow;
-    for (uint8_t i = 0; i < 4; i++) {
+    for (uint8_t i = 0; i < 6; i++) {
         if (_pin[i] >= 0) {
             pinMode(_pin[i], usePullup ? INPUT_PULLUP : INPUT);
         }
+    }
+    uint32_t now = millis();
+    for (uint8_t i = 0; i < 6; i++) {
+        _rawState[i] = read(i);
+        _state[i] = false;
+        _tChange[i] = now;
     }
 }
 
@@ -43,20 +57,29 @@ void ButtonInput::fire(uint8_t idx) {
     else if (idx == 1) _ui->next();
     else if (idx == 2) _ui->select();
     else if (idx == 3) _ui->back();
+    else if (idx == 4) _ui->left();
+    else if (idx == 5) _ui->right();
 }
 
 void ButtonInput::update() {
     uint32_t now = millis();
-    for (uint8_t i = 0; i < 4; i++) {
+    for (uint8_t i = 0; i < 6; i++) {
         if (_pin[i] < 0) continue;
-        bool down = read(i);
+        bool raw = read(i);
+        if (raw != _rawState[i]) {
+            _rawState[i] = raw;
+            _tChange[i] = now;
+        }
+        if ((now - _tChange[i]) < _debounceMs) continue;
+
+        bool down = _rawState[i];
         if (down && !_state[i]) {
             _state[i] = true;
             _tDown[i] = now;
             _tRepeat[i] = now;
             fire(i);
         } else if (down && _state[i]) {
-            if (i <= 1) {
+            if (i <= 1 || i >= 4) {
                 if (now - _tDown[i] >= _repeatDelay && now - _tRepeat[i] >= _repeatRate) {
                     _tRepeat[i] = now;
                     fire(i);

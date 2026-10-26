@@ -14,15 +14,21 @@ class Label : public Widget {
     void clearColor();
     void setTextTransparent(bool transparent);
     void setSize(uint8_t size);
-    void setAlign(TextAlign align) { _align = align; }
-    void setFont(const AAFont *font) { _font = font; }
+    void setAlign(TextAlign align) { markDirty(); _align = align; }
+    void setFont(const AAFont *font) { markDirty(); _font = font; }
     void setSpacing(int8_t spacing);
     void clearSpacing();
-    void setBackground(uint16_t bg) { _bg = bg; _hasBg = true; }
+    void setBackground(uint16_t bg) { markDirty(); _bg = bg; _hasBg = true; }
+    const char *text() const { return _text; }
 
+    Label *asLabel() override { return this; }
+    Rect boundsLogical(Gfx &g, const Theme &theme) const override;
     void draw(Gfx &g, const Theme &theme, Store &store) override;
 
   private:
+    TextStyle style() const;
+    Rect textBox(Gfx &g, const Theme &theme, const TextStyle &style) const;
+
     const char *_text;
     TextAlign _align;
     uint16_t _color;

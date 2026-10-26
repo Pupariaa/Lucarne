@@ -9,54 +9,63 @@ Gauge::Gauge(int16_t x, int16_t y, int16_t w, int16_t h, const char *label, cons
     : Widget(x, y, w, h), _label(label), _key(key), _min(minV), _max(maxV), _accent(0), _hasAccent(false) {}
 
 void Gauge::setAccent(uint16_t c) {
+    markDirty();
     _accent = c;
     _hasAccent = true;
 }
 
-void Gauge::clearAccent() { _hasAccent = false; }
+void Gauge::clearAccent() { markDirty(); _hasAccent = false; }
 
 void Gauge::setLabelFont(const AAFont *font) {
+    markDirty();
     _labelStyle.font = font;
     _labelStyle.hasFont = true;
 }
 
 void Gauge::setLabelColor(uint16_t color) {
+    markDirty();
     _labelStyle.color = color;
     _labelStyle.hasColor = true;
     _labelStyle.transparent = false;
 }
 
-void Gauge::setLabelTransparent(bool transparent) { _labelStyle.transparent = transparent; }
+void Gauge::setLabelTransparent(bool transparent) { markDirty(); _labelStyle.transparent = transparent; }
 
 void Gauge::setLabelSize(uint8_t size) {
+    markDirty();
     _labelStyle.size = size;
     _labelStyle.hasSize = true;
 }
 
 void Gauge::setLabelSpacing(int8_t spacing) {
+    markDirty();
     _labelStyle.spacing = spacing;
     _labelStyle.hasSpacing = true;
 }
 
 void Gauge::setValueFont(const AAFont *font) {
+    markDirty();
     _valueStyle.font = font;
     _valueStyle.hasFont = true;
 }
 
 void Gauge::setValueColor(uint16_t color) {
+    markDirty();
     _valueStyle.color = color;
     _valueStyle.hasColor = true;
     _valueStyle.transparent = false;
 }
 
-void Gauge::setValueTransparent(bool transparent) { _valueStyle.transparent = transparent; }
+void Gauge::setValueTransparent(bool transparent) { markDirty(); _valueStyle.transparent = transparent; }
 
 void Gauge::setValueSize(uint8_t size) {
+    markDirty();
     _valueStyle.size = size;
     _valueStyle.hasSize = true;
 }
 
 void Gauge::setValueSpacing(int8_t spacing) {
+    markDirty();
     _valueStyle.spacing = spacing;
     _valueStyle.hasSpacing = true;
 }
@@ -67,6 +76,10 @@ void Gauge::draw(Gfx &g, const Theme &theme, Store &store) {
     if (v > _max) v = _max;
     float span = _max - _min;
     float ratio = span > 0.0f ? (v - _min) / span : 0.0f;
+    if (g.isCharacterGrid()) {
+        g.drawGridBar(x, y, w, h, ratio);
+        return;
+    }
     uint16_t accent = _hasAccent ? _accent : theme.primary;
     int16_t cx = (int16_t)(x + w / 2);
     int16_t cy = (int16_t)(y + h * 55 / 100);

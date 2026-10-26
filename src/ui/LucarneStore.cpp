@@ -4,9 +4,10 @@
 namespace lucarne {
 
 Store::Store() : _count(0), _dirty(false) {
-    for (uint8_t i = 0; i < CAPACITY; i++) {
+    for (uint16_t i = 0; i < CAPACITY; i++) {
         _entries[i].key = nullptr;
         _entries[i].type = ValueType::None;
+        _entries[i].dirty = false;
         _entries[i].f = 0.0f;
         _entries[i].i = 0;
         _entries[i].b = false;
@@ -16,7 +17,7 @@ Store::Store() : _count(0), _dirty(false) {
 
 int Store::findIndex(const char *key) const {
     if (!key) return -1;
-    for (uint8_t i = 0; i < _count; i++) {
+    for (uint16_t i = 0; i < _count; i++) {
         if (_entries[i].key == key || strcmp(_entries[i].key, key) == 0) {
             return (int)i;
         }
@@ -31,40 +32,50 @@ int Store::reserve(const char *key) {
     idx = (int)_count++;
     _entries[idx].key = key;
     _entries[idx].type = ValueType::None;
+    _entries[idx].dirty = false;
     return idx;
 }
 
-void Store::setFloat(const char *key, float v) {
+void Store::setFloat(const char *key, float v, bool touchDirty) {
     int idx = reserve(key);
     if (idx < 0) return;
     Entry &e = _entries[idx];
     if (e.type == ValueType::Float && e.f == v) return;
     e.type = ValueType::Float;
     e.f = v;
-    _dirty = true;
+    if (touchDirty) {
+        e.dirty = true;
+        _dirty = true;
+    }
 }
 
-void Store::setInt(const char *key, long v) {
+void Store::setInt(const char *key, long v, bool touchDirty) {
     int idx = reserve(key);
     if (idx < 0) return;
     Entry &e = _entries[idx];
     if (e.type == ValueType::Int && e.i == v) return;
     e.type = ValueType::Int;
     e.i = v;
-    _dirty = true;
+    if (touchDirty) {
+        e.dirty = true;
+        _dirty = true;
+    }
 }
 
-void Store::setBool(const char *key, bool v) {
+void Store::setBool(const char *key, bool v, bool touchDirty) {
     int idx = reserve(key);
     if (idx < 0) return;
     Entry &e = _entries[idx];
     if (e.type == ValueType::Bool && e.b == v) return;
     e.type = ValueType::Bool;
     e.b = v;
-    _dirty = true;
+    if (touchDirty) {
+        e.dirty = true;
+        _dirty = true;
+    }
 }
 
-void Store::setString(const char *key, const char *v) {
+void Store::setString(const char *key, const char *v, bool touchDirty) {
     int idx = reserve(key);
     if (idx < 0) return;
     Entry &e = _entries[idx];
@@ -73,7 +84,10 @@ void Store::setString(const char *key, const char *v) {
     e.type = ValueType::String;
     strncpy(e.s, src, STRLEN - 1);
     e.s[STRLEN - 1] = '\0';
-    _dirty = true;
+    if (touchDirty) {
+        e.dirty = true;
+        _dirty = true;
+    }
 }
 
 float Store::getFloat(const char *key, float def) const {
@@ -118,6 +132,23 @@ ValueType Store::typeOf(const char *key) const {
     int idx = findIndex(key);
     if (idx < 0) return ValueType::None;
     return _entries[idx].type;
+}
+
+void Store::clearDirty() {
+    for (uint16_t i = 0; i < _count; i++) _entries[i].dirty = false;
+    _dirty = false;
+}
+
+bool Store::isKeyDirty(const char *key) const {
+    int idx = findIndex(key);
+    return idx >= 0 && _entries[idx].dirty;
+}
+
+void Store::markKeyDirty(const char *key) {
+    int idx = findIndex(key);
+    if (idx < 0) return;
+    _entries[idx].dirty = true;
+    _dirty = true;
 }
 
 bool Store::has(const char *key) const {

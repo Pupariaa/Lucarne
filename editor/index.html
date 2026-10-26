@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lucarne Studio</title>
+  <link rel="icon" href="brand/Lucarne-logo-only.png" type="image/png" />
+  <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="topbar">
+        <a href="#" class="brand" data-tail="" aria-label="Lucarne home">
+          <img class="logo" src="brand/Lucarne-logo-only.png" alt="" width="22" height="22" />
+          <span class="brandName">Lucarne</span>
+          <span class="brandSub">Studio</span>
+        </a>
+        <span class="tb-slot" id="slotNav">
+          <nav class="tb-nav" id="tbNav" aria-label="Site">
+            <a href="#" data-tail="">Home</a>
+            <a href="#" data-tail="doc/">Docs</a>
+          </nav>
+        </span>
+
+        <div class="tb-group tb-main">
+          <button type="button" id="btnUndo" class="btn icon" title="Undo (Ctrl+Z)" aria-label="Undo" data-icon="undo"></button>
+          <button type="button" id="btnRedo" class="btn icon" title="Redo (Ctrl+Shift+Z)" aria-label="Redo" data-icon="redo"></button>
+          <span class="tb-sep"></span>
+          <span class="proj-name-wrap">
+            <input id="projectName" class="proj-name" type="text" spellcheck="false" title="Project name" aria-label="Project name" />
+          </span>
+          <select id="deviceSel" class="select" title="Target device preset" aria-label="Target device preset"></select>
+          <span class="tb-slot" id="slotPanel">
+            <span class="tb-panel-dims" id="tbPanelDims">
+              <input id="panelW" class="panel-num" type="number" min="1" max="2048" title="Panel width (native)" aria-label="Panel width" />
+              <span class="panel-x" aria-hidden="true">×</span>
+              <input id="panelH" class="panel-num" type="number" min="1" max="2048" title="Panel height (native)" aria-label="Panel height" />
+            </span>
+          </span>
+          <span class="tb-sep tb-sep-collapsible"></span>
+          <span class="tb-slot" id="slotRotation">
+            <select id="rotationSel" class="select" title="Screen rotation" aria-label="Screen rotation">
+              <option value="0">0°</option>
+              <option value="1">90°</option>
+              <option value="2">180°</option>
+              <option value="3">270°</option>
+            </select>
+          </span>
+          <span class="tb-slot" id="slotLiveSpeed">
+            <select id="liveSpeed" class="select live-speed" title="USB serial speed — must match Serial.begin() in LucarnePreview.ino" aria-label="Live preview serial speed">
+              <option value="safe">Safe</option>
+              <option value="eco">Eco</option>
+              <option value="balanced">Balanced</option>
+              <option value="fast">Fast</option>
+              <option value="turbo" selected>Turbo</option>
+              <option value="realtime">Realtime</option>
+            </select>
+          </span>
+          <button type="button" id="btnLive" class="btn" title="USB Live preview on real hardware (Chrome/Edge) — not Bluetooth">Live</button>
+          <span class="tb-slot" id="slotFlash">
+            <button type="button" id="btnFlash" class="btn ghost" title="Flash the LucarneLivePreview receiver firmware onto a board over USB">Flash receiver</button>
+          </span>
+        </div>
+
+        <div class="modeTabs" role="tablist" aria-label="Editor mode">
+          <button type="button" class="modeTab active" role="tab" aria-selected="true" data-mode="blueprint" title="Screen map and navigation graph (1)" aria-label="Blueprint"><span class="modeTab-icon" data-icon="graph" data-icon-size="15"></span><span class="modeTab-label">Blueprint</span></button>
+          <button type="button" class="modeTab" role="tab" aria-selected="false" tabindex="-1" data-mode="designer" title="Lay out widgets on a screen (2)" aria-label="Designer"><span class="modeTab-icon" data-icon="pen" data-icon-size="15"></span><span class="modeTab-label">Designer</span></button>
+          <button type="button" class="modeTab" role="tab" aria-selected="false" tabindex="-1" data-mode="simulate" title="Interact with the UI as it will run on-device (3)" aria-label="Simulate"><span class="modeTab-icon" data-icon="play" data-icon-size="15"></span><span class="modeTab-label">Simulate</span></button>
+        </div>
+
+        <div class="tb-group right">
+          <button type="button" id="btnExport" class="btn primary" title="Generate the Arduino sketch (.ino) and C++ headers for this project">Export</button>
+          <span class="tb-slot" id="slotHelp">
+            <button type="button" id="btnHelp" class="btn ghost icon" title="Help and keyboard shortcuts (?)" aria-label="Help and keyboard shortcuts" data-icon="help"></button>
+          </span>
+          <button type="button" id="btnProjectSettings" class="btn ghost icon" title="Project settings — theme, fonts, hardware, assets and data keys" aria-label="Project settings" data-icon="gear"></button>
+          <div class="tb-menu tb-more">
+            <button type="button" id="btnMoreMenu" class="btn ghost icon" title="More tools" aria-label="More tools" aria-haspopup="true" aria-expanded="false" aria-controls="moreMenuPanel" data-icon="more"></button>
+            <div id="moreMenuPanel" class="tb-menu-panel tb-more-panel" role="menu" aria-label="More tools" hidden>
+              <div class="tb-more-row" data-more="slotPanel">
+                <span class="tb-more-label">Panel size</span>
+                <span class="tb-more-slot"></span>
+              </div>
+              <div class="tb-more-row" data-more="slotRotation">
+                <span class="tb-more-label">Rotation</span>
+                <span class="tb-more-slot"></span>
+              </div>
+              <div class="tb-more-row" data-more="slotLiveSpeed">
+                <span class="tb-more-label">Live speed</span>
+                <span class="tb-more-slot"></span>
+              </div>
+              <div class="tb-more-row" data-more="slotFlash">
+                <span class="tb-more-label">Receiver</span>
+                <span class="tb-more-slot"></span>
+              </div>
+              <div class="tb-more-row" data-more="slotHelp">
+                <span class="tb-more-label">Help</span>
+                <span class="tb-more-slot"></span>
+              </div>
+              <div class="tb-more-row" data-more="slotNav">
+                <span class="tb-more-label">Site</span>
+                <span class="tb-more-slot"></span>
+              </div>
+              <div id="moreSerialHint" class="hint hint-warn tb-more-hint" hidden>Live preview and Flash need Web Serial: use Chrome or Edge on desktop.</div>
+            </div>
+          </div>
+          <div class="tb-menu">
+            <button type="button" id="btnFileMenu" class="btn ghost" title="Project file actions" aria-haspopup="true" aria-expanded="false" aria-controls="fileMenuPanel">
+              <span class="tb-menu-label">File</span><span class="tb-menu-caret" data-icon="chevronDown" data-icon-size="12" aria-hidden="true"></span>
+            </button>
+            <div id="fileMenuPanel" class="tb-menu-panel" role="menu" aria-label="File" hidden>
+              <button type="button" id="btnProjects" class="tb-menu-item" role="menuitem" title="Switch between projects stored in this browser">
+                <span class="tb-menu-item-label">Projects&#8230;</span>
+                <span class="tb-menu-item-sub">Browse projects saved in this browser</span>
+              </button>
+              <span class="tb-menu-sep"></span>
+              <button type="button" id="btnSave" class="tb-menu-item" role="menuitem" title="Download this project as a .lucarne.json file">
+                <span class="tb-menu-item-label">Save</span>
+                <span class="tb-menu-item-sub">Download as .lucarne.json</span>
+              </button>
+              <button type="button" id="btnLoad" class="tb-menu-item" role="menuitem" title="Load a project from a .lucarne.json file">
+                <span class="tb-menu-item-label">Load&#8230;</span>
+                <span class="tb-menu-item-sub">Open a .lucarne.json file</span>
+              </button>
+              <input id="fileLoad" type="file" accept="application/json,.json" hidden />
+              <span class="tb-menu-sep"></span>
+              <button type="button" id="btnNew" class="tb-menu-item" role="menuitem" title="Start a new project">
+                <span class="tb-menu-item-label">New project&#8230;</span>
+                <span class="tb-menu-item-sub">Full setup wizard</span>
+              </button>
+              <span class="tb-menu-sep"></span>
+              <button type="button" id="btnWelcome" class="tb-menu-item" role="menuitem" title="Open the welcome screen">
+                <span class="tb-menu-item-label">Welcome&#8230;</span>
+                <span class="tb-menu-item-sub">Start, open recent projects</span>
+              </button>
+              <button type="button" id="btnTour" class="tb-menu-item" role="menuitem" title="Guided tour of Lucarne Studio">
+                <span class="tb-menu-item-label">Take the tour</span>
+                <span class="tb-menu-item-sub">Step-by-step walkthrough</span>
+              </button>
+              <button type="button" id="btnShortcuts" class="tb-menu-item" role="menuitem" title="Keyboard shortcuts (?)">
+                <span class="tb-menu-item-label">Keyboard shortcuts</span>
+                <span class="tb-menu-item-sub">Press ? anywhere</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div id="historyBar" class="history-bar" role="toolbar" aria-label="History"></div>
+
+      <main class="workspace">
+        <section id="stage" aria-label="Canvas">
+          <div id="graphHost" class="stageView"></div>
+          <div id="designerHost" class="stageView" hidden></div>
+          <div id="simHost" class="stageView" hidden></div>
+          <button type="button" id="btnDockToggle" class="dock-toggle" aria-controls="dock" aria-expanded="false" title="Show inspector" aria-label="Show inspector" data-icon="panel" data-icon-size="18"></button>
+        </section>
+
+        <aside id="dock" aria-label="Inspector">
+          <div class="dockHeader">
+            <span class="dockHeaderTitle" id="dockTitle">Inspector</span>
+            <button type="button" id="btnDockClose" class="btn ghost icon dock-close" title="Hide inspector" aria-label="Hide inspector" data-icon="close"></button>
+          </div>
+          <div id="dockBody">
+            <div id="tab-inspector" class="dockPane"></div>
+          </div>
+        </aside>
+      </main>
+      <footer id="memoryBar" class="memory-bar" aria-label="Memory estimate"></footer>
+    </div>
+
+    <div id="settingsModal" class="modal" hidden>
+      <div class="modal-card settings-card" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+        <div class="modal-head">
+          <strong class="lc-dialog-title" id="settingsTitle">Project settings</strong>
+          <button type="button" id="settingsClose" class="btn ghost">Close</button>
+        </div>
+        <div class="settings-body">
+          <nav class="settings-nav" role="tablist" aria-orientation="vertical" aria-label="Project settings sections">
+            <button type="button" class="settingsTab active" role="tab" aria-selected="true" aria-controls="tab-theme" data-tab="theme" title="Global colors, spacing and default text style">
+              <span class="settingsTab-icon" aria-hidden="true" data-icon="palette" data-icon-size="16"></span>
+              <span class="settingsTab-text">
+                <span class="settingsTab-label">Theme</span>
+                <span class="settingsTab-sub">Colors &amp; text style</span>
+              </span>
+            </button>
+            <button type="button" class="settingsTab" role="tab" aria-selected="false" tabindex="-1" aria-controls="tab-fonts" data-tab="fonts" title="Fonts available to widgets in this project">
+              <span class="settingsTab-icon" aria-hidden="true"><span class="settingsTab-glyph">Aa</span></span>
+              <span class="settingsTab-text">
+                <span class="settingsTab-label">Fonts</span>
+                <span class="settingsTab-sub">Typefaces &amp; sizes</span>
+              </span>
+            </button>
+            <button type="button" class="settingsTab" role="tab" aria-selected="false" tabindex="-1" aria-controls="tab-hardware" data-tab="hardware" title="Board, GPIO pins, SPI/I2C bus and peripherals">
+              <span class="settingsTab-icon" aria-hidden="true" data-icon="chip" data-icon-size="16"></span>
+              <span class="settingsTab-text">
+                <span class="settingsTab-label">Hardware</span>
+                <span class="settingsTab-sub">Board, GPIO &amp; buses</span>
+              </span>
+            </button>
+            <button type="button" class="settingsTab" role="tab" aria-selected="false" tabindex="-1" aria-controls="tab-assets" data-tab="assets" title="Images and custom icons used by widgets">
+              <span class="settingsTab-icon" aria-hidden="true" data-icon="image" data-icon-size="16"></span>
+              <span class="settingsTab-text">
+                <span class="settingsTab-label">Assets</span>
+                <span class="settingsTab-sub">Images &amp; icons</span>
+              </span>
+            </button>
+            <button type="button" class="settingsTab" role="tab" aria-selected="false" tabindex="-1" aria-controls="tab-data" data-tab="data" title="Data keys, calculated keys and their values in Simulate">
+              <span class="settingsTab-icon" aria-hidden="true"><span class="settingsTab-glyph">{ }</span></span>
+              <span class="settingsTab-text">
+                <span class="settingsTab-label">Data</span>
+                <span class="settingsTab-sub">Data keys &amp; formulas</span>
+              </span>
+            </button>
+          </nav>
+          <div class="settings-content">
+            <div id="tab-theme" class="dockPane settings-pane" role="tabpanel" aria-label="Theme"></div>
+            <div id="tab-fonts" class="dockPane settings-pane" role="tabpanel" aria-label="Fonts" hidden></div>
+            <div id="tab-hardware" class="dockPane settings-pane" role="tabpanel" aria-label="Hardware" hidden></div>
+            <div id="tab-assets" class="dockPane settings-pane" role="tabpanel" aria-label="Assets" hidden></div>
+            <div id="tab-data" class="dockPane settings-pane" role="tabpanel" aria-label="Data" hidden></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="modal" class="modal" hidden>
+      <div class="modal-card size-xl export-card" role="dialog" aria-modal="true" aria-labelledby="exportTitle">
+        <div class="modal-head export-head">
+          <strong class="lc-dialog-title" id="exportTitle">Export</strong>
+          <div class="export-tabs" id="modalExportTabs" role="tablist" aria-label="Export file groups">
+            <button type="button" class="export-tab active" role="tab" aria-selected="true" data-export-tab="headers">Headers</button>
+            <button type="button" class="export-tab" role="tab" aria-selected="false" tabindex="-1" data-export-tab="sd">Files (SD / Volume)</button>
+          </div>
+          <button type="button" id="modalClose" class="btn ghost">Close</button>
+          <div id="modalExportSummary" class="hint modal-export-summary"></div>
+          <div class="modal-files" id="modalFiles" role="group" aria-label="Generated files"></div>
+        </div>
+        <textarea id="modalText" spellcheck="false" readonly aria-label="File content"></textarea>
+        <div class="modal-foot">
+          <button type="button" id="modalCopy" class="btn">Copy</button>
+          <button type="button" id="modalDownload" class="btn">Download file</button>
+          <button type="button" id="modalDownloadZip" class="btn primary">Download .zip</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast-stack" aria-live="polite" aria-relevant="additions"></div>
+
+    <script src="ui-icons.js"></script>
+    <script src="icon-format.js"></script>
+    <script src="history.js"></script>
+    <script src="dialog.js"></script>
+    <script src="screen-calibration.js"></script>
+    <script src="clipboard.js"></script>
+    <script src="apng-js.js"></script>
+    <script src="fluent-emojis.js"></script>
+    <script src="tabler-icons.js"></script>
+    <script src="icon-packs.js"></script>
+    <script src="lucarne-font.js"></script>
+    <script src="lucarne-icons.js"></script>
+    <script src="utf8.js"></script>
+    <script src="lucarne-render.js"></script>
+    <script src="icon-picker.js"></script>
+    <script src="text-style.js"></script>
+    <script src="fonts.js"></script>
+    <script src="assets.js"></script>
+    <script src="boards-catalog.js"></script>
+    <script src="board-pinouts.js"></script>
+    <script src="gpio-wizard.js"></script>
+    <script src="new-project-wizard.js"></script>
+    <script src="calc-keys.js"></script>
+    <script src="hardware.js"></script>
+    <script src="keyboard.js"></script>
+    <script src="state.js"></script>
+    <script src="graph.js"></script>
+    <script src="templates.js"></script>
+    <script src="designer.js"></script>
+    <script src="simulate.js"></script>
+    <script src="memory-estimate.js"></script>
+    <script src="opaque-bake.js"></script>
+    <script src="export.js"></script>
+    <script src="zip-export.js"></script>
+    <script src="live-profiles.js"></script>
+    <script src="live-receivers.js"></script>
+    <script src="live.js?v=20261026e"></script>
+    <script src="esptool-js.js"></script>
+    <script src="flash.js"></script>
+    <script src="nav.js"></script>
+    <script src="drc.js"></script>
+    <script src="drc-panel.js"></script>
+    <script src="project-manager.js"></script>
+    <script src="welcome.js"></script>
+    <script src="tour.js"></script>
+    <script src="help.js"></script>
+    <script src="modules.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

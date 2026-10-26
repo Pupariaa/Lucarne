@@ -64,7 +64,7 @@ void loop() {
 
 - Raw **RGB565**, little-endian, row-major.
 - Size must match `width × height × 2` bytes (same as Studio export).
-- No alpha channel on SD (opaque pixels only).
+- Optional **alpha channel**: a `.alpha` sidecar file next to the `.rgb565` (same base name, e.g. `img_abc.rgb565` + `img_abc.alpha`), one byte per pixel, `width × height` bytes. `LucarneImageLoader` loads it automatically when present and blends per-pixel transparency at draw time — this is how animated icons keep transparency when exported to SD/Volume storage. Without a matching `.alpha` file, pixels draw fully opaque.
 - Paths in `Projet_images.h` use `ImageStorage::Sd` and the `source` string (e.g. `"/assets/img_abc.rgb565"`).
 
 ## Runtime behaviour

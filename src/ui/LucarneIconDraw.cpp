@@ -270,7 +270,7 @@ uint8_t iconRefAnimFrame(const char *ref, uint32_t ms) {
     return iconAnimFrameAt(lookupAnimRef(ref), animScaledMs(ms));
 }
 
-bool iconAnimBlitReady(Display &disp, Icon *ic, uint8_t frameIndex) {
+bool iconAnimBlitReady(Gfx &disp, Icon *ic, uint8_t frameIndex) {
     AnimSnapSlot *slot = snapFind(ic);
     if (!slot || !slot->ready || frameIndex >= slot->readyFc || !slot->readyBuilt[frameIndex] ||
         !slot->ready[frameIndex]) {
@@ -282,24 +282,64 @@ bool iconAnimBlitReady(Display &disp, Icon *ic, uint8_t frameIndex) {
 
 static bool frameDrawReady(const ImageAsset *frame) { return imageAssetDrawReady(frame); }
 
-bool iconAnimDrawInitial(Gfx &g, Icon *ic, int16_t x, int16_t y, int16_t bw, int16_t bh, uint16_t bg) {
+bool iconAnimDrawInitial(Gfx &g, Icon *ic, int16_t x, int16_t y, int16_t bw, int16_t bh, uint16_t bg,
+                         uint8_t frameIndex) {
     const IconAnimAsset *anim = lookupAnimRef(ic ? ic->iconRef() : nullptr);
-    const ImageAsset *frame = anim ? iconAnimFramePtr(anim, 0) : nullptr;
+    if (!anim) return false;
+    uint8_t fc = iconAnimFrameCount(anim);
+    if (fc < 1) return false;
+    if (frameIndex >= fc) frameIndex = 0;
+    const ImageAsset *frame = iconAnimFramePtr(anim, frameIndex);
     if (!frame) return false;
     sdCacheEnsure(frame);
     if (!frameDrawReady(frame)) {
-        if (anim) sdCacheWarmAnim(anim, 1);
+        sdCacheWarmAnim(anim, (uint8_t)(frameIndex + 1));
         if (!frameDrawReady(frame)) return false;
     }
-    if (g.canPeekPixel()) {
-        Display &disp = static_cast<Display &>(g);
-        if (iconAnimBlitReady(disp, ic, 0)) return true;
+    if (g.canPeekPixel() && g.hasBuffer()) {
+        if (iconAnimBlitReady(g, ic, frameIndex)) return true;
     }
-    drawIconAnimFrame(g, ic->iconRef(), 0, x, y, bw, bh, bg);
+    drawIconAnimFrame(g, ic->iconRef(), frameIndex, x, y, bw, bh, bg);
     return frameDrawReady(frame);
 }
 
-bool iconAnimPatchScreen(Display &disp, Screen *screen, const Theme &theme, Store &store) {
+bool iconAnimAdvanceDirty(Screen *screen) {
+    if (!screen || !_animLookup) return false;
+    uint32_t ms = animScaledMs(millis());
+    bool any = false;
+    for (Widget *w = screen->first(); w; w = w->_next) {
+        Icon *ic = w->asIcon();
+        if (!ic || !ic->visible) continue;
+        const char *ref = ic->iconRef();
+        if (!iconRefIsAnim(ref)) continue;
+        const IconAnimAsset *anim = lookupAnimRef(ref);
+        if (!anim) continue;
+        uint8_t fc = iconAnimFrameCount(anim);
+        if (fc < 1) continue;
+        uint8_t cur = ic->lastAnimFrame();
+        uint8_t fi;
+        if (cur == 0xff) {
+            fi = 0;
+        } else {
+            if ((uint32_t)(ms - ic->animShowMs()) < (uint32_t)iconAnimDelayMs(anim, cur)) continue;
+            fi = (uint8_t)((cur + 1) % fc);
+        }
+        const ImageAsset *frame = iconAnimFramePtr(anim, fi);
+        if (!frame) continue;
+        sdCacheEnsure(frame);
+        if (!frameDrawReady(frame)) {
+            sdCacheWarmAnim(anim, (uint8_t)(fi + 1));
+            continue;
+        }
+        ic->syncAnimFrame(fi);
+        ic->markAnimShown(ms);
+        ic->markDirty();
+        any = true;
+    }
+    return any;
+}
+
+bool iconAnimPatchScreen(Gfx &disp, Screen *screen, const Theme &theme, Store &store) {
     (void)theme;
     (void)store;
     if (!screen || !_animLookup || !disp.canPeekPixel() || !disp.hasBuffer()) return false;
@@ -365,13 +405,13 @@ bool iconAnimPatchScreen(Display &disp, Screen *screen, const Theme &theme, Stor
         any = true;
     }
     if (haveFlush) {
-        disp.display(fx0, fy0, (int16_t)(fx1 - fx0 + 1), (int16_t)(fy1 - fy0 + 1));
+        disp.flushArea(fx0, fy0, (int16_t)(fx1 - fx0 + 1), (int16_t)(fy1 - fy0 + 1));
     }
     return any;
 }
 
 void iconAnimSnapCapture(Gfx &g, Icon *ic) {
-    if (!ic || !g.canPeekPixel()) return;
+    if (!ic || !g.canPeekPixel() || !g.hasBuffer()) return;
     IconAnimDrawRect dr = iconAnimDrawRect(ic);
     int16_t bx = dr.x;
     int16_t by = dr.y;
@@ -392,8 +432,7 @@ void iconAnimSnapCapture(Gfx &g, Icon *ic) {
     slot->y = by;
     slot->w = bw;
     slot->h = bh;
-    Display &disp = static_cast<Display &>(g);
-    disp.readBufferRectNative(bx, by, bw, bh, slot->buf);
+    g.readBufferRectNative(bx, by, bw, bh, slot->buf);
     const IconAnimAsset *anim = lookupAnimRef(ic->iconRef());
     if (anim) {
         const ImageAsset *f0 = iconAnimFramePtr(anim, 0);
@@ -433,6 +472,8 @@ static void prefetchIconRef(const char *ref, uint8_t animMaxFrames) {
         const ImageAsset *img = _imageLookup(ref);
         if (img && isFileBackedStorage(imageAssetStorage(img)) && !imageAssetData(img)) {
             sdCacheEnsure(img);
+        } else if (img && imageAssetStorage(img) == ImageStorage::Psram) {
+            psramCacheEnsure(img);
         }
     }
 }
@@ -449,6 +490,8 @@ void screenPrefetchAssets(Screen *screen, uint8_t animMaxFramesPerIcon) {
             const ImageAsset *asset = imgw->asset();
             if (asset && isFileBackedStorage(imageAssetStorage(asset)) && !imageAssetData(asset)) {
                 sdCacheEnsure(asset);
+            } else if (asset && imageAssetStorage(asset) == ImageStorage::Psram) {
+                psramCacheEnsure(asset);
             }
             continue;
         }
